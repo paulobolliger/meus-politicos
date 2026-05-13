@@ -42,7 +42,7 @@ const officeCards = [
   {
     title: "Governador",
     icon: Building,
-    count: "227",
+    count: "27",
     status: "Em breve",
     href: "",
     isAvailable: false,
