@@ -4,7 +4,7 @@ import { updateSession } from '@/lib/supabase/middleware'
 // Rotas que exigem autenticação
 const PROTECTED_ROUTES = ['/meus-politicos', '/admin']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
 
   const { pathname } = request.nextUrl
