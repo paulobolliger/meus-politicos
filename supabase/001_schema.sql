@@ -1,7 +1,7 @@
 -- ============================================================
 -- meuspoliticos.com — Schema do banco de dados
 -- Supabase / PostgreSQL
--- Versão: 2.11 — maio 2026
+-- Versão: 2.12 — maio 2026
 -- ============================================================
 -- Alterações v2.2 (vs v2.1):
 --   + timestamptz em todos os campos de data/hora (UTC-safe)
@@ -53,8 +53,14 @@
 --   + campos sq_candidato e cd_municipio_tse em candidaturas_historico
 -- Alterações v2.10 (vs v2.9):  [Portal da Transparência — levantamento]
 --   + campo codigo_siafi em politicos (identificador CGU/SIAFI para emendas)
--- Alterações v2.11 (vs v2.10):  [Feed]
---   + tabela feed_eventos (trocas de partido, DOU, notícias, alertas)
+-- Alterações v2.12 (vs v2.11):  [Câmara — campos do gabinete e dados pessoais]
+--   + campo uf_nascimento em politicos (ufNascimento)
+--   + campo sexo em politicos (sexo)
+--   + campo data_falecimento em politicos (dataFalecimento)
+--   + campo gabinete_nome em politicos (ultimoStatus.gabinete.nome)
+--   + campo gabinete_telefone em politicos (ultimoStatus.gabinete.telefone)
+--   + campo gabinete_email em politicos (ultimoStatus.gabinete.email)
+--   + comentários nos campos email, naturalidade, ocupacao, nome_eleitoral
 --   + VIEW feed_usuario expandida para incluir feed_eventos
 --   + índices compostos + RLS em feed_eventos
 -- ============================================================
@@ -232,13 +238,21 @@ CREATE TABLE politicos (
   foto_fonte          text,
   -- ex: 'camara.leg.br' | 'senado.leg.br' | 'tse.jus.br'
   foto_atualizada_em  timestamptz,
-  email               text,
+  email               text,       -- gabinete.email (Câmara)
   nome_eleitoral      text,
   -- Nome na urna — ex: "NIKOLAS" | Fonte: ultimoStatus.nomeEleitoral (Câmara)
   data_nascimento     date,
-  naturalidade        text,
+  naturalidade        text,       -- municipioNascimento (Câmara)
+  uf_nascimento       char(2),    -- ufNascimento (Câmara)
+  sexo                text,       -- 'M' | 'F' (Câmara)
+  data_falecimento    date,       -- dataFalecimento (Câmara) — null se vivo
   escolaridade        text,
-  ocupacao            text,
+  ocupacao            text,       -- ultimoStatus.descricaoOcupacao (Câmara)
+
+  -- Gabinete (Câmara)
+  gabinete_nome       text,       -- ultimoStatus.gabinete.nome
+  gabinete_telefone   text,       -- ultimoStatus.gabinete.telefone
+  gabinete_email      text,       -- ultimoStatus.gabinete.email (formal)
 
   -- IDs nas fontes externas
   id_camara      integer unique,
@@ -1568,7 +1582,7 @@ CREATE TRIGGER trg_senado_sessoes_atualizado
 
 
 -- ============================================================
--- FIM DO SCHEMA v2.11
+-- FIM DO SCHEMA v2.12
 --
 -- Próximos passos após rodar este schema:
 --   1. Verificar ENUMs criados corretamente (incluindo parse_status_tipo)
