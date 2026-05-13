@@ -1,7 +1,12 @@
-import type { NextConfig } from "next";
+import path from "path"
+
+import { loadEnvConfig } from "@next/env"
+import type { NextConfig } from "next"
+
+loadEnvConfig(path.resolve(__dirname, ".."))
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  env: {},
+}
 
-export default nextConfig;
+export default nextConfig
