@@ -24,12 +24,134 @@ A plataforma não editorializa, não milita, não opina. Mostra dados. O usuári
 
 ---
 
-## 2. Domínios
+## 2. Domínios e Infraestrutura
 
-| Domínio | Status |
+### Domínios
+
+| Domínio | Papel | Status |
+|---|---|---|
+| `meuspoliticos.com.br` | **Principal** — site, SEO, e-mails | ✅ Registrado (Hostgator → Cloudflare) |
+| `meuspoliticos.com` | Alias — redireciona 301 para `.com.br` | ✅ Registrado (Hostgator → Cloudflare) |
+
+**DNS:** Cloudflare (nameservers apontados pelo Hostgator)
+
+| Domínio | Nameserver 1 | Nameserver 2 |
+|---|---|---|
+| `meuspoliticos.com` | `dom.ns.cloudflare.com` | `kim.ns.cloudflare.com` |
+| `meuspoliticos.com.br` | `alfred.ns.cloudflare.com` | `treasure.ns.cloudflare.com` |
+
+**Hosting:** Vercel — domínio personalizado `meuspoliticos.com.br`
+**Redirect:** `meuspoliticos.com` → `meuspoliticos.com.br` via Cloudflare Redirect Rules (301 permanente)
+
+### Supabase
+
+| Campo | Valor |
 |---|---|
-| meuspoliticos.com | ✅ registrado |
-| meuspoliticos.com.br | ✅ registrado |
+| Organização | Meus Politicos |
+| Projeto | meus-politicos |
+| Project ref | `ldgfmrvaluwidpghafke` |
+| URL | `https://ldgfmrvaluwidpghafke.supabase.co` |
+| DB host | `db.ldgfmrvaluwidpghafke.supabase.co` |
+| Região | South America (São Paulo) — sa-east-1 |
+| Database password | **Ver .env.local** — não armazenar aqui |
+| Schema | `supabase/001_schema.sql` v2.11 |
+
+**⚠️ Credenciais salvas em `.env.local` (não commitado) e no gerenciador de senhas.**
+
+### E-mail institucional — Titan (Hostgator)
+
+| Endereço | Uso |
+|---|---|
+| `contato@meuspoliticos.com.br` | Contato público / formulário do site |
+
+**Provedor:** Titan (Hostgator) — webmail em `https://titan.hostgator.com.br/mail/`
+
+**Configurações IMAP/SMTP:**
+```
+Incoming:  imap.titan.email  · porta 993 · SSL/TLS
+Outgoing:  smtp.titan.email  · porta 465 · SSL/TLS
+Username:  contato@meuspoliticos.com.br
+```
+
+### E-mail transacional — Resend
+
+| Campo | Valor |
+|---|---|
+| Provedor | Resend |
+| Domínio | `meuspoliticos.com.br` |
+| Região | São Paulo (sa-east-1) |
+| From | `noreply@meuspoliticos.com.br` |
+| API Key | **Ver .env.local** |
+| Plano | Free (3.000 e-mails/mês) |
+
+**Registros DNS adicionados automaticamente via Resend → Cloudflare:**
+
+| Tipo | Nome | Conteúdo |
+|---|---|---|
+| MX | `send` | `feedback-smtp.sa-east-1.amazonses.com` (prioridade 10) |
+| TXT | `resend._domainkey` | DKIM Resend |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` |
+
+**`.env.local`:**
+```
+RESEND_API_KEY=re_Se4uTEFo_PANsmSN2pUjVX9Q8xxK4sZJ7
+RESEND_FROM=noreply@meuspoliticos.com.br
+```
+
+### APIs externas
+
+| API | Chave | Status | Fase |
+|---|---|---|---|
+| Portal da Transparência | **Ver .env.local** | ✅ Ativa | MVP |
+| OpenAI | **Ver .env.local** | ✅ Ativa | MVP |
+| Bing News Search | — | ⏳ Pendente | Fase 2 |
+| NewsAPI | — | ⏳ Pendente | Fase 2 |
+| SIOP | Requer cadastro específico | ⏳ Pendente | Fase 2 |
+
+**Portal da Transparência — uso:**
+```
+Header: chave-api-dados: <ver .env.local>
+Cadastro: portaldatransparencia.gov.br/api-de-dados/cadastrar-email
+Login gov.br: paulobolliger@gmail.com
+Rate limit: 400 req/min diurno · 700 req/min madrugada
+```
+
+### `.env.local` completo
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://ldgfmrvaluwidpghafke.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_mcBDrVWxuicQoKoTGso5bA_flmy7n7M
+SUPABASE_SERVICE_ROLE_KEY=              ← pegar em Supabase → Settings → API
+SUPABASE_DB_HOST=db.ldgfmrvaluwidpghafke.supabase.co
+SUPABASE_DB_PORT=5432
+SUPABASE_DB_USER=postgres
+SUPABASE_DB_PASSWORD=                   ← ver gerenciador de senhas
+
+# App
+NEXT_PUBLIC_APP_URL=https://meuspoliticos.com.br
+
+# E-mail transacional
+RESEND_API_KEY=re_Se4uTEFo_PANsmSN2pUjVX9Q8xxK4sZJ7
+RESEND_FROM=noreply@meuspoliticos.com.br
+
+# APIs externas
+PORTAL_TRANSPARENCIA_API_KEY=           ← ver gerenciador de senhas
+OPENAI_API_KEY=                         ← ver gerenciador de senhas
+```
+
+| Campo | Valor |
+|---|---|
+| Razão Social | NORO TECNOLOGIA E TURISMO LTDA |
+| Nome Fantasia | NORO GURU |
+| CNPJ | 63.429.497/0001-88 |
+| Porte | ME |
+| Situação | Ativa desde 29/10/2025 |
+| Endereço | R. Comendador Torlogo Dauntre, 74 — Sala 1207, Cambui, Campinas/SP — CEP 13.025-270 |
+| E-mail corporativo | noro@noro.guru |
+| CNAE principal | 62.01-5-01 — Desenvolvimento de programas de computador sob encomenda |
+
+**O Meus Políticos é um produto da NORO GURU** — desenvolvido e operado pela empresa, com CNAE compatível com a atividade (desenvolvimento de software, portais de conteúdo e serviços de informação na internet).
 
 ---
 
@@ -1565,7 +1687,7 @@ Esforço: 1 hora. Impacto: retenção + SEO (reduz bounce).
 12. ⬜ Criar repositório no GitHub (monorepo)
 13. ⬜ Criar projeto no Supabase → rodar `001_schema.sql`
 14. ⬜ Criar projeto no Vercel → conectar ao repo
-15. ⬜ Obter API Key do Portal da Transparência (gov.br)
+15. ✅ Obter API Key do Portal da Transparência (gov.br)
 16. ⬜ Atualizar schema — tabela `candidatos` + `feature_flags` + campos novos
 17. ⬜ Scripts Python de coleta — deputados, votações, gastos, presença
 18. ⬜ Construir frontend — Next.js (SEO e structured data junto com cada página)
