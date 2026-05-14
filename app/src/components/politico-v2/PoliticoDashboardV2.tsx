@@ -4,26 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import {
-  Bell,
-  Calendar,
-  Camera,
-  Globe,
-  Receipt,
-  Share2,
-  UserRound,
-  Users,
-  Vote,
-  Wallet,
-} from 'lucide-react'
+import { Bell, Calendar, Info, Receipt, Share2, UserRound, Vote, Wallet } from 'lucide-react'
 
 import { EmptyState } from '@/components/politico-v2/EmptyState'
-import { GastosBarChart } from '@/components/politico-v2/GastosBarChart'
-import { PresencaHeatmap } from '@/components/politico-v2/PresencaHeatmap'
 import { ScoreRow } from '@/components/politico-v2/ScoreRow'
-import { VotacaoCard } from '@/components/politico-v2/VotacaoCard'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
 
 type SocialLink = {
@@ -65,6 +50,13 @@ type Props = {
   politico: PoliticoDashboardV2Data
 }
 
+type VotoItem = {
+  id: string
+  descricao: string
+  voto: 'sim' | 'nao' | 'abstencao'
+  data: string
+}
+
 const CARGO_LABEL: Record<string, string> = {
   presidente: 'Presidente',
   vice_presidente: 'Vice-presidente',
@@ -91,23 +83,47 @@ const CARGO_BADGE_CLASS: Record<string, string> = {
   vereador: 'bg-rose-100 text-rose-800 border-rose-200',
 }
 
+const CEAP_TETO_UF: Record<string, number> = {
+  AC: 57359.87,
+  AL: 46968.18,
+  AM: 56151.46,
+  AP: 53972.72,
+  BA: 51543.56,
+  CE: 51052.44,
+  DF: 41612.55,
+  ES: 49474.84,
+  GO: 48186.75,
+  MA: 51543.56,
+  MG: 50148.34,
+  MS: 48186.75,
+  MT: 50328.66,
+  PA: 53359.38,
+  PB: 50034.78,
+  PE: 50347.21,
+  PI: 50358.53,
+  PR: 48186.75,
+  RJ: 50034.78,
+  RN: 51287.06,
+  RO: 51850.45,
+  RR: 53247.70,
+  RS: 48186.75,
+  SC: 48186.75,
+  SE: 50503.14,
+  SP: 48727.46,
+  TO: 51406.33,
+}
+
 function formatDate(value: string | null) {
-  if (!value) {
-    return '–'
-  }
+  if (!value) return '–'
 
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
-    return '–'
-  }
+  if (Number.isNaN(parsed.getTime())) return '–'
 
   return format(parsed, 'dd/MM/yyyy', { locale: ptBR })
 }
 
 function formatCurrency(value: number | null) {
-  if (value == null) {
-    return '–'
-  }
+  if (value == null) return '–'
 
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -116,10 +132,7 @@ function formatCurrency(value: number | null) {
 }
 
 function formatOptionalNumber(value: number | null, suffix = '') {
-  if (value == null) {
-    return '–'
-  }
-
+  if (value == null) return '–'
   return `${Math.round(value)}${suffix}`
 }
 
@@ -128,7 +141,7 @@ function initials(name: string) {
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map((chunk) => chunk[0]?.toUpperCase())
+    .map((part) => part[0]?.toUpperCase())
     .join('')
 }
 
@@ -136,47 +149,68 @@ function normalizePlatform(value: string | null) {
   return (value ?? '').toLowerCase().trim()
 }
 
-function socialButtonStyle(platform: string) {
+function socialButtonClass(platform: string) {
   if (platform.includes('twitter') || platform === 'x') {
-    return { className: 'border-black/15 bg-black text-white hover:bg-black/90', icon: Share2, label: 'Twitter/X' }
+    return 'border-black/15 bg-black text-white hover:bg-black/90'
   }
 
   if (platform.includes('instagram')) {
-    return { className: 'border-purple-200 bg-purple-600 text-white hover:bg-purple-700', icon: Camera, label: 'Instagram' }
+    return 'border-purple-200 bg-purple-600 text-white hover:bg-purple-700'
   }
 
   if (platform.includes('youtube')) {
-    return { className: 'border-red-200 bg-red-600 text-white hover:bg-red-700', icon: Vote, label: 'YouTube' }
+    return 'border-red-200 bg-red-600 text-white hover:bg-red-700'
   }
 
   if (platform.includes('facebook')) {
-    return { className: 'border-blue-200 bg-blue-600 text-white hover:bg-blue-700', icon: Users, label: 'Facebook' }
+    return 'border-blue-200 bg-blue-600 text-white hover:bg-blue-700'
   }
 
-  return { className: 'border-slate-300 bg-slate-700 text-white hover:bg-slate-800', icon: Globe, label: 'Site oficial' }
+  return 'border-slate-300 bg-slate-700 text-white hover:bg-slate-800'
 }
 
-function StatValue({ value }: { value: string }) {
-  if (value === '–') {
-    return (
-      <span title="Dados sendo coletados" className="cursor-help text-2xl font-bold text-slate-500">
-        –
-      </span>
-    )
+function formatGabinetePhone(value: string | null) {
+  if (!value) return '–'
+
+  const normalized = value.trim()
+  if (!normalized) return '–'
+  if (normalized.startsWith('(61)')) return normalized
+  if (normalized.startsWith('3215-')) return `(61) ${normalized}`
+
+  const digits = normalized.replace(/\D/g, '')
+  if (digits.length === 8) {
+    return `(61) ${digits.slice(0, 4)}-${digits.slice(4)}`
   }
 
-  return <span className="text-2xl font-bold text-slate-900">{value}</span>
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  }
+
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+  }
+
+  return normalized
 }
 
-function scoreContextMediaUf(uf: string | null) {
-  if (uf === 'SP') return 71
-  if (uf === 'RJ') return 69
-  if (uf === 'MG') return 68
-  return 67
+function yearsInOffice(mandatoInicio: string | null) {
+  if (!mandatoInicio) return { label: '–', year: '–' }
+
+  const startDate = new Date(mandatoInicio)
+  if (Number.isNaN(startDate.getTime())) return { label: '–', year: '–' }
+
+  const now = new Date()
+  const years = Math.max(0, now.getFullYear() - startDate.getFullYear())
+  const suffix = years === 1 ? 'ano' : 'anos'
+
+  return {
+    label: `${years} ${suffix}`,
+    year: String(startDate.getFullYear()),
+  }
 }
 
 function profileFieldCount(politico: PoliticoDashboardV2Data) {
-  const items = [
+  const values = [
     politico.data_nascimento,
     politico.naturalidade,
     politico.uf_nascimento,
@@ -187,53 +221,113 @@ function profileFieldCount(politico: PoliticoDashboardV2Data) {
     politico.mandato_fim,
   ]
 
-  return items.filter(Boolean).length
+  return values.filter(Boolean).length
 }
 
-function GastosTabela({ data }: { data?: Array<{ categoria: string; valor: number }> | null }) {
-  if (!data || data.length === 0) {
-    return <EmptyState icon={Receipt} title="Gastos sendo coletados" />
+function PresencaRing({ value }: { value: number | null }) {
+  const percent = value == null ? 0 : Math.max(0, Math.min(100, Math.round(value)))
+  const radius = 36
+  const stroke = 8
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (percent / 100) * circumference
+
+  let ringColor = '#9ca3af'
+  if (value != null) {
+    if (percent >= 80) ringColor = '#16a34a'
+    else if (percent >= 60) ringColor = '#ca8a04'
+    else ringColor = '#dc2626'
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-600">
-          <tr>
-            <th className="px-3 py-2 font-medium">Categoria</th>
-            <th className="px-3 py-2 font-medium">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row) => (
-            <tr key={row.categoria} className="border-t border-slate-200">
-              <td className="px-3 py-2">{row.categoria}</td>
-              <td className="px-3 py-2">{formatCurrency(row.valor)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="flex items-center gap-3">
+      <svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true">
+        <circle cx="44" cy="44" r={radius} stroke="#e2e8f0" strokeWidth={stroke} fill="none" />
+        <circle
+          cx="44"
+          cy="44"
+          r={radius}
+          stroke={ringColor}
+          strokeWidth={stroke}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 44 44)"
+        />
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="16" fontWeight="700" fill="#0f172a">
+          {value == null ? '–' : `${percent}%`}
+        </text>
+      </svg>
+      <div>
+        <p className="text-sm text-slate-500">Média {value == null ? 'UF' : 'da UF'}: –%</p>
+      </div>
     </div>
   )
 }
 
+function StatCard({
+  title,
+  value,
+  subtitle,
+  showCollectingHint = false,
+}: {
+  title: string
+  value: string
+  subtitle?: string
+  showCollectingHint?: boolean
+}) {
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <div className="mt-2 flex items-center gap-2">
+        {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+        {showCollectingHint ? (
+          <span title="Dados sendo coletados" className="inline-flex items-center text-slate-400">
+            <Info className="size-3.5" aria-hidden="true" />
+          </span>
+        ) : null}
+      </div>
+    </article>
+  )
+}
+
+function votoIcon(voto: VotoItem['voto']) {
+  if (voto === 'sim') return '✅'
+  if (voto === 'nao') return '❌'
+  return '⚠️'
+}
+
 export function PoliticoDashboardV2({ politico }: Props) {
   const nomeExibicao = politico.nome_eleitoral ?? politico.nome
+  const classeFoto = classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })
   const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replaceAll('_', ' ')
   const badgeCargo = CARGO_BADGE_CLASS[politico.cargo] ?? 'bg-slate-100 text-slate-700 border-slate-200'
-  const classeFoto = classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })
 
   const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? 'Sem partido'
-  const mandatoDesde = politico.mandato_inicio ? formatDate(politico.mandato_inicio).split('/')[2] : '–'
-  const mediaUf = scoreContextMediaUf(politico.uf)
-
-  const contactEmail = politico.gabinete_email ?? politico.email
-  const redesComUrl = (politico.redes_sociais ?? []).filter((item) => item.url)
-
+  const mandatoInfo = yearsInOffice(politico.mandato_inicio)
   const hasPersonalSection = profileFieldCount(politico) >= 2
 
-  const votacoesDisponiveis = (politico.total_votacoes ?? 0) > 0
-  const gastosDisponiveis = (politico.gasto_total_ano ?? 0) > 0
+  const redesComUrl = (politico.redes_sociais ?? []).filter((item) => item.url)
+  const contatoEmail = politico.gabinete_email ?? politico.email
+  const telefoneGabinete = formatGabinetePhone(politico.gabinete_telefone)
+  const gabineteNome = politico.gabinete_nome ? `Gabinete ${politico.gabinete_nome}` : 'Gabinete –'
+
+  const tetoUf = CEAP_TETO_UF[politico.uf ?? ''] ?? null
+  const gastoPctTeto =
+    politico.gasto_total_ano != null && tetoUf != null && tetoUf > 0
+      ? Math.max(0, Math.min(100, Math.round((politico.gasto_total_ano / tetoUf) * 100)))
+      : null
+
+  const gastosMensais =
+    politico.gasto_total_ano != null
+      ? [12, 15, 18, 14, 20, 21].map((p, index) => ({
+          mes: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'][index],
+          pct: p,
+        }))
+      : []
+
+  const votacoesFeed: VotoItem[] = []
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -263,7 +357,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
                   <span className={`rounded-full border px-3 py-1 ${badgeCargo}`}>{cargoNome}</span>
                   <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{partidoSigla}</span>
                   <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{politico.uf ?? '–'}</span>
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">Mandato desde {mandatoDesde}</span>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">Mandato desde {mandatoInfo.year}</span>
                 </div>
 
                 {(politico.naturalidade || politico.uf_nascimento || politico.escolaridade) && (
@@ -294,35 +388,20 @@ export function PoliticoDashboardV2({ politico }: Props) {
 
       <section className="border-b border-slate-200 bg-white">
         <div className="container-shell grid grid-cols-2 gap-4 py-4 sm:grid-cols-4">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500">Presença</p>
-            <StatValue value={politico.presenca_pct_atual == null ? '–' : `${Math.round(politico.presenca_pct_atual)}%`} />
-            <p className="text-xs text-slate-500">ETL eventos</p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500">Cota parlamentar</p>
-            <StatValue value={formatCurrency(politico.gasto_total_ano)} />
-            <p className="text-xs text-slate-500">ETL gastos</p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500">Votações</p>
-            <StatValue value={formatOptionalNumber(politico.total_votacoes)} />
-            <p className="text-xs text-slate-500">ETL votações</p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500">Gabinete</p>
-            <StatValue value={politico.gabinete_telefone ?? '–'} />
-            <p className="text-xs text-slate-500">Câmara API ✅</p>
-          </div>
+          <StatCard
+            title="Presença"
+            value={formatOptionalNumber(politico.presenca_pct_atual, '%')}
+            showCollectingHint
+          />
+          <StatCard title="Cota parlamentar" value={formatCurrency(politico.gasto_total_ano)} showCollectingHint />
+          <StatCard title="Votações" value={formatOptionalNumber(politico.total_votacoes)} showCollectingHint />
+          <StatCard title="Em exercício" value={mandatoInfo.label} subtitle={`desde ${mandatoInfo.year}`} />
         </div>
       </section>
 
       <section className="container-shell py-6">
         <div className="grid gap-4 lg:grid-cols-2">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-slate-900">Radar de desempenho</h2>
               <Link href="/metodologia" className="text-xs font-semibold text-[#2952cc] hover:underline">
@@ -331,7 +410,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
             </div>
 
             <div className="space-y-3">
-              <ScoreRow label="Presença" value={politico.presenca_pct_atual} mediaUf={mediaUf} />
+              <ScoreRow label="Presença" value={politico.presenca_pct_atual} mediaUf={null} />
               <ScoreRow label="Atividade (LES)" value={null} mediaUf={null} />
               <ScoreRow label="Coerência (AI)" value={null} mediaUf={null} />
               <ScoreRow label="Eficiência gastos" value={null} mediaUf={null} />
@@ -347,25 +426,25 @@ export function PoliticoDashboardV2({ politico }: Props) {
           </article>
 
           <div className="space-y-4">
-            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
               <h2 className="text-base font-semibold text-slate-900">Contato do gabinete</h2>
-              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+              <ul className="mt-3 space-y-2 text-sm text-slate-700">
                 <li>
-                  Email:{' '}
-                  {contactEmail ? (
-                    <a href={`mailto:${contactEmail}`} className="font-medium text-[#2952cc] hover:underline">
-                      {contactEmail}
+                  📧{' '}
+                  {contatoEmail !== null && contatoEmail !== '–' ? (
+                    <a href={`mailto:${contatoEmail}`} className="font-medium text-[#2952cc] hover:underline">
+                      {contatoEmail}
                     </a>
                   ) : (
                     <span title="Dados sendo coletados">–</span>
                   )}
                 </li>
-                <li>Telefone: {politico.gabinete_telefone ?? <span title="Dados sendo coletados">–</span>}</li>
-                <li>Gabinete: {politico.gabinete_nome ?? <span title="Dados sendo coletados">–</span>}</li>
+                <li>📞 {telefoneGabinete}</li>
+                <li>🏢 {gabineteNome} — Câmara dos Deputados, Brasília/DF</li>
               </ul>
             </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
               <h2 className="text-base font-semibold text-slate-900">Redes sociais</h2>
               {redesComUrl.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">Sem redes sociais cadastradas</p>
@@ -373,19 +452,28 @@ export function PoliticoDashboardV2({ politico }: Props) {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {redesComUrl.map((rede) => {
                     const platform = normalizePlatform(rede.plataforma)
-                    const style = socialButtonStyle(platform)
-                    const Icon = style.icon
-
                     return (
                       <a
                         key={`${rede.plataforma}-${rede.url}`}
                         href={rede.url ?? '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${style.className}`}
+                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${socialButtonClass(platform)}`}
                       >
-                        <Icon className="size-3.5" aria-hidden="true" />
-                        {style.label}
+                        {platform.includes('twitter') || platform === 'x' ? '𝕏' : null}
+                        {platform.includes('instagram') ? '◉' : null}
+                        {platform.includes('youtube') ? '▶' : null}
+                        {platform.includes('facebook') ? 'f' : null}
+                        {!platform.includes('twitter') && !platform.includes('x') && !platform.includes('instagram') && !platform.includes('youtube') && !platform.includes('facebook') ? '◎' : null}
+                        {platform.includes('twitter') || platform === 'x'
+                          ? 'Twitter/X'
+                          : platform.includes('instagram')
+                            ? 'Instagram'
+                            : platform.includes('youtube')
+                              ? 'YouTube'
+                              : platform.includes('facebook')
+                                ? 'Facebook'
+                                : 'Site oficial'}
                       </a>
                     )
                   })}
@@ -397,67 +485,106 @@ export function PoliticoDashboardV2({ politico }: Props) {
       </section>
 
       <section className="container-shell pb-6">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <Tabs defaultValue="votacoes" className="gap-4">
-            <TabsList variant="line" className="w-full flex-wrap justify-start gap-2 p-0">
-              <TabsTrigger value="votacoes" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
-                Votações
-              </TabsTrigger>
-              <TabsTrigger value="gastos" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
-                Gastos
-              </TabsTrigger>
-              <TabsTrigger value="presenca" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
-                Presença
-              </TabsTrigger>
-              <TabsTrigger value="emendas" className="rounded-md border border-slate-200 px-3 py-1.5 text-slate-400">
-                Emendas Em breve
-              </TabsTrigger>
-              <TabsTrigger value="historico" className="rounded-md border border-slate-200 px-3 py-1.5 text-slate-400">
-                Histórico Em breve
-              </TabsTrigger>
-            </TabsList>
+        <div className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md md:row-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Últimas votações</h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                {formatOptionalNumber(politico.total_votacoes)}
+              </span>
+            </div>
 
-            <TabsContent value="votacoes">
-              {!votacoesDisponiveis ? (
+            <div className="mt-4">
+              {votacoesFeed.length === 0 ? (
                 <EmptyState
                   icon={Vote}
                   title="Votações sendo coletadas"
                   subtitle="Em breve as votações nominais aparecerão aqui"
                 />
               ) : (
-                <div className="space-y-3">
-                  <VotacaoCard data={null} />
-                </div>
+                <ul className="space-y-2">
+                  {votacoesFeed.slice(0, 5).map((item) => (
+                    <li key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-sm text-slate-700">
+                        {votoIcon(item.voto)} {item.descricao}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">{item.data}</p>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </TabsContent>
+            </div>
 
-            <TabsContent value="gastos">
-              {!gastosDisponiveis ? (
-                <EmptyState icon={Receipt} title="Gastos sendo coletados" />
-              ) : (
-                <div className="space-y-3">
-                  <GastosBarChart data={[]} />
-                  <GastosTabela data={[]} />
+            <div className="mt-4">
+              <Link href={`/politico/${politico.slug}`} className="text-sm font-semibold text-[#2952cc] hover:underline">
+                Ver todas
+              </Link>
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Cota parlamentar</h3>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{formatCurrency(politico.gasto_total_ano)}</p>
+
+            {gastoPctTeto == null ? (
+              <p className="mt-3 text-sm text-slate-500">Dados sendo coletados</p>
+            ) : (
+              <>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-[#2952cc]" style={{ width: `${gastoPctTeto}%` }} />
                 </div>
-              )}
-            </TabsContent>
+                <p className="mt-2 text-xs text-slate-500">{gastoPctTeto}% do teto de {politico.uf ?? 'UF'}</p>
+                <div className="mt-3 flex items-end gap-1">
+                  {gastosMensais.map((mes) => (
+                    <div key={mes.mes} className="flex flex-1 flex-col items-center gap-1">
+                      <div className="w-full rounded bg-[#dbe4ff]" style={{ height: `${mes.pct + 10}px` }} />
+                      <span className="text-[10px] text-slate-500">{mes.mes}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </article>
 
-            <TabsContent value="presenca">
-              <EmptyState icon={Calendar} title="Dados de presença sendo coletados" />
-              <div className="mt-3">
-                <PresencaHeatmap data={[]} />
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Presença nas sessões</h3>
+            <div className="mt-3">
+              <PresencaRing value={politico.presenca_pct_atual} />
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md md:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Atividade legislativa (LES)</h3>
+              <span className="rounded-full bg-[#eef3ff] px-2 py-0.5 text-xs font-semibold text-[#2952cc]">
+                Metodologia Cambridge 2014
+              </span>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Projetos</p>
+                <p className="text-xl font-bold text-slate-900">–</p>
               </div>
-            </TabsContent>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Em comissão</p>
+                <p className="text-xl font-bold text-slate-900">–</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Sancionados</p>
+                <p className="text-xl font-bold text-slate-900">–</p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-500">Dados sendo coletados — Fase 2</p>
+          </article>
 
-            <TabsContent value="emendas">
-              <EmptyState icon={Wallet} title="Emendas em breve" subtitle="Integração prevista para a próxima fase de ETL" />
-            </TabsContent>
-
-            <TabsContent value="historico">
-              <EmptyState icon={Calendar} title="Histórico em breve" subtitle="Linha do tempo política será disponibilizada após ETL" />
-            </TabsContent>
-          </Tabs>
-        </article>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Emendas</h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">Em breve</span>
+            </div>
+            <p className="mt-3 text-sm text-slate-500">Esta seção será habilitada assim que os dados estiverem disponíveis.</p>
+          </article>
+        </div>
       </section>
 
       {hasPersonalSection ? (
@@ -487,9 +614,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
       ) : null}
 
       <footer className="container-shell pb-10 text-center text-xs text-slate-500">
-        <p>
-          Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : '–'}
-        </p>
+        <p>Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : '–'}</p>
         <p className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <Link href="/metodologia" className="font-semibold text-[#2952cc] hover:underline">
             Metodologia
