@@ -39,12 +39,12 @@ export function SearchBar() {
           value={term}
           onChange={(event) => setTerm(event.target.value)}
           placeholder="Buscar político por nome..."
-          className="h-12 w-full rounded-lg border border-white/30 bg-white pl-11 pr-4 text-[15px] text-slate-900 placeholder:text-slate-500 focus:border-[#2952cc] focus:outline-none focus:ring-2 focus:ring-[#2952cc]/30"
+          className="h-12 w-full rounded-lg border border-slate-300 bg-white pl-11 pr-4 text-[15px] text-slate-900 placeholder:text-slate-500 focus:border-[#2952cc] focus:outline-none focus:ring-2 focus:ring-[#2952cc]/30"
         />
       </div>
       <button
         type="submit"
-        className="h-12 rounded-lg bg-[#2952cc] px-7 text-sm font-semibold text-white transition hover:brightness-110"
+        className="h-12 rounded-lg bg-[#2952cc] px-7 text-sm font-semibold text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] transition hover:bg-[#2349bb]"
       >
         Buscar
       </button>

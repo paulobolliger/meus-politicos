@@ -33,11 +33,11 @@ export function CepSearch() {
         value={cep}
         onChange={(event) => setCep(event.target.value)}
         placeholder="Digite seu CEP"
-        className="h-12 w-full rounded-lg border border-white/30 bg-white px-4 text-[15px] text-slate-900 placeholder:text-slate-500 focus:border-[#2952cc] focus:outline-none focus:ring-2 focus:ring-[#2952cc]/30"
+        className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-[15px] text-slate-900 placeholder:text-slate-500 focus:border-[#2952cc] focus:outline-none focus:ring-2 focus:ring-[#2952cc]/30"
       />
       <button
         type="submit"
-        className="h-12 rounded-lg bg-[#2952cc] px-7 text-sm font-semibold text-white transition hover:brightness-110"
+        className="h-12 rounded-lg bg-[#2952cc] px-7 text-sm font-semibold text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] transition hover:bg-[#2349bb]"
       >
         Ver meus representantes
       </button>

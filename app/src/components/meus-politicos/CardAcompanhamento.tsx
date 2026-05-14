@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
+
 type Partido = {
   sigla: string | null
 } | null
@@ -57,7 +59,7 @@ export function CardAcompanhamento({ politico }: { politico: PoliticoAcompanhado
               src={politico.foto_url}
               alt={`Foto de ${nome}`}
               fill
-              className="object-cover"
+              className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })}`}
               sizes="56px"
               unoptimized
             />

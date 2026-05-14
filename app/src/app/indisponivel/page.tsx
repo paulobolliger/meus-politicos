@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 export default function UnavailablePage() {
   return (
     <SystemStateLayout
-      eyebrow="Disponibilidade"
+      eyebrow="Disponibilidade da rede"
       icon={WifiOff}
       title="Não foi possível conectar com segurança agora."
-      description="A conexão pode estar offline, instável ou uma fonte pública pode estar temporariamente indisponível. Verifique sua rede e tente novamente."
+      description="A conexão pode estar offline, instável ou uma fonte pública pode estar temporariamente indisponível. Verifique sua rede e tente novamente em instantes."
       actions={[
         { href: "/", label: "Voltar para Home", variant: "primary" },
         { href: "/busca", label: "Acessar busca pública" },

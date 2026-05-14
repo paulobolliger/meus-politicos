@@ -42,13 +42,14 @@ export function SystemStateLayout({
 }: SystemStateLayoutProps) {
   return (
     <main className={cn("min-h-screen bg-linear-to-b from-slate-50 to-white", className)}>
-      <section className="relative overflow-hidden border-b border-slate-200">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-linear-to-b from-[#eef3ff] to-transparent" />
-        <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#2952cc]/8 blur-3xl" />
+      <section className="relative overflow-hidden border-b border-slate-200/80">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff]/90 via-white to-transparent" />
+        <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-[#2952cc]/8 blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-24 h-48 w-48 rounded-full bg-slate-900/5 blur-3xl" />
 
-        <div className="container-shell relative py-14 sm:py-20 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-[#dbe4ff] bg-white text-[#2952cc] shadow-[0_18px_42px_-32px_rgba(15,23,42,0.45)] sm:size-16">
+        <div className="container-shell relative py-14 sm:py-18 lg:py-24">
+          <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-[#dbe4ff] bg-white text-[#2952cc] shadow-[0_18px_42px_-32px_rgba(15,23,42,0.45)] sm:size-18">
               <Icon className="size-7 sm:size-8" aria-hidden="true" />
             </div>
 
@@ -72,13 +73,13 @@ export function SystemStateLayout({
             </p>
 
             {actions.length > 0 ? (
-              <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <div className="mt-8 flex w-full max-w-2xl flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:justify-center">
                 {actions.map((action) => (
                   <Link
                     key={`${action.href}-${action.label}`}
                     href={action.href}
                     className={cn(
-                      "inline-flex h-11 items-center justify-center rounded-lg border px-5 text-sm font-semibold transition-all focus-visible:ring-3 focus-visible:ring-[#2952cc]/20 focus-visible:outline-none",
+                      "inline-flex h-11 items-center justify-center rounded-xl border px-5 text-sm font-semibold transition-all focus-visible:ring-3 focus-visible:ring-[#2952cc]/20 focus-visible:outline-none",
                       actionClasses[action.variant ?? "secondary"]
                     )}
                   >
@@ -93,12 +94,14 @@ export function SystemStateLayout({
 
       {children ? (
         <section className="container-shell py-10 sm:py-14">
-          <div className="mx-auto max-w-4xl">{children}</div>
+          <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            {children}
+          </div>
         </section>
       ) : null}
 
       {footer ? (
-        <section className="border-t border-slate-200 bg-slate-50">
+        <section className="border-t border-slate-200 bg-slate-50/80">
           <div className="container-shell py-8 sm:py-10">{footer}</div>
         </section>
       ) : null}

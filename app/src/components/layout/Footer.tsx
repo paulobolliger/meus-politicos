@@ -22,6 +22,9 @@ const footerSections = [
     title: "Projeto",
     links: [
       { href: "/", label: "Visão geral" },
+      { href: "/sobre", label: "Sobre" },
+      { href: "/manifesto", label: "Manifesto" },
+      { href: "/como-funciona", label: "Como funciona" },
       { href: "/cadastro", label: "Criar conta" },
       { href: "/login", label: "Entrar" },
     ],

@@ -15,7 +15,10 @@ export default function MaintenancePage() {
       icon={ShieldCheck}
       title="Estamos atualizando a infraestrutura da plataforma."
       description="A manutenção ajuda a preservar estabilidade, segurança e qualidade dos dados. O acesso será restabelecido assim que a operação for concluída."
-      actions={[{ href: "/", label: "Voltar para Home", variant: "primary" }]}
+      actions={[
+        { href: "/", label: "Voltar para Home", variant: "primary" },
+        { href: "/busca", label: "Explorar a busca" },
+      ]}
     />
   )
 }

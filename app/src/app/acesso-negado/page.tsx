@@ -13,8 +13,8 @@ export default function AccessDeniedPage() {
     <SystemStateLayout
       eyebrow="Controle de acesso"
       icon={LockKeyhole}
-      title="Você não tem acesso a esta área."
-      description="Algumas funcionalidades exigem autenticação ou permissões específicas. Entre com uma conta autorizada para continuar."
+      title="Você não tem permissão para acessar esta área."
+      description="Algumas funcionalidades exigem autenticação ou permissões específicas. Entre com uma conta autorizada para continuar, ou volte para uma área pública da plataforma."
       actions={[
         { href: "/login", label: "Entrar na conta", variant: "primary" },
         { href: "/", label: "Voltar para Home" },

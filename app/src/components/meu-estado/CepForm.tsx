@@ -8,26 +8,28 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 type CepFormProps = {
-  defaultCep?: string
+  defaultLocalidade?: string
 }
 
-export function CepForm({ defaultCep = '' }: CepFormProps) {
+export function CepForm({ defaultLocalidade = '' }: CepFormProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [cep, setCep] = useState(defaultCep)
+  const [localidade, setLocalidade] = useState(defaultLocalidade)
   const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'error'>('idle')
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const cepNumerico = cep.replace(/\D/g, '').slice(0, 8)
+    const valor = localidade.trim()
     const params = new URLSearchParams(searchParams.toString())
 
-    if (!cepNumerico) {
+    if (!valor) {
+      params.delete('local')
       params.delete('cep')
     } else {
-      params.set('cep', cepNumerico)
+      params.delete('cep')
+      params.set('local', valor)
     }
 
     const query = params.toString()
@@ -70,9 +72,9 @@ export function CepForm({ defaultCep = '' }: CepFormProps) {
         return
       }
 
-      setCep(cepEncontrado)
+      setLocalidade(cepEncontrado)
       setGeoStatus('idle')
-      router.push(`/meu-estado?cep=${cepEncontrado}`)
+      router.push(`/meu-estado?local=${cepEncontrado}`)
     } catch {
       setGeoStatus('error')
     }
@@ -82,14 +84,14 @@ export function CepForm({ defaultCep = '' }: CepFormProps) {
     <form onSubmit={onSubmit} className="space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
-          value={cep}
-          onChange={(event) => setCep(event.target.value)}
-          inputMode="numeric"
-          placeholder="Digite seu CEP"
+          value={localidade}
+          onChange={(event) => setLocalidade(event.target.value)}
+          type="search"
+          placeholder="Digite sua cidade ou CEP"
           className="h-11 border-white/30 bg-white text-slate-900 placeholder:text-slate-500 sm:h-12 sm:text-base"
         />
         <Button type="submit" className="h-11 bg-[#2952cc] text-white hover:bg-[#2347b2] sm:h-12">
-          Ver representantes
+          Buscar representantes
         </Button>
       </div>
       <Button
@@ -115,7 +117,7 @@ export function CepForm({ defaultCep = '' }: CepFormProps) {
       {geoStatus === 'error' ? (
         <p className="text-sm text-red-300">Não foi possível detectar</p>
       ) : null}
-      <p className="text-sm text-white/75">🔒 Seu CEP nao e armazenado</p>
+      <p className="text-sm text-white/75">🔒 Sua localidade nao e armazenada</p>
     </form>
   )
 }

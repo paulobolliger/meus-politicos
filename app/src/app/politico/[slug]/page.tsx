@@ -11,6 +11,7 @@ import { AcompanharButton } from '@/components/politico/AcompanharButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/types'
 
@@ -310,7 +311,7 @@ export default async function PoliticoPage({ params }: PageProps) {
                       src={politico.foto_url ?? ''}
                       alt={`Foto de ${nomeExibicao}`}
                       fill
-                      className="object-cover"
+                      className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug })}`}
                       unoptimized
                     />
                   ) : (

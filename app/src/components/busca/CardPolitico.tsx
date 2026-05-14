@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 import { Badge } from '@/components/ui/badge'
+import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
 import { cn } from '@/lib/utils'
 
 export type PoliticoCard = {
@@ -94,7 +95,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
               src={politico.foto_url}
               alt={`Foto de ${nomeExibicao}`}
               fill
-              className="object-cover"
+              className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })}`}
               unoptimized
             />
           ) : (

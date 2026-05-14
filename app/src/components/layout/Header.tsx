@@ -19,23 +19,16 @@ import {
 const navLinks = [
   { href: "/busca", label: "Busca pública" },
   { href: "/meu-estado", label: "Meu estado" },
-  { href: "/termos", label: "Transparência" },
+  { href: "/como-funciona", label: "Como funciona" },
+  { href: "/manifesto", label: "Manifesto" },
 ]
 
-const authLinks = [
-  {
-    href: "/login",
-    label: "Entrar",
-    className:
-      "inline-flex h-10 items-center justify-center rounded-lg border border-slate-200/90 px-4 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950",
-  },
-  {
-    href: "/cadastrar",
-    label: "Cadastrar",
-    className:
-      "inline-flex h-10 items-center justify-center rounded-lg bg-[#2952cc] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-16px_rgba(41,82,204,0.95)] transition-all hover:bg-[#2349bb] hover:shadow-[0_14px_28px_-16px_rgba(41,82,204,0.95)]",
-  },
-]
+const authLink = {
+  href: "/login",
+  label: "Acessar conta",
+  className:
+    "inline-flex h-10 items-center justify-center rounded-lg bg-[#2952cc] px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-16px_rgba(41,82,204,0.95)] transition-all hover:bg-[#2349bb] hover:shadow-[0_14px_28px_-16px_rgba(41,82,204,0.95)]",
+}
 
 function isLinkActive(pathname: string, href: string) {
   if (href === "/") {
@@ -147,13 +140,9 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2.5">
-            {authLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={link.className}>
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          <Link href={authLink.href} className={authLink.className}>
+            {authLink.label}
+          </Link>
         </div>
 
         <Sheet>
@@ -192,11 +181,9 @@ export function Header() {
               </nav>
 
               <div className="mt-8 flex flex-col gap-3">
-                {authLinks.map((link) => (
-                  <SheetClose key={link.href} render={<Link href={link.href} className={link.className} />}>
-                    {link.label}
-                  </SheetClose>
-                ))}
+                <SheetClose render={<Link href={authLink.href} className={authLink.className} />}>
+                  {authLink.label}
+                </SheetClose>
               </div>
 
               <div className="mt-auto border-t border-slate-200/80 pt-5 text-xs leading-5 text-slate-500">

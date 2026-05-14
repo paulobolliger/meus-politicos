@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { Pool } from 'pg'
+import { BarChart3, MapPin, Users2 } from 'lucide-react'
 
 import { CardPolitico, type PoliticoCard } from '@/components/busca/CardPolitico'
 import { CepForm } from '@/components/meu-estado/CepForm'
 import { CardRepresentante } from '@/components/meu-estado/CardRepresentante'
+import { MapaBrasilRegioes } from '@/components/meu-estado/MapaBrasilRegioes'
 import { SecaoRepresentantes } from '@/components/meu-estado/SecaoRepresentantes'
 import { createClient } from '@/lib/supabase/server'
 
@@ -20,6 +22,20 @@ type ViaCepResponse = {
   erro?: boolean
 }
 
+type NominatimResponse = {
+  display_name?: string
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    municipality?: string
+    county?: string
+    state?: string
+    state_code?: string
+    country_code?: string
+  }
+}
+
 type DeputadoPg = {
   id: string
   slug: string
@@ -32,10 +48,166 @@ type DeputadoPg = {
   sigla: string | null
 }
 
+const REGIAO_POR_UF: Record<string, string> = {
+  AC: 'Norte',
+  AP: 'Norte',
+  AM: 'Norte',
+  PA: 'Norte',
+  RO: 'Norte',
+  RR: 'Norte',
+  TO: 'Norte',
+  AL: 'Nordeste',
+  BA: 'Nordeste',
+  CE: 'Nordeste',
+  MA: 'Nordeste',
+  PB: 'Nordeste',
+  PE: 'Nordeste',
+  PI: 'Nordeste',
+  RN: 'Nordeste',
+  SE: 'Nordeste',
+  DF: 'Centro-Oeste',
+  GO: 'Centro-Oeste',
+  MT: 'Centro-Oeste',
+  MS: 'Centro-Oeste',
+  ES: 'Sudeste',
+  MG: 'Sudeste',
+  RJ: 'Sudeste',
+  SP: 'Sudeste',
+  PR: 'Sul',
+  RS: 'Sul',
+  SC: 'Sul',
+}
+
+const UF_POR_ESTADO: Record<string, string> = {
+  acre: 'AC',
+  alagoas: 'AL',
+  amapa: 'AP',
+  amazonas: 'AM',
+  bahia: 'BA',
+  ceara: 'CE',
+  'distrito federal': 'DF',
+  'espirito santo': 'ES',
+  goias: 'GO',
+  maranhao: 'MA',
+  'mato grosso': 'MT',
+  'mato grosso do sul': 'MS',
+  'minas gerais': 'MG',
+  para: 'PA',
+  paraiba: 'PB',
+  parana: 'PR',
+  pernambuco: 'PE',
+  piaui: 'PI',
+  'rio de janeiro': 'RJ',
+  'rio grande do norte': 'RN',
+  'rio grande do sul': 'RS',
+  rondonia: 'RO',
+  roraima: 'RR',
+  'santa catarina': 'SC',
+  'sao paulo': 'SP',
+  sergipe: 'SE',
+  tocantins: 'TO',
+}
+
 function parseTexto(valor?: string | string[]) {
   if (!valor) return ''
   const texto = Array.isArray(valor) ? valor[0] : valor
   return texto.trim()
+}
+
+function normalizarTexto(texto: string) {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function nomeParaUf(nomeEstado?: string, stateCode?: string) {
+  if (stateCode) {
+    return stateCode.toUpperCase()
+  }
+
+  if (!nomeEstado) {
+    return ''
+  }
+
+  return UF_POR_ESTADO[normalizarTexto(nomeEstado)] ?? ''
+}
+
+async function resolverLocalidade(entrada: string) {
+  const valor = entrada.trim()
+  const somenteNumeros = valor.replace(/\D/g, '')
+
+  if (!valor) {
+    return { cidade: '', uf: '', ibge: '', erro: 'Digite uma cidade ou um CEP.' }
+  }
+
+  if (somenteNumeros.length === 8) {
+    const viaCep = await fetch(`https://viacep.com.br/ws/${somenteNumeros}/json/`, {
+      cache: 'no-store',
+    })
+
+    const local = (await viaCep.json()) as ViaCepResponse
+
+    if (!viaCep.ok || local.erro) {
+      return { cidade: '', uf: '', ibge: '', erro: 'CEP invalido. Tente novamente.' }
+    }
+
+    const uf = local.uf ?? ''
+
+    if (!uf) {
+      return { cidade: '', uf: '', ibge: '', erro: 'Nao foi possivel identificar a UF para este CEP.' }
+    }
+
+    return {
+      cidade: local.localidade ?? '',
+      uf,
+      ibge: local.ibge ?? '',
+      erro: '',
+    }
+  }
+
+  const buscaCidade = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(valor)}&countrycodes=br&format=jsonv2&addressdetails=1&limit=5`,
+    {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  )
+
+  if (!buscaCidade.ok) {
+    return { cidade: '', uf: '', ibge: '', erro: 'Nao foi possivel buscar a cidade. Tente novamente.' }
+  }
+
+  const resultados = (await buscaCidade.json()) as NominatimResponse[]
+  const melhorResultado = resultados.find((item) => item.address?.state) ?? resultados[0]
+
+  const uf = nomeParaUf(melhorResultado?.address?.state, melhorResultado?.address?.state_code)
+  const cidade =
+    melhorResultado?.address?.city ??
+    melhorResultado?.address?.town ??
+    melhorResultado?.address?.village ??
+    melhorResultado?.address?.municipality ??
+    melhorResultado?.address?.county ??
+    valor
+
+  if (!uf) {
+    return {
+      cidade: '',
+      uf: '',
+      ibge: '',
+      erro: 'Nao encontramos a UF dessa cidade. Tente CEP ou nome completo da cidade.',
+    }
+  }
+
+  return {
+    cidade,
+    uf,
+    ibge: '',
+    erro: '',
+  }
 }
 
 async function buscarDeputadosViaPostgres(uf: string): Promise<PoliticoCard[]> {
@@ -100,7 +272,7 @@ async function buscarDeputadosViaPostgres(uf: string): Promise<PoliticoCard[]> {
 
 export default async function MeuEstadoPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const cep = parseTexto(params.cep).replace(/\D/g, '').slice(0, 8)
+  const localidade = parseTexto(params.local || params.cep)
 
   let cidade = ''
   let uf = ''
@@ -108,28 +280,12 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
   let erroCep = ''
   let deputados: PoliticoCard[] = []
 
-  if (cep) {
-    if (cep.length !== 8) {
-      erroCep = 'CEP invalido. Digite os 8 numeros.'
-    } else {
-      const viaCep = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
-        cache: 'no-store',
-      })
-
-      const local = (await viaCep.json()) as ViaCepResponse
-
-      if (!viaCep.ok || local.erro) {
-        erroCep = 'CEP invalido. Tente novamente.'
-      } else {
-        cidade = local.localidade ?? ''
-        uf = local.uf ?? ''
-        ibge = local.ibge ?? ''
-
-        if (!uf) {
-          erroCep = 'Nao foi possivel identificar a UF para este CEP.'
-        }
-      }
-    }
+  if (localidade) {
+    const resultado = await resolverLocalidade(localidade)
+    cidade = resultado.cidade
+    uf = resultado.uf
+    ibge = resultado.ibge
+    erroCep = resultado.erro
   }
 
   if (uf) {
@@ -161,31 +317,60 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
     }
   }
 
-  const mostrarSecoes = Boolean(cep && !erroCep && uf)
+  const mostrarSecoes = Boolean(localidade && !erroCep && uf)
   const deputadosPreview = deputados.slice(0, 5)
+  const regiaoAtual = uf ? REGIAO_POR_UF[uf] ?? '' : ''
 
   return (
     <main className="bg-[#f5f6fa] pb-12">
       <section className="bg-[#1a2b5e] text-white">
         <div className="container-shell py-10 sm:py-12">
-          <div className="mx-auto max-w-3xl space-y-5">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Quem me representa?</h1>
-            <p className="text-base text-white/80 sm:text-lg">
-              Digite seu CEP e veja todos os seus representantes politicos
-            </p>
-
-            <CepForm defaultCep={cep} />
-
-            {erroCep ? (
-              <p className="rounded-lg bg-[#ffd8d8] px-3 py-2 text-sm text-[#7b1d1d]">{erroCep}</p>
-            ) : null}
-
-            {mostrarSecoes ? (
-              <div className="rounded-lg border border-white/25 bg-white/15 px-3 py-2 text-sm text-white">
-                📍 {cidade} · {uf}
-                {ibge ? ` (IBGE ${ibge})` : ''}
+          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/70">
+                <Users2 className="size-3.5" aria-hidden="true" />
+                Quem me representa?
               </div>
-            ) : null}
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Digite sua cidade ou CEP e descubra seus representantes.</h1>
+              <p className="max-w-xl text-base leading-7 text-white/78 sm:text-lg">
+                Comece pela cidade se quiser pensar como cidadão. O sistema transforma isso em UF, mapa e representantes em poucos segundos.
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                  <MapPin className="size-5 text-[#9fb7ff]" aria-hidden="true" />
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">UF detectada</p>
+                  <p className="mt-1 text-2xl font-bold tracking-tight">{uf || '—'}</p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                  <BarChart3 className="size-5 text-[#9fb7ff]" aria-hidden="true" />
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">Deputados</p>
+                  <p className="mt-1 text-2xl font-bold tracking-tight">{deputados.length || '—'}</p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                  <Users2 className="size-5 text-[#9fb7ff]" aria-hidden="true" />
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">Região</p>
+                  <p className="mt-1 text-lg font-bold tracking-tight">{regiaoAtual || '—'}</p>
+                </div>
+              </div>
+
+              <CepForm defaultLocalidade={localidade} />
+
+              {erroCep ? (
+                <p className="rounded-lg bg-[#ffd8d8] px-3 py-2 text-sm text-[#7b1d1d]">{erroCep}</p>
+              ) : null}
+
+              {mostrarSecoes ? (
+                <div className="rounded-2xl border border-white/25 bg-white/15 px-4 py-3 text-sm text-white backdrop-blur">
+                  📍 {cidade} · {uf}
+                  {ibge ? ` (IBGE ${ibge})` : ''}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="lg:pt-2">
+              <MapaBrasilRegioes ufAtual={uf} />
+            </div>
           </div>
         </div>
       </section>

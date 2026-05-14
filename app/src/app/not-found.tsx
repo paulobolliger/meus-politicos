@@ -9,7 +9,7 @@ export default function NotFound() {
       statusCode="404"
       icon={Compass}
       title="Não encontramos a página que você está procurando."
-      description="O endereço pode ter sido alterado, removido ou digitado com algum detalhe incorreto. Você pode retornar para uma área principal da plataforma."
+      description="O endereço pode ter sido alterado, removido ou digitado com algum detalhe incorreto. Você pode retornar a uma área principal da plataforma sem perder o contexto da navegação."
       actions={[
         { href: "/", label: "Voltar para Home", variant: "primary" },
         { href: "/busca", label: "Buscar políticos" },

@@ -4,7 +4,213 @@
 
 ---
 
-## 1. Visão estratégica
+## 0. Panorama técnico — arquitetura de dados completa
+
+> *Visão de cima de onde vem cada dado, como as fontes se conversam e quais scripts ETL são necessários.*
+
+---
+
+### O problema central: um político, múltiplos IDs
+
+O mesmo político existe em 4 sistemas diferentes com IDs incompatíveis:
+
+```
+Câmara:  id_camara = 204554
+Senado:  id_senado = 5987
+TSE:     id_tse = "0123456"
+CPF      = âncora universal (só no ETL — nunca persiste no banco)
+```
+
+A tabela `politicos` é o **hub central** que unifica tudo via UUID interno.
+
+```
+CPF (só no ETL — nunca persiste no banco público)
+    ↓
+MATCH Câmara + TSE + Senado
+    ↓
+politicos.id (UUID interno)
+    │
+    ├─ politicos.id_camara  → chave para endpoints da Câmara
+    ├─ politicos.id_senado  → chave para endpoints do Senado
+    ├─ politicos.id_tse     → chave para candidaturas e bens no TSE
+    └─ politicos.slug       → chave pública da URL
+```
+
+---
+
+### Mapa completo: fonte → campo → tabela
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    API CÂMARA DOS DEPUTADOS                 │
+│                  dadosabertos.camara.leg.br                  │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           ├─ GET /deputados/{id}
+           │   └─→ politicos (nome, foto, email, gabinete, sexo,
+           │                  naturalidade, escolaridade, slug)
+           │   └─→ partidos (sigla, nome)
+           │   └─→ redes_sociais (instagram, twitter, youtube)
+           │
+           ├─ GET /deputados/{id}/historico
+           │   └─→ politico_partidos (troca de partido + timestamp)
+           │
+           ├─ GET /deputados/{id}/despesas
+           │   └─→ gastos (CEAP: valor, categoria, fornecedor, CNPJ)
+           │
+           ├─ GET /deputados/{id}/votacoes + /votacoes/{id}/votos
+           │   └─→ votacoes (como votou: sim/não/abstenção)
+           │   └─→ feed_eventos (votação relevante)
+           │
+           ├─ GET /deputados/{id}/eventos
+           │   └─→ presenca (calculada: presente/ausente por sessão)
+           │
+           ├─ GET /deputados/{id}/discursos
+           │   └─→ discursos (resumo, tema, link)
+           │
+           └─ GET /deputados/{id}/mandatosExternos
+               └─→ candidaturas_historico (cargos anteriores)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                     API SENADO FEDERAL                      │
+│                   legis.senado.leg.br                        │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           ├─ /senadores/lista/atual
+           │   └─→ politicos (nome, partido, UF) + senadores
+           │   └─→ politico_ids (id_senado vinculado ao uuid)
+           │
+           ├─ /senadores/{id}/votacoes
+           │   └─→ votacoes (mesmo schema da Câmara)
+           │
+           ├─ /senadores/{id}/discursos
+           │   └─→ discursos
+           │
+           └─ /senadores/{id}/comissoes
+               └─→ senado_comissoes
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                          TSE                                │
+│               dadosabertos.tse.jus.br (CSV)                 │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           ├─ consulta_cand_{ano}.csv
+           │   └─→ candidatos (registro, número, situação)
+           │   └─→ candidaturas_historico (eleições desde 1994)
+           │   └─→ politico_ids (id_tse via CPF ← só no ETL)
+           │
+           ├─ bem_candidato_{ano}.csv
+           │   └─→ candidatos.bens_declarados (JSON)
+           │
+           └─ DivulgaCandContas (API)
+               └─→ politicos.foto_url (candidatos sem foto na Câmara)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│               PORTAL DA TRANSPARÊNCIA (CGU)                 │
+│           portaldatransparencia.gov.br/api-de-dados          │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           ├─ /emendas-parlamentares
+           │   └─→ emendas (valor, município beneficiado, objeto)
+           │
+           ├─ /transferencias-voluntarias
+           │   └─→ emendas (cruzamento com execução)
+           │
+           └─ /viagens (fase 2)
+               └─→ feed_eventos (viagem internacional do Presidente)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                           IBGE                              │
+│           servicodados.ibge.gov.br/api/v1/localidades        │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           └─ /municipios
+               └─→ municipios (5.570 com código IBGE)
+               └─→ chave de cruzamento com ViaCEP e TSE
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                          ViaCEP                             │
+│                    viacep.com.br/ws/                         │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           └─ /{cep}/json/
+               └─→ UF + código IBGE (em memória — nunca persiste)
+               └─→ "Quem me representa" → filtra politicos por UF
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                  DOU — DIÁRIO OFICIAL DA UNIÃO              │
+│                    inlabs.seges.gov.br                       │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           └─ XML diário por seção
+               └─→ feed_eventos Seção 1: decretos, MPs (fase 2)
+               └─→ feed_eventos Seção 2: nomeações/exonerações (fase 2)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                       SIOP / PPA                            │
+│              siop.planejamento.gov.br                        │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           └─ GraphQL + SOAP
+               └─→ perfil Presidente: metas PPA prometidas vs executadas
+               └─→ cruzamento com Portal da Transparência via código de ação (17 dígitos)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                    NOTÍCIAS / MÍDIA                         │
+│         Bing News · Agência Brasil · RSS portais             │
+└──────────┬──────────────────────────────────────────────────┘
+           │
+           └─→ feed_eventos tipo 'na_imprensa'
+               └─→ source_id = 'g1' | 'agencia_brasil' | 'bing_news'
+```
+
+---
+
+### Pipeline de cada script ETL
+
+```
+API / CSV
+  ↓ validar schema (JSON Schema)
+  ↓ normalizar (tipos, encoding UTF-8, datas UTC)
+  ↓ entity resolution (CPF → politico_id)
+  ↓ upsert no Supabase (ON CONFLICT → UPDATE)
+  ↓ registrar em coletas_log (status, registros, duração)
+  ↓ se erro → registrar + continuar (nunca travar tudo)
+```
+
+---
+
+### Scripts ETL — roadmap completo
+
+| Script | Fonte | Fase | Frequência |
+|---|---|---|---|
+| `collect_deputados.py` | Câmara | ✅ Feito | Semanal |
+| `collect_votacoes.py` | Câmara | MVP | Diário 6h |
+| `collect_gastos.py` | Câmara | MVP | Diário 6h |
+| `collect_presenca.py` | Câmara | MVP | Diário 6h |
+| `collect_discursos.py` | Câmara | MVP | Diário 6h30 |
+| `collect_municipios.py` | IBGE | MVP | Mensal |
+| `collect_candidatos.py` | TSE CSV | MVP | Por lote (ago/2026) |
+| `collect_emendas.py` | Portal Transparência | Fase 2 | Diário 7h |
+| `collect_senadores.py` | Senado | Fase 2 | Semanal |
+| `collect_votacoes_senado.py` | Senado | Fase 2 | Diário |
+| `collect_dou.py` | INLABS | Fase 2 | Diário 10h30 |
+| `collect_siop.py` | SIOP | Fase 2 | Semestral |
+| `collect_noticias.py` | Bing/RSS | Fase 2 | 4x/dia |
+| `collect_governadores.py` | TSE + SEPLAN estaduais | Fase 2 | Semanal |
+| `collect_dep_estaduais.py` | 27 assembleias | Fase 3 | Diário |
+| `collect_prefeitos.py` | TSE CSV | Fase 3 | Semanal |
+| `collect_vereadores.py` | TSE + câmaras municipais | Fase 4 | Semanal |
+
+---
 
 O Meus Políticos opera como **infraestrutura de dados cívicos**, não apenas como portal. Isso muda a arquitetura completamente.
 
@@ -2900,5 +3106,263 @@ O campo `ultimoStatus.nomeEleitoral` (ex: "NIKOLAS") é o nome que aparece na ur
 
 ---
 
-*meuspoliticos.com · data_source_master.md*
-*Atualizar sempre que uma nova fonte for adicionada ou uma decisão de arquitetura for tomada.*
+## 10. Fontes avançadas — cruzamento via CPF (Fase 2/3/4)
+
+> *Todas baseadas em dados públicos por lei (LAI + LGPD Art. 7º II e III + Decreto 8.777/2016). CPF é âncora universal — nunca exibido publicamente, usado apenas no ETL.*
+
+---
+
+### Fonte A — Receita Federal: QSA / CNPJ bulk
+
+| Campo | Valor |
+|---|---|
+| source_id | `receita_qsa` |
+| URL | `gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/cadastros/consultas/dados-publicos-cnpj` |
+| Formato | CSV compactado (ZIP) · layout de colunas fixo · encoding LATIN1 |
+| Volume | +20 GB compactado · +100 GB descompactado |
+| Frequência | Mensal |
+| Autenticação | Nenhuma |
+| Fase | Fase 2 |
+
+**Schema da tabela de sócios (QSA):**
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `cnpj_basico` | char(8) | Raiz do CNPJ da empresa |
+| `identificador_socio` | int | 1=PJ · 2=PF · 3=Estrangeiro |
+| `nome_socio_razao_social` | text | Nome completo |
+| `cpf_cnpj_socio` | char(14) | **CPF mascarado:** `***.456.789-**` |
+| `qualificacao_socio` | int | 10=Sócio · 05=Administrador |
+| `data_entrada_sociedade` | date | Data de entrada na sociedade |
+| `representante_legal` | text | CPF do representante |
+
+**CPF mascarado — strategy de entity resolution:**
+```
+CPF completo (TSE): 123.456.789-00
+CPF mascarado (RFB): ***.456.789-**
+                          ↑↑↑↑↑↑
+                     6 dígitos centrais visíveis
+
+1. Filtro determinístico: match nos 6 dígitos centrais
+2. Validação por nome: Levenshtein/Jaro-Winkler ≥ 0.85
+3. Contexto geográfico: UF da empresa vs base eleitoral do político
+4. Score de confiança: alto/médio/baixo → badge na UI
+```
+
+**Ingestão em PostgreSQL:**
+```sql
+-- Staging table (UNLOGGED = sem WAL = muito mais rápido)
+CREATE UNLOGGED TABLE staging_qsa (
+    cnpj_basico      CHAR(8),
+    identificador_socio INT,
+    nome_socio       TEXT,
+    cpf_cnpj_socio   TEXT,
+    qualificacao_socio INT,
+    data_entrada     DATE
+);
+-- COPY via Python: psycopg2 + COPY FROM stdin
+-- Depois: INSERT INTO vinculos_empresariais SELECT ... FROM staging_qsa JOIN politicos
+```
+
+**⚠️ Mudança em jul/2026:** CNPJ passa a ter formato alfanumérico. Atualizar validações.
+
+**e-BEF (IN RFB nº 2.290/2025 — vigente jan/2026):**
+Declaração mensal obrigatória do **beneficiário final** — pessoa física que controla a empresa em última instância, mesmo através de holdings em cascata. Acaba com o "laranja" estrutural. Os dados públicos do e-BEF estarão disponíveis via mesmo repositório bulk da RFB.
+
+---
+
+### Fonte B — DataJud (CNJ)
+
+| Campo | Valor |
+|---|---|
+| source_id | `datajud` |
+| URL base | `api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search` |
+| Autenticação | API Key pública (sem cadastro individual) |
+| API Key pública | `cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==` |
+| Arquitetura | Elasticsearch |
+| Fase | Fase 2 |
+
+**Schema de resposta:**
+
+| Campo | Descrição |
+|---|---|
+| `numeroProcesso` | Número único CNJ |
+| `classe.codigo` | Classe processual (ex: Ação Penal) |
+| `assunto` | Códigos TPU (ex: Corrupção Passiva) |
+| `tribunal` | Tribunal de origem |
+| `dataAjuizamento` | Data de início |
+| `grau` | Instância (G1, G2, Superior) |
+
+**Busca por CPF — Python:**
+```python
+def buscar_datajud(cpf, tribunal="tse"):
+    url = f"https://api-publica.datajud.cnj.jus.br/api_publica_{tribunal}/_search"
+    headers = {"Authorization": "APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="}
+    query = {
+        "size": 20,
+        "query": {"match": {"partes.documento": cpf}}
+    }
+    return requests.post(url, json=query, headers=headers).json()
+
+# Tribunais prioritários: tse, tre-sp, tre-mg, tre-rj, tjsp, tjmg, trf1, trf3
+```
+
+**LGPD:** processos em segredo de justiça não retornam pela API pública. Metadados (quem, o quê, valor, tribunal) são sempre públicos.
+
+---
+
+### Fonte C — PNCP (Portal Nacional de Contratações Públicas)
+
+| Campo | Valor |
+|---|---|
+| source_id | `pncp` |
+| URL base | `pncp.gov.br/api/consulta` |
+| Endpoint contratos | `/v1/contratos?cnpjFornecedor={cnpj}&dataInicial={data}` |
+| Autenticação | Nenhuma |
+| Cobertura | Federal + Estadual + Municipal |
+| Histórico | A partir de 2021/2022 |
+| Fase | Fase 2 |
+
+**Schema de resposta:**
+
+| Campo | Descrição |
+|---|---|
+| `valorTotalEstimado` | Valor do contrato |
+| `orgaoEntidade.razaoSocial` | Nome do órgão contratante |
+| `objetoContrato` | Descrição do objeto |
+| `dataAssinatura` | Data de assinatura |
+| `unidadeOrgao.municipio` | Localização do contratante |
+
+**Fluxo ROI político:**
+```
+1. Extrair doadores de campanha (TSE) do político X
+2. Para cada doador PJ → buscar no PNCP por CNPJ
+3. Para cada doador PF → buscar no QSA (Receita) → empresas dele → PNCP
+4. Calcular: soma de contratos durante mandato / total doado na campanha
+5. Exibir na UI: "Empresas ligadas a doadores receberam R$ X em contratos"
+```
+
+---
+
+### Fonte D — IBAMA: embargos e autos de infração
+
+| Campo | Valor |
+|---|---|
+| source_id | `ibama_embargos` |
+| URL | `servicos.ibama.gov.br/ctf/publico/areasembargadas/` |
+| Formato | CSV · SHP (GIS) · XML |
+| Frequência | Diária |
+| Autenticação | Nenhuma |
+| Fase | Fase 3 |
+
+**Cruzamento:** CPF pessoal do político + CNPJs das empresas (Fonte A) → detectar propriedades com embargos ativos por desmatamento. Conectar com votações do político em projetos ambientais.
+
+---
+
+### Fonte E — CAR (Cadastro Ambiental Rural / SICAR)
+
+| Campo | Valor |
+|---|---|
+| source_id | `sicar` |
+| API (G2G) | `apigateway.conectagov.estaleiro.serpro.gov.br/api-sicar-cpfcnpj/v1/{cpfCnpj}` |
+| Download bulk | Por estado via SICAR |
+| Fase | Fase 3 |
+
+**Campos:** área total, bioma, município, situação (ativo/pendente/cancelado), coordenadas geográficas.
+
+**Feature:** sobrepor coordenadas com polígonos de biomas sensíveis → **"Alerta de Conflito Ambiental"** quando parlamentar com terras em área sensível for relator de PL ambiental.
+
+---
+
+### Fonte F — RAIS / CAGED (vínculos empregatícios)
+
+| Campo | Valor |
+|---|---|
+| source_id | `rais_caged` |
+| LGPD | Dados identificados com CPF **não são públicos** — exigem ACT (Acordo de Cooperação Técnica) |
+| Alternativa | Transparência ativa da Câmara/Senado já publica assessores com nome e cargo |
+| Fase | Fase 3 |
+
+**Estratégia para a plataforma:**
+1. Assessores → via API da Câmara (já integrada) + scraping do portal de transparência
+2. Cruzar nome dos assessores com QSA da Receita → detectar se assessor é sócio de empresa que recebe emendas do político
+3. Detectar nepotismo cruzado: assessor do político A = familiar do político B
+
+---
+
+### Fonte G — CVM (Comissão de Valores Mobiliários)
+
+| Campo | Valor |
+|---|---|
+| source_id | `cvm` |
+| Plataforma | CKAN |
+| URL | `dados.cvm.gov.br/dataset/cia_aberta-doc-fre` |
+| Formato | CSV semanal |
+| Autenticação | Nenhuma |
+| Fase | Fase 3 |
+
+**Arquivos relevantes:**
+- `fre_cia_aberta_administrador_membro_conselho_fiscal` — CPF (parcial) de diretores e conselheiros
+- `fre_cia_aberta_posicao_acionaria` — acionistas com participação >5%
+
+**Feature:** detectar se político é conselheiro ou acionista relevante em empresa listada que atua em setor que ele regula/legisla → **"Conflito de interesse em empresa de capital aberto"**
+
+---
+
+### Fonte H — SeCI (CGU — Sistema de Prevenção de Conflito de Interesses)
+
+| Campo | Valor |
+|---|---|
+| source_id | `seci_cgu` |
+| URL | `dadosabertos-download.cgu.gov.br/SeCI/SeCI.csv` |
+| Formato | CSV |
+| Autenticação | Nenhuma |
+| Fase | Fase 3 |
+
+**Dados:** pedidos de autorização para exercer atividade privada, órgão do solicitante, resposta (autorizado/negado por risco de conflito).
+
+---
+
+### Fonte I — ICIJ Offshore Leaks Database
+
+| Campo | Valor |
+|---|---|
+| source_id | `icij_offshore` |
+| URL API | `offshoreleaks.icij.org/api/v1/reconcile` |
+| Busca | Por nome + país (sem CPF) |
+| Bases | Panama Papers · Paradise Papers · Pandora Papers · Offshore Leaks |
+| Autenticação | Nenhuma |
+| Fase | Fase 4 |
+
+**Tratamento de falsos positivos:** filtrar por nationalidade=BR + data de nascimento aproximada. Para nomes comuns, exibir score de confiança.
+
+**⚠️ Disclaimer obrigatório na UI:** "Estes dados provêm de vazamentos jornalísticos. A posse de offshore não é ilegal se declarada."
+
+---
+
+### Infraestrutura mínima para cruzamento em escala
+
+Para processar 600 políticos mensalmente contra bases de terabytes:
+
+| Componente | Mínimo | Recomendado |
+|---|---|---|
+| RAM | 32 GB | 64 GB |
+| Storage | 500 GB SSD NVMe | 1 TB |
+| PostgreSQL | Supabase Pro | Instância dedicada |
+| Grafo | Apache AGE (extensão PostgreSQL) | Neo4j separado |
+
+**Apache AGE vs Neo4j:**
+> **Recomendação: Apache AGE** — estende o PostgreSQL com Cypher queries sem duplicar dados. Reduz complexidade operacional e permite JOINs nativos entre o grafo e as tabelas SQL existentes. Neo4j só vale se o projeto crescer para análises de centralidade (PageRank) em grafos muito grandes.
+
+---
+
+### Priorização de implementação
+
+| Prioridade | Fontes | Impacto | Complexidade |
+|---|---|---|---|
+| **1ª** | QSA Receita + PNCP | Fluxo de dinheiro público → empresas de políticos | Média |
+| **2ª** | DataJud + SeCI | Ficha limpa + ética do agente | Baixa |
+| **3ª** | CAR + IBAMA | Conflito ambiental — bancada ruralista | Alta |
+| **4ª** | CVM + ICIJ | Ativos financeiros + offshores | Alta |
+
+---

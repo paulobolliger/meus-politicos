@@ -24,7 +24,71 @@ A plataforma não editorializa, não milita, não opina. Mostra dados. O usuári
 
 ---
 
-## 2. Domínios e Infraestrutura
+## 1b. Como funciona — texto base para a página /sobre
+
+> *Este texto serve de base para a página /sobre e conteúdos de marketing. Tom: direto, acessível, sem jargão técnico.*
+
+---
+
+### O problema que resolvemos
+
+A política brasileira afeta cada aspecto da sua vida — da saúde pública à educação dos seus filhos, do preço dos alimentos à segurança da sua rua. Mas acompanhar o que os políticos realmente fazem é difícil, fragmentado e, muitas vezes, manipulado por interesses editoriais.
+
+As informações existem. Estão nos portais oficiais da Câmara, do Senado, do TSE e do Portal da Transparência. O problema é que estão espalhadas em dezenas de sistemas diferentes, em formatos técnicos inacessíveis para o cidadão comum.
+
+O Meus Políticos resolve isso.
+
+---
+
+### O que fazemos
+
+Coletamos dados diretamente das fontes oficiais do governo brasileiro e os apresentamos de forma simples, organizada e neutra — sem filtro editorial, sem agenda política.
+
+**Nossas fontes:**
+- **Câmara dos Deputados** — votações, gastos de gabinete, presenças, projetos de lei
+- **Senado Federal** — votações, discursos, comissões
+- **TSE** — histórico de candidaturas, bens declarados, financiamento de campanha
+- **Portal da Transparência** — emendas parlamentares, viagens, contratos
+- **IBGE** — dados geográficos para cruzar representantes com municípios
+- **Diário Oficial da União** — nomeações, decretos, atos oficiais
+
+---
+
+### Como apresentamos os dados
+
+**Linguagem simples:** ementas técnicas de projetos de lei são traduzidas automaticamente para português acessível. A versão original está sempre disponível para quem quiser verificar.
+
+**Sem opinião:** os dados são apresentados como são. Não dizemos se uma votação foi boa ou ruim — mostramos como o político votou e deixamos você concluir.
+
+**Contexto:** cada número vem acompanhado de comparativo — média do partido, média do estado, média nacional. Sem contexto, um número isolado não significa nada.
+
+**Atualização contínua:** os dados são coletados automaticamente de forma regular. Votações novas, gastos novos e atos oficiais aparecem em horas.
+
+---
+
+### Quem me representa?
+
+Digite seu CEP e descubra instantaneamente todos os seus representantes políticos — do vereador ao presidente. Veja o histórico de cada um e decida por si mesmo.
+
+---
+
+### Neutralidade como princípio
+
+O Meus Políticos não tem filiação partidária, não recebe financiamento de partidos ou grupos políticos e não emite opinião sobre candidatos, partidos ou ideologias.
+
+Acreditamos que cidadãos bem informados tomam melhores decisões. Nosso papel é dar informação — o resto é com você.
+
+Qualquer erro nos dados pode ser reportado diretamente pela plataforma. Levamos correções a sério.
+
+---
+
+### Quem somos
+
+O Meus Políticos é desenvolvido e operado pela **NORO GURU** (NORO Tecnologia e Turismo Ltda · CNPJ 63.429.497/0001-88), empresa brasileira com sede em Campinas/SP.
+
+Contato: contato@meuspoliticos.com.br
+
+---
 
 ### Domínios
 
@@ -54,6 +118,15 @@ A plataforma não editorializa, não milita, não opina. Mostra dados. O usuári
 | Origens JS autorizadas | `https://meuspoliticos.com.br` · `http://localhost:3000` |
 | URI de redirecionamento | `https://ldgfmrvaluwidpghafke.supabase.co/auth/v1/callback` |
 | Configurado em | Supabase → Authentication → Providers → Google |
+
+### Auth — X (Twitter) OAuth
+
+| Campo | Valor |
+|---|---|
+| Provedor | X (Twitter) / console.x.com |
+| Client ID | `QVZHU1lVWFY4ajFrVTN5TjZXZk46MTpjaQ` |
+| Client Secret | **Ver .env.local** |
+| Configurado em | Supabase → Authentication → Providers → Twitter |
 
 ### Google Search Console
 
@@ -1183,20 +1256,95 @@ Texto humano para a página `/sobre`, imprensa, investidores e deck.
 
 ---
 
-*Por que o Meus Políticos existe*
+**Por que isso existe**
 
-A política brasileira produz uma quantidade enorme de dados públicos.
-Mas dados difíceis de acessar não geram transparência real.
+O Brasil tem 594 parlamentares federais, 27 governadores, mais de 5.500 prefeitos e 57.000 vereadores. Cada um deles toma decisões que afetam sua vida, sua família, seu bairro. Todos os dias.
 
-O Meus Políticos existe para transformar informações públicas em algo compreensível para qualquer cidadão.
+E a maioria dos brasileiros não sabe o nome do deputado federal que os representa.
 
-Sem opinião. Sem partido. Sem narrativa.
+Não por falta de interesse. Por falta de acesso.
 
-A plataforma não diz em quem votar. Não ranqueia ideologias. Não promove candidatos.
+---
 
-Mostra dados oficiais, fontes verificáveis e contexto suficiente para que cada pessoa tire suas próprias conclusões.
+**O problema não é a informação. É a distância.**
 
-Porque transparência não deveria exigir conhecimento técnico.
+As informações existem. A Câmara publica cada votação. O Senado registra cada discurso. O TSE declara cada centavo de financiamento. O Portal da Transparência lista cada gasto.
+
+Mas estão em 47 sistemas diferentes, em formatos que exigem paciência técnica, vocabulário jurídico e horas disponíveis. Coisas que a maioria das pessoas não tem.
+
+Essa distância não é acidente. É o custo real da opacidade.
+
+---
+
+**O que fazemos**
+
+Coletamos dados diretamente das fontes oficiais do governo brasileiro. Organizamos. Traduzimos o juridiquês para português. E exibimos tudo em segundos, para qualquer pessoa, no celular.
+
+Do presidente ao vereador — em um só lugar.
+
+Sem filtro editorial. Sem agenda. Sem patrocínio de partido ou ideologia.
+
+---
+
+**Neutralidade não é omissão**
+
+A plataforma não diz quem é bom ou ruim. Não ranqueia por ideologia. Não compara propostas com julgamento de valor.
+
+Isso não é omissão — é respeito.
+
+Respeito pela sua capacidade de concluir. Pelo seu direito de ter acesso aos mesmos dados que os especialistas acessam. Pela sua inteligência como cidadão.
+
+A transparência só funciona quando é igualmente transparente para todos os lados. O momento em que começamos a selecionar quais dados mostrar, e para quem, deixamos de ser transparência e nos tornamos mais uma narrativa.
+
+---
+
+**O que acreditamos**
+
+Acreditamos que cidadãos bem informados tomam melhores decisões.
+
+Acreditamos que informação pública deve ser compreensível por qualquer pessoa — não apenas por jornalistas, advogados e acadêmicos.
+
+Acreditamos que tecnologia pode servir à democracia, não apenas ao mercado.
+
+Acreditamos que um país onde cada cidadão conhece seu representante é um país mais difícil de enganar.
+
+---
+
+**O que não somos**
+
+Não somos jornalismo — não temos pauta, não temos editorial, não investigamos.
+
+Não somos militância — não defendemos causa, não fazemos campanha, não temos candidatos.
+
+Não somos governo — não somos financiados por partido, não somos subordinados a nenhuma esfera pública.
+
+Somos infraestrutura. O sistema operacional da cidadania política brasileira.
+
+---
+
+**Por onde começamos**
+
+Pelos 513 deputados federais. Porque é onde os dados estão mais estruturados, mais acessíveis, mais verificáveis.
+
+Depois os senadores. Os governadores. Os prefeitos. Os vereadores.
+
+Cada fase expande o mapa. O objetivo é chegar em todos os 57 mil vereadores do país. Cada um com nome, votação, gasto e presença — visíveis para quem quiser ver.
+
+---
+
+**Uma promessa simples**
+
+Qualquer erro nos dados pode ser reportado. Levamos correções a sério, com transparência sobre o que foi alterado, quando e por quê.
+
+A fonte oficial sempre prevalece sobre qualquer resumo que geramos.
+
+Quando usamos inteligência artificial para traduzir uma ementa técnica, dizemos isso claramente. Você sempre pode verificar o original.
+
+---
+
+**Transparência para decidir melhor.**
+
+*NORO GURU — Campinas, Brasil — 2026*
 
 ---
 
@@ -1747,5 +1895,295 @@ Esforço: 1 hora. Impacto: retenção + SEO (reduz bounce).
 
 ---
 
-*meuspoliticos.com · meuspoliticos.com.br*
-*Transparência para decidir melhor.*
+## 33. Metodologia científica dos scores — Radar Político
+
+> *Baseado em metodologias academicamente validadas. Scores não são invenção da plataforma — são adaptações de índices usados por universidades, ONGs e organismos internacionais.*
+>
+> **Princípio:** nunca ranquear com julgamento moral. Mostrar como o político performa **em relação aos seus pares** com o mesmo perfil (partido, estado, tempo de mandato) — não uma nota absoluta de "bom ou mau".
+
+---
+
+### Embasamento científico por score
+
+---
+
+#### 1. Score de Presença
+**Base:** NDI (National Democratic Institute) — checklist de sessões ponderadas por tipo
+
+**Fórmula:**
+```
+Score_PRE = [(P_ord × 1.0) + (P_extra × 1.2) + (P_com × 0.8) + (P_sol × 0.2)]
+            ÷ Total de Sessões Ponderadas
+
+P_ord   = presença em sessões deliberativas ordinárias (peso 1.0)
+P_extra = sessões extraordinárias (peso 1.2 — mais urgentes)
+P_com   = reuniões de comissão (peso 0.8)
+P_sol   = sessões solenes/debate (peso 0.2 — menor relevância decisória)
+```
+
+**Limitação conhecida:** missões diplomáticas e lideranças de partido têm ausências legítimas. Excluir do denominador ausências amparadas por missão oficial registrada.
+
+**Fonte:** NDI Parliamentary Monitoring Guidelines · Câmara API `/deputados/{id}/eventos`
+
+---
+
+#### 2. Score de Atividade Legislativa (LES adaptado)
+**Base:** Legislative Effectiveness Score — Volden & Wiseman (Vanderbilt/UVA) — metodologia mais citada na ciência política para medir eficácia legislativa individual
+
+**Lógica:** não conta apenas projetos apresentados — pondera pelo estágio que cada projeto alcançou e pela importância do tema.
+
+**Pesos por estágio:**
+```
+Apresentado (BILL)           → peso 1
+Ação em comissão (AIC)       → peso 2
+Além da comissão (ABC)       → peso 3
+Aprovado na casa (PASS)      → peso 5
+Sancionado (LAW)             → peso 7
+```
+
+**Pesos por tipo de projeto:**
+```
+Comemorativo (nome de rua, homenagem)   → α = 1
+Substantivo (altera política pública)   → β = 5
+Significativo (PEC, cobertura nacional) → γ = 10
+```
+
+**Score final:** normalizado pela média da legislatura (média = 1.0). Score > 1.5 = acima da média. Score < 0.5 = abaixo da média.
+
+**Limitação conhecida:** favorece base governista (mais facilidade de aprovação). Exibir junto com dado de bancada para contextualizar.
+
+**Fonte:** Volden & Wiseman, "Legislative Effectiveness in the United States Congress" (Cambridge University Press, 2014)
+
+---
+
+#### 3. Score de Transparência
+**Base:** Asset and Interest Disclosure (AID) — Banco Mundial + Financial Disclosure Index (OCDE)
+
+**Variáveis:**
+```
+T_prazo   (30%) = declaração TSE entregue no prazo
+T_comp    (30%) = campos de descrição de bens preenchidos completamente
+T_pend    (20%) = ausência de pendências na Justiça Eleitoral
+T_agenda  (20%) = publicação voluntária de agenda de gabinete
+```
+
+**Fórmula:**
+```
+Score_TRA = (T_prazo × 0.3) + (T_comp × 0.3) + (T_pend × 0.2) + (T_agenda × 0.2)
+```
+
+**Limitação conhecida:** qualidade do preenchimento no TSE muitas vezes é baixa por erro, não má-fé. Badge de dado incompleto quando campos faltam.
+
+**Fonte:** World Bank "Public Officials Financial Disclosure" · OCDE Financial Disclosure Index
+
+---
+
+#### 4. Score de Coerência Partidária (Agreement Index)
+**Base:** Agreement Index (AI) — Simon Hix, Abdul Noury e Gérard Roland — usado pelo VoteWatch Europa e TheyWorkForYou (UK)
+
+**Por que não o Rice Index:** o Rice Index ignora abstenções e superestima coesão em partidos pequenos. O AI é mais preciso.
+
+**Fórmula:**
+```
+AI = [max(y, n, a) - 0.5 × (Σ(y,n,a) - max(y,n,a))] ÷ Σ(y,n,a)
+
+y = proporção de votos Sim no partido
+n = proporção de votos Não no partido
+a = proporção de Abstenções
+
+Resultado: 0 (divisão total) → 1 (unanimidade)
+```
+
+**Para o político individual:** distância entre o voto dele e o voto da maioria de sua bancada em cada votação.
+
+**Limitação conhecida:** alta coesão pode ser disciplina imposta (chicote) — não necessariamente convergência real. Contextualizar com dado de votações contra a orientação da liderança.
+
+**Fonte:** Hix, Noury & Roland, "Democratic Politics in the European Parliament" (Cambridge, 2007)
+
+---
+
+#### 5. Score de Eficiência de Gastos (CEAP normalizado)
+**Base:** Clusterização regional — metodologia adaptada do Ranking dos Políticos (Brasil) + tetos por UF da Câmara
+
+**O problema:** deputado do Acre paga passagem aérea 3× mais cara que deputado de SP. Comparação bruta é injusta.
+
+**Fórmula:**
+```
+Score_GASTO = 100 × (1 - Gasto_Real_i ÷ Média_Regional_do_Gasto)
+
+Onde Média_Regional = média de gastos de deputados da mesma UF
+```
+
+**Exemplos de teto CEAP por UF (Câmara):**
+```
+Acre:             R$ 57.359,87/mês
+Amazonas:         R$ 56.151,46/mês
+São Paulo:        R$ 48.727,46/mês
+Distrito Federal: R$ 41.612,55/mês
+```
+
+**Limitação conhecida:** gastar pouco não é sempre positivo — pode indicar mandato inativo. Cruzar com Score de Atividade para calcular eficiência real (produção ÷ gasto).
+
+**Fonte:** Ranking dos Políticos (metodologia auditada) · Câmara API `/deputados/{id}/despesas`
+
+---
+
+### Referências brasileiras a citar na metodologia pública
+
+| Referência | O que faz | Como usar |
+|---|---|---|
+| **DIAP — "Quem Foi Quem"** | Seleciona votações por impacto social | Critério de seleção de votações relevantes |
+| **Ranking dos Políticos** | Score com bônus por PL e penalidade por condenação | Base para Score de Atividade BR |
+| **OLB/IESP-UERJ** | Índice de Ativismo por tema | Base para perfil temático do político |
+| **Manchetômetro/IESP** | Valência da cobertura midiática | Base para "Na imprensa" com análise de tom |
+
+---
+
+### Como exibir os scores sem virar tribunal
+
+**Regras de comunicação (baseadas em TheyWorkForYou e GovTrack):**
+
+```
+❌ "Este político é ruim"
+❌ "Nota F — abaixo do esperado"
+✅ "Vota consistentemente com sua bancada (AI = 0.87)"
+✅ "Presença 12% acima da média de deputados de SP"
+✅ "Atividade legislativa: 3 projetos sancionados — 2.3× a média da legislatura"
+```
+
+**Benchmark relativo — nunca absoluto:**
+Sempre comparar com peers do mesmo perfil (partido + UF + tempo de mandato), não com nota absoluta de 0–100.
+
+**Transparência radical:**
+- Fórmulas públicas em `/metodologia`
+- Código open source no GitHub
+- Memória de cálculo por parlamentar (auditável)
+- Usuário pode ajustar pesos e criar seu próprio ranking
+
+**Proteção jurídica:**
+- Dados extraídos de fontes oficiais (TSE, Câmara, Senado)
+- Disclaimer: "Score baseado em análise estatística de dados públicos — não constitui julgamento moral"
+- Base legal: LAI (Lei 12.527/2011) + interesse público + verdade factual como defesa
+
+---
+
+### Validação externa da metodologia (Gemini Deep Research)
+
+> *Análise independente confirmou que a arquitetura metodológica escolhida é "tecnicamente inatacável".*
+
+**Pontos validados:**
+
+1. **LES de Volden & Wiseman** — "a decisão mais robusta para medir produtividade. Protege a plataforma contra a crítica de que estaria favorecendo parlamentares que inflam o sistema com projetos irrelevantes."
+
+2. **Agreement Index vs Rice Index** — "tecnicamente superior para o contexto de multipartidarismo brasileiro. Mais granular por considerar abstenções e punir a fragmentação interna."
+
+3. **Normalização regional CEAP** — "o único caminho para comparação justa. Comparar gasto bruto do Acre com o DF seria um erro metodológico grave."
+
+4. **Segurança jurídica confirmada** — "em casos envolvendo figuras públicas, a jurisprudência exige prova de Actual Malice — extremamente difícil de sustentar contra uma plataforma que utiliza fórmulas matemáticas públicas e auditáveis baseadas em registros de Estado."
+
+5. **Conclusão** — "transforma a plataforma de um ranking de opinião em um instrumento de auditoria cívica, permitindo que qualquer score seja replicado por pesquisadores externos."
+
+**Posicionamento definitivo do produto:**
+> *"Não somos ranking de opinião. Somos instrumento de auditoria cívica."*
+
+Este é o argumento central para:
+- Página `/sobre` e `/metodologia`
+- Press kit e pitches para investidores
+- Resposta a qualquer político que questionar um score
+- Diferenciação de concorrentes
+
+---
+
+| Score | Dados necessários | Disponível agora? | Fase |
+|---|---|---|---|
+| Presença | `/deputados/{id}/eventos` | ⬜ ETL pendente | MVP+ |
+| Eficiência de gastos | `/deputados/{id}/despesas` | ⬜ ETL pendente | MVP+ |
+| Atividade (LES adaptado) | PLs + estágios (Câmara API) | ⬜ ETL pendente | Fase 2 |
+| Coerência (Agreement Index) | Votações nominais por bancada | ⬜ ETL pendente | Fase 2 |
+| Transparência (AID) | TSE declarações + agenda pública | ⬜ Parcial (TSE) | Fase 2 |
+
+---
+
+> *Baseado em research de fontes públicas brasileiras e internacionais. Cada feature usa o CPF como âncora de cruzamento. Todas são juridicamente viáveis — dados públicos por lei.*
+
+---
+
+### Nível 1 — Fase 2/3 (viáveis com a infraestrutura atual)
+
+**💼 Vínculos empresariais**
+Cruzar CPF com QSA da Receita Federal → mostrar todas as empresas onde o político é sócio ou administrador. Com o e-BEF (IN RFB nº 2.290/2025, vigente jan/2026) também será possível identificar onde é **beneficiário final** — mesmo sem aparecer no contrato social.
+
+**⚖️ Dossiê jurídico (DataJud/CNJ)**
+Cruzar CPF com DataJud → exibir processos em andamento em qualquer tribunal do país. Metadados públicos: quem processa, assunto, valor, tribunal. Sem conteúdo sigiloso. Detectar padrões de litigância repetitiva em múltiplos estados.
+
+**💰 ROI político — financiamento × contratos**
+Cruzar doadores de campanha (TSE) com empresas vencedoras de licitações (PNCP) → mostrar se empresas ligadas a doadores receberam contratos durante o mandato. A pergunta: "Quem financiou sua campanha ganhou contratos públicos?"
+
+**🌿 Conflito ambiental**
+Cruzar CPF com CAR (Cadastro Ambiental Rural) e embargos do IBAMA → alertar quando parlamentar com propriedades em biomas sensíveis for relator de projetos que afetam essas áreas.
+
+**👥 Raio-X do gabinete**
+Cruzar CPF de assessores (RAIS/CAGED) com QSA da Receita → detectar assessores que são sócios de empresas que recebem emendas do próprio político. Detectar nepotismo cruzado entre gabinetes.
+
+---
+
+### Nível 2 — Fase 3/4 (requer mais infraestrutura)
+
+**🔄 Relógio de quarentena — porta giratória**
+Monitorar ex-políticos: CPF aparece em QSA de empresa do mesmo setor de atuação antes dos 6 meses de quarentena (Lei 12.813/2013)? Alertar automaticamente.
+
+**🏦 Rastro internacional (ICIJ)**
+Cruzar nome + data de nascimento com base do ICIJ (Panama Papers, Paradise Papers, Pandora Papers) → mostrar se político ou familiares aparecem em documentos de paraísos fiscais. Base pública disponível em `offshoreleaks.icij.org`.
+
+**📊 Índice de concentração de emendas**
+Calcular: qual % das emendas do político vai para municípios onde seus doadores têm contratos? Score de 0–100. Quanto mais concentrado, maior o índice de suspeição.
+
+**🗺️ Mapa de poder — grafo de relações**
+Visualizar em grafo: político → empresas → sócios → outros políticos → contratos. Revelar a rede de influência que não aparece em dados tabulares. Referência: Poderopedia (Chile).
+
+---
+
+### Referências internacionais para inspirar features futuras
+
+| Plataforma | País | Feature inspiradora |
+|---|---|---|
+| **OpenSecrets** | EUA | Monitoramento de lobby + ROI político |
+| **TheyWorkForYou** | Reino Unido | "WhoFundsThem" — perfil de doadores por indústria |
+| **Poderopedia** | Chile | Grafo de relações de poder |
+| **mySociety** | Reino Unido | Padrões OCDE de auditoria de conflito de interesse |
+
+---
+
+### Fontes de dados para features avançadas
+
+| Feature | Fonte | Acesso |
+|---|---|---|
+| Vínculos empresariais | Receita Federal QSA bulk | Gratuito — download mensal |
+| Beneficiário final | e-BEF (Receita, jan/2026) | Gratuito — vigente jan/2026 |
+| Dossiê jurídico | DataJud (CNJ) | API pública gratuita |
+| ROI político | TSE × PNCP | Ambos gratuitos |
+| Conflito ambiental | CAR + IBAMA | Gratuitos — dados abertos |
+| Raio-X gabinete | RAIS/CAGED (MTE) | Gratuito |
+| Quarentena | QSA + SeCI (CGU) | Gratuito |
+| Rastro internacional | ICIJ Offshore Leaks | Gratuito — API pública |
+| Grafo de poder | Cruzamento interno | Infraestrutura própria (Neo4j) |
+
+---
+
+### Princípio de exibição — nunca acusar, sempre mostrar
+
+Todas essas features seguem o mesmo princípio do produto: **mostrar o fato, não o julgamento**.
+
+```
+❌ "Este político é corrupto"
+✅ "Este político é sócio de empresa que recebeu R$ 2,3M 
+    em contratos durante seu mandato"
+
+❌ "Esta emenda é suspeita"  
+✅ "87% das emendas deste político foram para municípios 
+    onde seus doadores de campanha têm contratos ativos"
+```
+
+O cidadão conclui. A plataforma informa.
+
+---
