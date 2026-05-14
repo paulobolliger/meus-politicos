@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { CheckCircle2, Circle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ export function CadastroForm() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [aceite, setAceite] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [loadingEmail, setLoadingEmail] = useState(false)
@@ -63,6 +65,16 @@ export function CadastroForm() {
       return
     }
 
+    if (!senhaValida) {
+      setErrorMessage('A senha ainda nao atende aos requisitos minimos.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage('As senhas informadas nao conferem.')
+      return
+    }
+
     setErrorMessage('')
     setLoadingEmail(true)
 
@@ -87,9 +99,23 @@ export function CadastroForm() {
     router.refresh()
   }
 
+  const requisitosSenha = [
+    { label: 'Pelo menos 8 caracteres', valido: password.length >= 8 },
+    { label: 'Uma letra maiuscula', valido: /[A-Z]/.test(password) },
+    { label: 'Uma letra minuscula', valido: /[a-z]/.test(password) },
+    { label: 'Um numero', valido: /\d/.test(password) },
+  ]
+  const senhaValida = requisitosSenha.every((requisito) => requisito.valido)
+  const senhasConferem = confirmPassword.length > 0 && password === confirmPassword
+
   return (
-    <form onSubmit={cadastrarComEmail} className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-900">Criar conta</h1>
+    <form onSubmit={cadastrarComEmail} className="space-y-5">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-950">Criar conta</h2>
+        <p className="text-sm leading-6 text-slate-600">
+          Comece com login social ou cadastre seus dados básicos de acesso.
+        </p>
+      </div>
 
       <div className="space-y-2">
         <Button
@@ -97,7 +123,7 @@ export function CadastroForm() {
           variant="outline"
           onClick={cadastrarComGoogle}
           disabled={loadingGoogle}
-          className="h-11 w-full border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+          className="h-11 w-full border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
             <path
@@ -113,7 +139,7 @@ export function CadastroForm() {
           variant="outline"
           onClick={cadastrarComX}
           disabled={loadingTwitter}
-          className="h-11 w-full border-slate-300 bg-black text-white shadow-sm hover:bg-slate-900"
+          className="h-11 w-full border-black bg-black text-white shadow-sm hover:bg-slate-900 hover:text-white disabled:text-white [&_svg]:text-white"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-white">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
@@ -134,7 +160,7 @@ export function CadastroForm() {
           value={nome}
           onChange={(event) => setNome(event.target.value)}
           placeholder="Seu nome"
-          className="h-11"
+          className="h-11 border-slate-300 bg-white"
           required
         />
 
@@ -143,7 +169,7 @@ export function CadastroForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Seu e-mail"
-          className="h-11"
+          className="h-11 border-slate-300 bg-white"
           required
         />
 
@@ -152,10 +178,46 @@ export function CadastroForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Crie uma senha"
-          className="h-11"
+          className="h-11 border-slate-300 bg-white"
           required
-          minLength={6}
+          minLength={8}
+          aria-describedby="password-requirements"
         />
+
+        <div id="password-requirements" className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Requisitos da senha</p>
+          <ul className="mt-2 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+            {requisitosSenha.map((requisito) => {
+              const Icon = requisito.valido ? CheckCircle2 : Circle
+
+              return (
+                <li
+                  key={requisito.label}
+                  className={requisito.valido ? 'flex items-center gap-2 text-emerald-700' : 'flex items-center gap-2'}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                  <span>{requisito.label}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+
+        <Input
+          type="password"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          placeholder="Repita a senha"
+          className="h-11 border-slate-300 bg-white"
+          required
+          minLength={8}
+          aria-invalid={confirmPassword.length > 0 && password !== confirmPassword}
+        />
+        {confirmPassword.length > 0 ? (
+          <p className={senhasConferem ? 'text-sm text-emerald-700' : 'text-sm text-red-600'}>
+            {senhasConferem ? 'As senhas conferem.' : 'As senhas ainda nao conferem.'}
+          </p>
+        ) : null}
       </div>
 
       <label className="flex items-start gap-2 text-sm text-slate-600">
@@ -180,7 +242,7 @@ export function CadastroForm() {
       <Button
         type="submit"
         disabled={loadingEmail}
-        className="h-11 w-full bg-[#2952cc] text-white hover:bg-[#2347b2]"
+        className="h-11 w-full bg-[#2952cc] text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] hover:bg-[#2347b2]"
       >
         {loadingEmail ? 'Criando conta...' : 'Criar conta'}
       </Button>

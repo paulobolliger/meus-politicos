@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { Pool } from 'pg'
+import { SearchX } from 'lucide-react'
 
 import { CardPolitico, type PoliticoCard } from '@/components/busca/CardPolitico'
 import { FiltrosChips } from '@/components/busca/FiltrosChips'
 import { Paginacao } from '@/components/busca/Paginacao'
+import { EmptyState } from '@/components/system'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/server'
@@ -29,11 +31,30 @@ type PoliticoPgRow = {
 }
 
 const POR_PAGINA = 20
+const CARGOS_VALIDOS = [
+  'presidente',
+  'vice_presidente',
+  'governador',
+  'vice_governador',
+  'senador',
+  'deputado_federal',
+  'deputado_estadual',
+  'prefeito',
+  'vice_prefeito',
+  'vereador',
+] as const
+
+type CargoPolitico = (typeof CARGOS_VALIDOS)[number]
 
 function parseTexto(valor?: string | string[]) {
   if (!valor) return ''
   const texto = Array.isArray(valor) ? valor[0] : valor
   return texto.trim()
+}
+
+function parseCargo(valor?: string | string[]): CargoPolitico | '' {
+  const texto = parseTexto(valor)
+  return CARGOS_VALIDOS.includes(texto as CargoPolitico) ? (texto as CargoPolitico) : ''
 }
 
 function moeda(valor: number | null) {
@@ -172,7 +193,7 @@ export default async function BuscaPage({ searchParams }: BuscaPageProps) {
   const params = await searchParams
 
   const q = parseTexto(params.q)
-  const cargo = parseTexto(params.cargo)
+  const cargo = parseCargo(params.cargo)
   const uf = parseTexto(params.uf)
   const ordem = parseTexto(params.ordem) || 'relevancia'
   const pagina = Math.max(1, Number.parseInt(parseTexto(params.pagina) || '1', 10) || 1)
@@ -203,12 +224,14 @@ export default async function BuscaPage({ searchParams }: BuscaPageProps) {
 
   query = query.range(offset, offset + 19)
 
-  const { data, count, error } = await query
+  const response = await query
+  const { data, count } = response
+  const errorCode = response.error ? (response.error as { code?: string }).code : undefined
 
   let politicos: PoliticoCard[] = (data ?? []) as PoliticoCard[]
   let totalResultados = count ?? 0
 
-  if ((!data || error?.code === '42501') && totalResultados === 0) {
+  if ((!data || errorCode === '42501') && totalResultados === 0) {
     const fallback = await buscarViaPostgres(q, cargo, uf, ordem, pagina)
     politicos = fallback.data
     totalResultados = fallback.count
@@ -277,18 +300,22 @@ export default async function BuscaPage({ searchParams }: BuscaPageProps) {
           <>
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {politicos.map((politico) => (
-                <CardPolitico key={politico.id} politico={politico} />
+                <CardPolitico key={politico.slug} politico={politico} />
               ))}
             </div>
 
             <Paginacao paginaAtual={pagina} totalPaginas={totalPaginas} />
           </>
         ) : (
-          <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <p className="text-lg font-semibold text-slate-800">Nenhum político encontrado</p>
-            <p className="mt-2 text-sm text-slate-500">Tente ajustar o termo de busca ou remover filtros.</p>
-            <p className="mt-3 text-sm text-slate-400">Gasto cota médio exibido como referência: {moeda(null)}</p>
-          </div>
+          <EmptyState
+            className="mt-8"
+            icon={SearchX}
+            title="Nenhum político encontrado"
+            description="Não encontramos resultados para os critérios informados. Tente ajustar o termo de busca, remover filtros ou explorar a base completa."
+            action={{ href: '/busca', label: 'Limpar busca' }}
+          >
+            Gasto cota médio exibido como referência: {moeda(null)}
+          </EmptyState>
         )}
       </section>
     </main>

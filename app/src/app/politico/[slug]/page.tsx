@@ -227,7 +227,7 @@ async function buscarPolitico(slug: string): Promise<PoliticoPerfil | null> {
     .single()
 
   if (politico) {
-    return politico as PoliticoPerfil
+    return politico as unknown as PoliticoPerfil
   }
 
   if (adminClient) {
@@ -238,7 +238,7 @@ async function buscarPolitico(slug: string): Promise<PoliticoPerfil | null> {
       .single()
 
     if (adminPolitico) {
-      return adminPolitico as PoliticoPerfil
+      return adminPolitico as unknown as PoliticoPerfil
     }
   }
 
@@ -264,7 +264,7 @@ async function buscarPolitico(slug: string): Promise<PoliticoPerfil | null> {
     .eq('politico_id', basePolitico.id)
 
   return {
-    ...(basePolitico as Omit<PoliticoPerfil, 'redes_sociais'>),
+    ...(basePolitico as unknown as Omit<PoliticoPerfil, 'redes_sociais'>),
     redes_sociais: (redesSociais ?? []) as PoliticoPerfil['redes_sociais'],
   }
 }

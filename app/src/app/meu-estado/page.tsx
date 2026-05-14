@@ -144,8 +144,15 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
       .order('nome_eleitoral')
 
     if (deputadosData && !error) {
-      deputados = (deputadosData as PoliticoCard[]).map((item) => ({
-        ...item,
+      deputados = deputadosData.map((item) => ({
+        slug: item.slug,
+        nome: item.nome,
+        nome_eleitoral: item.nome_eleitoral,
+        foto_url: item.foto_url,
+        cargo: item.cargo,
+        uf: item.uf,
+        presenca_pct_atual: item.presenca_pct_atual,
+        partidos: item.partidos,
         gasto_total_ano: null,
         mandato_inicio: null,
       }))
@@ -222,7 +229,7 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
               <>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {deputadosPreview.map((deputado) => (
-                    <CardPolitico key={deputado.id} politico={deputado} />
+                    <CardPolitico key={deputado.slug} politico={deputado} />
                   ))}
                 </div>
 

@@ -77,8 +77,13 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={entrarComEmail} className="space-y-4">
-      <h1 className="text-2xl font-bold text-slate-900">Entrar</h1>
+    <form onSubmit={entrarComEmail} className="space-y-5">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-950">Entrar</h2>
+        <p className="text-sm leading-6 text-slate-600">
+          Continue com uma conta conectada ou use seu e-mail cadastrado.
+        </p>
+      </div>
 
       <div className="space-y-2">
         <Button
@@ -86,7 +91,7 @@ export function LoginForm() {
           variant="outline"
           onClick={entrarComGoogle}
           disabled={loadingGoogle}
-          className="h-11 w-full border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+          className="h-11 w-full border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
             <path
@@ -102,7 +107,7 @@ export function LoginForm() {
           variant="outline"
           onClick={entrarComX}
           disabled={loadingTwitter}
-          className="h-11 w-full border-slate-300 bg-black text-white shadow-sm hover:bg-slate-900"
+          className="h-11 w-full border-black bg-black text-white shadow-sm hover:bg-slate-900 hover:text-white disabled:text-white [&_svg]:text-white"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-white">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
@@ -123,7 +128,7 @@ export function LoginForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Seu e-mail"
-          className="h-11"
+          className="h-11 border-slate-300 bg-white"
           required
         />
 
@@ -133,7 +138,7 @@ export function LoginForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Sua senha"
-            className="h-11 pr-10"
+            className="h-11 border-slate-300 bg-white pr-10"
             required
           />
           <button
@@ -156,7 +161,7 @@ export function LoginForm() {
       <Button
         type="submit"
         disabled={loadingEmail}
-        className="h-11 w-full bg-[#2952cc] text-white hover:bg-[#2347b2]"
+        className="h-11 w-full bg-[#2952cc] text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] hover:bg-[#2347b2]"
       >
         {loadingEmail ? 'Entrando...' : 'Entrar'}
       </Button>
