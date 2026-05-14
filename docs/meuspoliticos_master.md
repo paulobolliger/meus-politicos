@@ -43,7 +43,25 @@ A plataforma não editorializa, não milita, não opina. Mostra dados. O usuári
 **Hosting:** Vercel — domínio personalizado `meuspoliticos.com.br`
 **Redirect:** `meuspoliticos.com` → `meuspoliticos.com.br` via Cloudflare Redirect Rules (301 permanente)
 
-### Supabase
+### Auth — Google OAuth
+
+| Campo | Valor |
+|---|---|
+| Provedor | Google Cloud Console |
+| Project | meus-politicos-496222 |
+| Client ID | `628132097975-t97ai1p9tnat7pfaubnj4c07oe4c3i1t.apps.googleusercontent.com` |
+| Client Secret | **Ver Google Cloud Console** |
+| Origens JS autorizadas | `https://meuspoliticos.com.br` · `http://localhost:3000` |
+| URI de redirecionamento | `https://ldgfmrvaluwidpghafke.supabase.co/auth/v1/callback` |
+| Configurado em | Supabase → Authentication → Providers → Google |
+
+### Google Search Console
+
+| Campo | Valor |
+|---|---|
+| Domínio | `meuspoliticos.com.br` |
+| Status | ✅ Registrado — dados em processamento (~1 dia) |
+| Próximo passo | Submeter sitemap: `meuspoliticos.com.br/sitemap.xml` |
 
 | Campo | Valor |
 |---|---|
@@ -219,18 +237,46 @@ Criado por uma advogada e um programador. Foco em emendas PIX, cota parlamentar 
 
 | Camada | Tecnologia | Custo |
 |---|---|---|
-| Frontend | Next.js + TypeScript | Grátis (Vercel) |
+| Frontend | Next.js 15 + TypeScript | Grátis (Vercel) |
 | Banco de dados | Supabase (PostgreSQL) | Grátis até 500MB |
 | Autenticação | Supabase Auth | Grátis |
 | Backend/API | Supabase Edge Functions | Grátis |
 | Coleta de dados | Python scripts via GitHub Actions | Grátis |
 | Deploy frontend | Vercel | Grátis |
 | CI/CD | GitHub Actions | Grátis |
+| E-mail transacional | Resend | Grátis até 3k/mês |
 | Pagamentos/doações | Guru + Asaas (contrato existente) | Contrato ativo |
 
 **Custo de infraestrutura no MVP: R$ 0/mês**
 
-Nota: Railway/Render não são necessários. Supabase Edge Functions substitui o backend separado.
+### Dependências instaladas (`app/`)
+
+**UI e componentes:**
+```
+shadcn/ui (Tailwind v4)
+  └── button, input, card, badge, avatar
+  └── separator, skeleton, tabs, dialog, sheet
+lucide-react       ← ícones
+clsx + tailwind-merge ← utilitários de classes
+```
+
+**Supabase:**
+```
+@supabase/supabase-js  ← client principal
+@supabase/ssr          ← SSR/Server Components
+```
+
+**Formulários e validação:**
+```
+react-hook-form
+@hookform/resolvers
+zod
+```
+
+**Utilitários:**
+```
+date-fns   ← formatação de datas
+```
 
 ---
 
@@ -1232,6 +1278,7 @@ Nenhuma mudança visual favorece candidatos específicos. Todos os candidatos do
   - Grafo de rede política: senadores agrupados por similaridade de voto
   - Timeline de atividade do senador ao longo do mandato
 - Testes de integração contra a API de produção
+- **"Quem me representa" — deputados por município:** mostrar deputados que tiveram mais votos no município do CEP consultado (dados TSE por zona eleitoral — requer integração com resultados eleitorais)
 
 **Dados:**
 - Senadores + presidente + governadores
@@ -1684,15 +1731,19 @@ Esforço: 1 hora. Impacto: retenção + SEO (reduz bounce).
 18. ⬜ Testes de integração contra API de produção
 
 ### Desenvolvimento — iniciar agora
-12. ⬜ Criar repositório no GitHub (monorepo)
-13. ⬜ Criar projeto no Supabase → rodar `001_schema.sql`
-14. ⬜ Criar projeto no Vercel → conectar ao repo
+12. ✅ Criar repositório no GitHub (monorepo)
+13. ✅ Criar projeto no Supabase → schema v2.11 rodando (33 tabelas)
+14. ✅ Criar projeto no Vercel → meuspoliticos.com.br no ar
 15. ✅ Obter API Key do Portal da Transparência (gov.br)
-16. ⬜ Atualizar schema — tabela `candidatos` + `feature_flags` + campos novos
-17. ⬜ Scripts Python de coleta — deputados, votações, gastos, presença
-18. ⬜ Construir frontend — Next.js (SEO e structured data junto com cada página)
-19. ⬜ Construir `/admin`
-20. ⬜ Configurar Search Console + GA4 no dia do primeiro deploy
+16. ✅ Obter API Key OpenAI
+17. ✅ Configurar Resend — domínio verificado
+18. ✅ Cloudflare + DNS propagado
+19. ✅ Next.js 15 inicializado + dependências instaladas
+20. ⬜ Configurar cliente Supabase no Next.js (`lib/supabase/`)
+21. ⬜ Scripts Python de coleta — deputados, votações, gastos, presença (Câmara)
+22. ⬜ Construir frontend — home, busca, perfil, CEP
+23. ⬜ Construir `/admin`
+24. ✅ Configurar Search Console — `meuspoliticos.com.br` registrado (dados em processamento ~1 dia)
 
 ---
 
