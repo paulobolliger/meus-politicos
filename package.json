@@ -4,6 +4,9 @@
   "workspaces": [
     "app"
   ],
+  "devDependencies": {
+    "next": "16.2.6"
+  },
   "scripts": {
     "dev": "npm --prefix app run dev",
     "build": "npm --prefix app run build",
