@@ -63,6 +63,11 @@
 --   + comentários nos campos email, naturalidade, ocupacao, nome_eleitoral
 --   + VIEW feed_usuario expandida para incluir feed_eventos
 --   + índices compostos + RLS em feed_eventos
+-- Alterações v2.13 (vs v2.12):  [Resumo Interpretativo IA]
+--   + tabela politico_resumos_ia (cache por hash das métricas)
+--   + tabela politico_resumos_ia_cotas (controle de cota diária)
+--   + RLS admin-only nas tabelas internas de IA
+--   + triggers set_atualizado_em nas tabelas internas de IA
 -- ============================================================
 -- NÃO persistido no banco (gerado dinamicamente no Next.js):
 --   - seo_descricao (template server-side)
@@ -824,6 +829,43 @@ CREATE INDEX idx_coletas_inicio ON coletas_log(iniciado_em desc);
 
 
 -- ============================================================
+-- RESUMOS INTERPRETATIVOS (IA)
+-- Cache por hash para evitar recálculo e gasto duplicado
+-- ============================================================
+
+CREATE TABLE politico_resumos_ia (
+  politico_id     uuid primary key references politicos(id) on delete cascade,
+  hash_dados      text not null,
+  conteudo_json   jsonb not null,
+  criado_em       timestamptz default now(),
+  atualizado_em   timestamptz default now()
+);
+
+CREATE INDEX idx_politico_resumos_ia_hash ON politico_resumos_ia(hash_dados);
+
+
+-- ============================================================
+-- COTAS DIÁRIAS DE IA (controle de custo)
+-- Registra geração nova (cache hit não consome cota)
+-- ============================================================
+
+CREATE TABLE politico_resumos_ia_cotas (
+  id              uuid primary key default gen_random_uuid(),
+  politico_id     uuid not null references politicos(id) on delete cascade,
+  dia_referencia  date not null,
+  geracoes        integer not null default 0 check (geracoes >= 0),
+  limite_diario   integer not null default 3 check (limite_diario >= 1),
+  criado_em       timestamptz default now(),
+  atualizado_em   timestamptz default now(),
+
+  unique(politico_id, dia_referencia)
+);
+
+CREATE INDEX idx_politico_resumos_ia_cotas_dia      ON politico_resumos_ia_cotas(dia_referencia desc);
+CREATE INDEX idx_politico_resumos_ia_cotas_politico ON politico_resumos_ia_cotas(politico_id, dia_referencia desc);
+
+
+-- ============================================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================================
 
@@ -883,6 +925,16 @@ CREATE POLICY "admin gerencia correcoes" ON correcoes
 ALTER TABLE coletas_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "admin acessa logs" ON coletas_log
+  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Tabelas internas de IA: só admin
+ALTER TABLE politico_resumos_ia ENABLE ROW LEVEL SECURITY;
+ALTER TABLE politico_resumos_ia_cotas ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "admin acessa resumos ia" ON politico_resumos_ia
+  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+
+CREATE POLICY "admin acessa cotas resumos ia" ON politico_resumos_ia_cotas
   FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
 
@@ -1555,6 +1607,14 @@ CREATE TRIGGER trg_feature_flags_atualizado
   BEFORE UPDATE ON feature_flags
   FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
 
+CREATE TRIGGER trg_politico_resumos_ia_atualizado
+  BEFORE UPDATE ON politico_resumos_ia
+  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+
+CREATE TRIGGER trg_politico_resumos_ia_cotas_atualizado
+  BEFORE UPDATE ON politico_resumos_ia_cotas
+  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+
 -- Triggers — Fase 2 (Senado Federal)
 CREATE TRIGGER trg_senadores_atualizado
   BEFORE UPDATE ON senadores
@@ -1582,7 +1642,7 @@ CREATE TRIGGER trg_senado_sessoes_atualizado
 
 
 -- ============================================================
--- FIM DO SCHEMA v2.12
+-- FIM DO SCHEMA v2.13
 --
 -- Próximos passos após rodar este schema:
 --   1. Verificar ENUMs criados corretamente (incluindo parse_status_tipo)

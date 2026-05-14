@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale'
 import { Bell, Calendar, Info, Receipt, Share2, UserRound, Vote, Wallet } from 'lucide-react'
 
 import { EmptyState } from '@/components/politico-v2/EmptyState'
+import { ResumoInterpretativoCard } from '@/components/politico-v2/ResumoInterpretativoCard'
 import { ScoreRow } from '@/components/politico-v2/ScoreRow'
 import { Button } from '@/components/ui/button'
 import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
@@ -56,6 +57,8 @@ type VotoItem = {
   voto: 'sim' | 'nao' | 'abstencao'
   data: string
 }
+
+const NA = 'Não informado'
 
 const CARGO_LABEL: Record<string, string> = {
   presidente: 'Presidente',
@@ -114,16 +117,16 @@ const CEAP_TETO_UF: Record<string, number> = {
 }
 
 function formatDate(value: string | null) {
-  if (!value) return '–'
+  if (!value) return NA
 
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return '–'
+  if (Number.isNaN(parsed.getTime())) return NA
 
   return format(parsed, 'dd/MM/yyyy', { locale: ptBR })
 }
 
 function formatCurrency(value: number | null) {
-  if (value == null) return '–'
+  if (value == null) return NA
 
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -132,7 +135,7 @@ function formatCurrency(value: number | null) {
 }
 
 function formatOptionalNumber(value: number | null, suffix = '') {
-  if (value == null) return '–'
+  if (value == null) return NA
   return `${Math.round(value)}${suffix}`
 }
 
@@ -170,10 +173,10 @@ function socialButtonClass(platform: string) {
 }
 
 function formatGabinetePhone(value: string | null) {
-  if (!value) return '–'
+  if (!value) return NA
 
   const normalized = value.trim()
-  if (!normalized) return '–'
+  if (!normalized) return NA
   if (normalized.startsWith('(61)')) return normalized
   if (normalized.startsWith('3215-')) return `(61) ${normalized}`
 
@@ -194,10 +197,10 @@ function formatGabinetePhone(value: string | null) {
 }
 
 function yearsInOffice(mandatoInicio: string | null) {
-  if (!mandatoInicio) return { label: '–', year: '–' }
+  if (!mandatoInicio) return { label: NA, year: NA }
 
   const startDate = new Date(mandatoInicio)
-  if (Number.isNaN(startDate.getTime())) return { label: '–', year: '–' }
+  if (Number.isNaN(startDate.getTime())) return { label: NA, year: NA }
 
   const now = new Date()
   const years = Math.max(0, now.getFullYear() - startDate.getFullYear())
@@ -255,40 +258,13 @@ function PresencaRing({ value }: { value: number | null }) {
           transform="rotate(-90 44 44)"
         />
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="16" fontWeight="700" fill="#0f172a">
-          {value == null ? '–' : `${percent}%`}
+          {value == null ? 'N/I' : `${percent}%`}
         </text>
       </svg>
       <div>
-        <p className="text-sm text-slate-500">Média {value == null ? 'UF' : 'da UF'}: –%</p>
+        <p className="text-sm text-slate-500">Média {value == null ? 'UF' : 'da UF'}: {NA}</p>
       </div>
     </div>
-  )
-}
-
-function StatCard({
-  title,
-  value,
-  subtitle,
-  showCollectingHint = false,
-}: {
-  title: string
-  value: string
-  subtitle?: string
-  showCollectingHint?: boolean
-}) {
-  return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
-      <div className="mt-2 flex items-center gap-2">
-        {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
-        {showCollectingHint ? (
-          <span title="Dados sendo coletados" className="inline-flex items-center text-slate-400">
-            <Info className="size-3.5" aria-hidden="true" />
-          </span>
-        ) : null}
-      </div>
-    </article>
   )
 }
 
@@ -304,14 +280,14 @@ export function PoliticoDashboardV2({ politico }: Props) {
   const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replaceAll('_', ' ')
   const badgeCargo = CARGO_BADGE_CLASS[politico.cargo] ?? 'bg-slate-100 text-slate-700 border-slate-200'
 
-  const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? 'Sem partido'
+  const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? NA
   const mandatoInfo = yearsInOffice(politico.mandato_inicio)
   const hasPersonalSection = profileFieldCount(politico) >= 2
 
   const redesComUrl = (politico.redes_sociais ?? []).filter((item) => item.url)
   const contatoEmail = politico.gabinete_email ?? politico.email
   const telefoneGabinete = formatGabinetePhone(politico.gabinete_telefone)
-  const gabineteNome = politico.gabinete_nome ? `Gabinete ${politico.gabinete_nome}` : 'Gabinete –'
+  const gabineteNome = politico.gabinete_nome ? `Gabinete ${politico.gabinete_nome}` : NA
 
   const tetoUf = CEAP_TETO_UF[politico.uf ?? ''] ?? null
   const gastoPctTeto =
@@ -328,74 +304,147 @@ export function PoliticoDashboardV2({ politico }: Props) {
       : []
 
   const votacoesFeed: VotoItem[] = []
+  const ultimaAtualizacao = politico.collected_at ? formatDate(politico.collected_at) : NA
+  const metricasInterpretativas = {
+    cargo: cargoNome,
+    uf: politico.uf,
+    partido: partidoSigla === NA ? null : partidoSigla,
+    em_exercicio_anos: mandatoInfo.label === NA ? null : mandatoInfo.label,
+    presenca_pct_atual: politico.presenca_pct_atual,
+    gasto_total_ano: politico.gasto_total_ano,
+    total_votacoes: politico.total_votacoes,
+    dado_estado: politico.dado_estado,
+    atualizado_em: politico.collected_at,
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <section className="bg-[#1a2b5e] text-white">
-        <div className="container-shell py-6 sm:py-8">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-white/20 bg-[#2952cc]">
-                {politico.foto_url ? (
-                  <Image
-                    src={politico.foto_url}
-                    alt={`Foto de ${nomeExibicao}`}
-                    fill
-                    className={`object-cover ${classeFoto}`}
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xl font-bold">{initials(nomeExibicao)}</div>
-                )}
-              </div>
+      <section className="relative overflow-hidden bg-[#1a2b5e] text-white">
+        <div className="pointer-events-none absolute -left-20 top-8 h-56 w-56 rounded-full bg-[#2952cc]/25 blur-3xl" />
+        <div className="pointer-events-none absolute -right-12 top-0 h-72 w-72 rounded-full bg-[#6f8fff]/20 blur-3xl" />
 
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">{nomeExibicao}</h1>
-                <p className="mt-1 text-sm text-white/70 sm:text-base">{politico.nome_civil ?? 'Nome civil não disponível'}</p>
-
-                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className={`rounded-full border px-3 py-1 ${badgeCargo}`}>{cargoNome}</span>
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{partidoSigla}</span>
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{politico.uf ?? '–'}</span>
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">Mandato desde {mandatoInfo.year}</span>
+        <div className="container-shell relative py-6 sm:py-8">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-white/20 bg-[#2952cc] shadow-[0_0_0_8px_rgba(255,255,255,0.06)]">
+                  {politico.foto_url ? (
+                    <Image
+                      src={politico.foto_url}
+                      alt={`Foto de ${nomeExibicao}`}
+                      fill
+                      className={`object-cover ${classeFoto}`}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xl font-bold">{initials(nomeExibicao)}</div>
+                  )}
                 </div>
 
-                {(politico.naturalidade || politico.uf_nascimento || politico.escolaridade) && (
-                  <p className="mt-3 text-sm text-white/80">
-                    Nascido em {politico.naturalidade ?? '–'}/{politico.uf_nascimento ?? '–'} · {politico.escolaridade ?? '–'}
-                  </p>
-                )}
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl">{nomeExibicao}</h1>
+                  <p className="mt-1 text-sm text-white/75 sm:text-base">{politico.nome_civil ?? NA}</p>
+
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span className={`rounded-full border px-3 py-1 ${badgeCargo}`}>{cargoNome}</span>
+                    <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{partidoSigla}</span>
+                    <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{politico.uf ?? NA}</span>
+                    <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">
+                      {mandatoInfo.year === NA ? 'Mandato não informado' : `Mandato desde ${mandatoInfo.year}`}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/85">
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="size-3.5" aria-hidden="true" />
+                      {mandatoInfo.label === NA ? 'Em exercício: Não informado' : `Em exercício há ${mandatoInfo.label}`}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Info className="size-3.5" aria-hidden="true" /> Última atualização: {ultimaAtualizacao}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <Button className="h-10 bg-[#2952cc] px-4 text-white hover:bg-[#3662e0]">
+                      <Bell className="size-4" />
+                      Acompanhar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-10 border-white/25 bg-white/10 px-4 text-white hover:bg-white/20"
+                    >
+                      <UserRound className="size-4" />
+                      Comparar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="h-10 px-3 text-white/85 hover:bg-white/10 hover:text-white"
+                    >
+                      <Share2 className="size-4" />
+                      Compartilhar
+                    </Button>
+                  </div>
+
+                  {(politico.naturalidade || politico.uf_nascimento || politico.escolaridade || politico.ocupacao) && (
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      {(politico.naturalidade || politico.uf_nascimento) && (
+                        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
+                          Naturalidade: {politico.naturalidade ?? NA}/{politico.uf_nascimento ?? NA}
+                        </span>
+                      )}
+                      {politico.escolaridade && (
+                        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
+                          Escolaridade: {politico.escolaridade}
+                        </span>
+                      )}
+                      {politico.ocupacao && (
+                        <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-white/90">
+                          Ocupação: {politico.ocupacao}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button className="bg-[#2952cc] text-white hover:bg-[#3662e0]">
-                <Bell className="size-4" />
-                Acompanhar
-              </Button>
-              <Button variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/20">
-                <UserRound className="size-4" />
-                Comparar
-              </Button>
-              <Button variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/20">
-                <Share2 className="size-4" />
-                Compartilhar
-              </Button>
-            </div>
+            <article className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Resumo rápido</p>
+                <Link href="/metodologia" className="text-xs font-semibold text-white hover:underline">
+                  Metodologia
+                </Link>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-white/70">Presença</p>
+                  <p className="mt-1 text-xl font-bold text-white">{formatOptionalNumber(politico.presenca_pct_atual, '%')}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-white/70">Cota no ano</p>
+                  <p className="mt-1 text-xl font-bold text-white">{formatCurrency(politico.gasto_total_ano)}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-white/70">Votações</p>
+                  <p className="mt-1 text-xl font-bold text-white">{formatOptionalNumber(politico.total_votacoes)}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-white/70">Em exercício</p>
+                  <p className="mt-1 text-xl font-bold text-white">{mandatoInfo.label}</p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-white/70">
+                Dados oficiais com rastreabilidade pública. Veja também{' '}
+                <Link href="/fontes" className="font-semibold text-white hover:underline">
+                  fontes
+                </Link>
+                .
+              </p>
+            </article>
           </div>
-        </div>
-      </section>
-
-      <section className="border-b border-slate-200 bg-white">
-        <div className="container-shell grid grid-cols-2 gap-4 py-4 sm:grid-cols-4">
-          <StatCard
-            title="Presença"
-            value={formatOptionalNumber(politico.presenca_pct_atual, '%')}
-            showCollectingHint
-          />
-          <StatCard title="Cota parlamentar" value={formatCurrency(politico.gasto_total_ano)} showCollectingHint />
-          <StatCard title="Votações" value={formatOptionalNumber(politico.total_votacoes)} showCollectingHint />
-          <StatCard title="Em exercício" value={mandatoInfo.label} subtitle={`desde ${mandatoInfo.year}`} />
         </div>
       </section>
 
@@ -431,16 +480,16 @@ export function PoliticoDashboardV2({ politico }: Props) {
               <ul className="mt-3 space-y-2 text-sm text-slate-700">
                 <li>
                   📧{' '}
-                  {contatoEmail !== null && contatoEmail !== '–' ? (
+                  {contatoEmail !== null && contatoEmail !== NA ? (
                     <a href={`mailto:${contatoEmail}`} className="font-medium text-[#2952cc] hover:underline">
                       {contatoEmail}
                     </a>
                   ) : (
-                    <span title="Dados sendo coletados">–</span>
+                    <span>{NA}</span>
                   )}
                 </li>
                 <li>📞 {telefoneGabinete}</li>
-                <li>🏢 {gabineteNome} — Câmara dos Deputados, Brasília/DF</li>
+                <li>🏢 {gabineteNome === NA ? NA : `${gabineteNome} — Câmara dos Deputados, Brasília/DF`}</li>
               </ul>
             </article>
 
@@ -480,6 +529,8 @@ export function PoliticoDashboardV2({ politico }: Props) {
                 </div>
               )}
             </article>
+
+            <ResumoInterpretativoCard politicoId={politico.id} metricas={metricasInterpretativas} />
           </div>
         </div>
       </section>
@@ -527,13 +578,13 @@ export function PoliticoDashboardV2({ politico }: Props) {
             <p className="mt-2 text-2xl font-bold text-slate-900">{formatCurrency(politico.gasto_total_ano)}</p>
 
             {gastoPctTeto == null ? (
-              <p className="mt-3 text-sm text-slate-500">Dados sendo coletados</p>
+              <p className="mt-3 text-sm text-slate-500">{NA}</p>
             ) : (
               <>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
                   <div className="h-full rounded-full bg-[#2952cc]" style={{ width: `${gastoPctTeto}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{gastoPctTeto}% do teto de {politico.uf ?? 'UF'}</p>
+                <p className="mt-2 text-xs text-slate-500">{gastoPctTeto}% do teto de {politico.uf ?? NA}</p>
                 <div className="mt-3 flex items-end gap-1">
                   {gastosMensais.map((mes) => (
                     <div key={mes.mes} className="flex flex-1 flex-col items-center gap-1">
@@ -563,18 +614,18 @@ export function PoliticoDashboardV2({ politico }: Props) {
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs text-slate-500">Projetos</p>
-                <p className="text-xl font-bold text-slate-900">–</p>
+                <p className="text-xl font-bold text-slate-900">{NA}</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs text-slate-500">Em comissão</p>
-                <p className="text-xl font-bold text-slate-900">–</p>
+                <p className="text-xl font-bold text-slate-900">{NA}</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs text-slate-500">Sancionados</p>
-                <p className="text-xl font-bold text-slate-900">–</p>
+                <p className="text-xl font-bold text-slate-900">{NA}</p>
               </div>
             </div>
-            <p className="mt-3 text-sm text-slate-500">Dados sendo coletados — Fase 2</p>
+            <p className="mt-3 text-sm text-slate-500">{NA}</p>
           </article>
 
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -593,17 +644,17 @@ export function PoliticoDashboardV2({ politico }: Props) {
             <h2 className="text-base font-semibold text-slate-900">Perfil pessoal</h2>
             <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
               <p>
-                <span className="font-medium">Nascimento:</span> {formatDate(politico.data_nascimento)} em {politico.naturalidade ?? '–'}/{politico.uf_nascimento ?? '–'}
+                Nascimento: {formatDate(politico.data_nascimento)} em {politico.naturalidade ?? NA}/{politico.uf_nascimento ?? NA}
               </p>
               <p>
-                <span className="font-medium">Escolaridade:</span> {politico.escolaridade ?? '–'}
+                <span className="font-medium">Escolaridade:</span> {politico.escolaridade ?? NA}
               </p>
               <p>
-                <span className="font-medium">Ocupação:</span> {politico.ocupacao ?? '–'}
+                <span className="font-medium">Ocupação:</span> {politico.ocupacao ?? NA}
               </p>
               <p>
                 <span className="font-medium">Sexo:</span>{' '}
-                {politico.sexo === 'M' ? 'Masculino' : politico.sexo === 'F' ? 'Feminino' : '–'}
+                {politico.sexo === 'M' ? 'Masculino' : politico.sexo === 'F' ? 'Feminino' : NA}
               </p>
               <p className="sm:col-span-2">
                 <span className="font-medium">Mandato:</span> desde {formatDate(politico.mandato_inicio)} até {politico.mandato_fim ? formatDate(politico.mandato_fim) : 'presente'}
@@ -614,7 +665,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
       ) : null}
 
       <footer className="container-shell pb-10 text-center text-xs text-slate-500">
-        <p>Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : '–'}</p>
+        <p>Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : NA}</p>
         <p className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <Link href="/metodologia" className="font-semibold text-[#2952cc] hover:underline">
             Metodologia

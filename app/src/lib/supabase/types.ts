@@ -1032,6 +1032,90 @@ export type Database = {
           },
         ]
       }
+      politico_resumos_ia: {
+        Row: {
+          atualizado_em: string
+          conteudo_json: Json
+          criado_em: string
+          hash_dados: string
+          politico_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          conteudo_json: Json
+          criado_em?: string
+          hash_dados: string
+          politico_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          conteudo_json?: Json
+          criado_em?: string
+          hash_dados?: string
+          politico_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "politico_resumos_ia_politico_id_fkey"
+            columns: ["politico_id"]
+            isOneToOne: true
+            referencedRelation: "politicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "politico_resumos_ia_politico_id_fkey"
+            columns: ["politico_id"]
+            isOneToOne: true
+            referencedRelation: "resumo_politico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      politico_resumos_ia_cotas: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          dia_referencia: string
+          geracoes: number
+          id: string
+          limite_diario: number
+          politico_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          dia_referencia: string
+          geracoes?: number
+          id?: string
+          limite_diario?: number
+          politico_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          dia_referencia?: string
+          geracoes?: number
+          id?: string
+          limite_diario?: number
+          politico_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "politico_resumos_ia_cotas_politico_id_fkey"
+            columns: ["politico_id"]
+            isOneToOne: false
+            referencedRelation: "politicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "politico_resumos_ia_cotas_politico_id_fkey"
+            columns: ["politico_id"]
+            isOneToOne: false
+            referencedRelation: "resumo_politico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       politico_senado_ids: {
         Row: {
           criado_em: string | null
@@ -1079,12 +1163,16 @@ export type Database = {
           collected_at: string | null
           criado_em: string | null
           dado_estado: Database["public"]["Enums"]["dado_estado"] | null
+          data_falecimento: string | null
           data_nascimento: string | null
           email: string | null
           escolaridade: string | null
           foto_atualizada_em: string | null
           foto_fonte: string | null
           foto_url: string | null
+          gabinete_email: string | null
+          gabinete_nome: string | null
+          gabinete_telefone: string | null
           gasto_total_ano: number | null
           id: string
           id_camara: number | null
@@ -1102,12 +1190,14 @@ export type Database = {
           partido_id: string | null
           presenca_pct_atual: number | null
           removido_em: string | null
+          sexo: string | null
           situacao: Database["public"]["Enums"]["situacao_politico"] | null
           slug: string
           source_id: string | null
           source_record_id: string | null
           total_votacoes: number | null
           uf: string
+          uf_nascimento: string | null
         }
         Insert: {
           atualizado_em?: string | null
@@ -1116,12 +1206,16 @@ export type Database = {
           collected_at?: string | null
           criado_em?: string | null
           dado_estado?: Database["public"]["Enums"]["dado_estado"] | null
+          data_falecimento?: string | null
           data_nascimento?: string | null
           email?: string | null
           escolaridade?: string | null
           foto_atualizada_em?: string | null
           foto_fonte?: string | null
           foto_url?: string | null
+          gabinete_email?: string | null
+          gabinete_nome?: string | null
+          gabinete_telefone?: string | null
           gasto_total_ano?: number | null
           id?: string
           id_camara?: number | null
@@ -1139,12 +1233,14 @@ export type Database = {
           partido_id?: string | null
           presenca_pct_atual?: number | null
           removido_em?: string | null
+          sexo?: string | null
           situacao?: Database["public"]["Enums"]["situacao_politico"] | null
           slug: string
           source_id?: string | null
           source_record_id?: string | null
           total_votacoes?: number | null
           uf: string
+          uf_nascimento?: string | null
         }
         Update: {
           atualizado_em?: string | null
@@ -1153,12 +1249,16 @@ export type Database = {
           collected_at?: string | null
           criado_em?: string | null
           dado_estado?: Database["public"]["Enums"]["dado_estado"] | null
+          data_falecimento?: string | null
           data_nascimento?: string | null
           email?: string | null
           escolaridade?: string | null
           foto_atualizada_em?: string | null
           foto_fonte?: string | null
           foto_url?: string | null
+          gabinete_email?: string | null
+          gabinete_nome?: string | null
+          gabinete_telefone?: string | null
           gasto_total_ano?: number | null
           id?: string
           id_camara?: number | null
@@ -1176,12 +1276,14 @@ export type Database = {
           partido_id?: string | null
           presenca_pct_atual?: number | null
           removido_em?: string | null
+          sexo?: string | null
           situacao?: Database["public"]["Enums"]["situacao_politico"] | null
           slug?: string
           source_id?: string | null
           source_record_id?: string | null
           total_votacoes?: number | null
           uf?: string
+          uf_nascimento?: string | null
         }
         Relationships: [
           {

@@ -144,6 +144,15 @@ DF: R$ 41.612,55 | (tabela completa em dados da Câmara)
 
 ## Regras de implementação para todos os componentes
 
+### Contrato de dados de back office
+Antes de implementar fallback, status de campo, ou regras de exibicao para
+campos nao relacionados a score, usar como referencia obrigatoria:
+
+`docs/BACKOFFICE_DATA_CONTRACT.md`
+
+Este arquivo define status por campo, fallback oficial e contrato de saida
+entre back office e frontend.
+
 ### Quando dados não estão disponíveis
 ```tsx
 // SEMPRE usar este padrão — nunca exibir 0 ou null sem contexto

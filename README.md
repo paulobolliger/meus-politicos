@@ -13,6 +13,21 @@ Centralizamos dados públicos sobre políticos brasileiros — do presidente ao 
 
 ---
 
+## Governança documental
+
+Para crescimento organizado e sem duplicação de regras, use estes documentos como fonte oficial:
+
+- Contrato de dados de perfil (back office -> frontend): [docs/BACKOFFICE_DATA_CONTRACT.md](docs/BACKOFFICE_DATA_CONTRACT.md)
+- Metodologia de scores e regras de exibição: [docs/METRICS.md](docs/METRICS.md)
+- Fontes, ingestão e arquitetura de dados: [docs/data_source_master.md](docs/data_source_master.md)
+- Navegação geral do projeto (master doc): [docs/meuspoliticos_master.md](docs/meuspoliticos_master.md)
+
+Regra de organização:
+- README e master doc descrevem visão e navegação.
+- Regras operacionais detalhadas ficam somente nos documentos especializados acima.
+
+---
+
 ## O que é
 
 O cidadão pesquisa qualquer político e vê, em segundos:
@@ -79,7 +94,13 @@ Preencha no `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+OPENAI_API_KEY=
+IA_RESUMO_MAX_GERACOES_DIA=3
 ```
+
+Notas:
+- `OPENAI_API_KEY`: necessária para gerar resumo interpretativo sob demanda.
+- `IA_RESUMO_MAX_GERACOES_DIA`: limite diário por político para controlar custo (cache hit não consome).
 
 ### 4. Crie o banco de dados
 

@@ -5,6 +5,20 @@
 
 ---
 
+## 0. Governanca documental (fonte oficial)
+
+Para manter crescimento organizado e sem duplicacao de regra, use os documentos abaixo por responsabilidade:
+
+- Contrato de dados de perfil (back office -> frontend): `docs/BACKOFFICE_DATA_CONTRACT.md`
+- Metodologia de scores e regras de exibicao de indicadores: `docs/METRICS.md`
+- Mapa de fontes, ingestao e arquitetura de dados: `docs/data_source_master.md`
+
+Regra obrigatoria:
+- `docs/meuspoliticos_master.md` funciona como documento de navegacao e visao geral.
+- Regras operacionais detalhadas devem ficar nos documentos especializados acima.
+
+---
+
 ## 1. O que é
 
 Portal de transparência política para o cidadão brasileiro.

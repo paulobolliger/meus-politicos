@@ -12,7 +12,7 @@ function colorByDelta(value: number | null, media: number | null) {
     return {
       text: 'text-slate-500',
       bar: 'bg-slate-300',
-      context: 'Dados sendo coletados',
+      context: 'Não informado',
     }
   }
 
@@ -48,8 +48,8 @@ export function ScoreRow({ label, value, mediaUf, unit = '%' }: ScoreRowProps) {
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-slate-700">{label}</p>
         {value == null ? (
-          <span title="Dados sendo coletados" className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500">
-            –
+          <span title="Não informado" className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500">
+            Não informado
             <AlertCircle className="size-3.5" aria-hidden="true" />
           </span>
         ) : (
@@ -61,7 +61,7 @@ export function ScoreRow({ label, value, mediaUf, unit = '%' }: ScoreRowProps) {
       </div>
 
       {value == null ? (
-        <p className="text-xs text-slate-500">Dados sendo coletados</p>
+        <p className="text-xs text-slate-500">Não informado</p>
       ) : (
         <div className="space-y-1">
           <div className="h-2 overflow-hidden rounded-full bg-slate-200">
