@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd app && npm ci",
+  "installCommand": "cd app && npm ci --include=optional",
   "buildCommand": "cd app && npm run build",
   "outputDirectory": "app/.next",
   "framework": "nextjs"
