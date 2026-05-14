@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd app && npm ci --include=optional",
+  "installCommand": "cd app && npm ci --include=optional && npm i --no-save @tailwindcss/oxide-linux-x64-gnu @tailwindcss/oxide-linux-x64-musl lightningcss-linux-x64-gnu lightningcss-linux-x64-musl",
   "buildCommand": "cd app && npm run build",
   "outputDirectory": "app/.next",
   "framework": "nextjs"
