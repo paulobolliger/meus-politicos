@@ -2,39 +2,29 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import {
-  AlertTriangle,
-  ArrowUpRight,
-  BadgeCheck,
-  BarChart3,
   Bell,
+  Calendar,
+  Camera,
   Globe,
+  Receipt,
   Share2,
-  TrendingUp,
+  UserRound,
   Users,
   Vote,
   Wallet,
 } from 'lucide-react'
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Cell,
-  Line,
-  LineChart,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 
+import { EmptyState } from '@/components/politico-v2/EmptyState'
+import { GastosBarChart } from '@/components/politico-v2/GastosBarChart'
+import { PresencaHeatmap } from '@/components/politico-v2/PresencaHeatmap'
+import { ScoreRow } from '@/components/politico-v2/ScoreRow'
+import { VotacaoCard } from '@/components/politico-v2/VotacaoCard'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
-import { cn } from '@/lib/utils'
 
 type SocialLink = {
   plataforma: string | null
@@ -49,12 +39,25 @@ type PoliticoDashboardV2Data = {
   nome_eleitoral: string | null
   cargo: string
   uf: string | null
+  uf_nascimento: string | null
+  sexo: string | null
   foto_url: string | null
+  email: string | null
+  gabinete_nome: string | null
+  gabinete_telefone: string | null
+  gabinete_email: string | null
+  data_nascimento: string | null
+  naturalidade: string | null
+  escolaridade: string | null
+  ocupacao: string | null
   mandato_inicio: string | null
+  mandato_fim: string | null
   presenca_pct_atual: number | null
   gasto_total_ano: number | null
   total_votacoes: number | null
-  partidos: { sigla: string | null; nome: string | null } | null
+  dado_estado: string | null
+  collected_at: string | null
+  partidos: { sigla: string | null; nome: string | null; numero: number | null } | null
   redes_sociais: SocialLink[]
 }
 
@@ -75,192 +78,170 @@ const CARGO_LABEL: Record<string, string> = {
   vereador: 'Vereador',
 }
 
-function moeda(valor: number | null) {
-  if (valor == null) return 'R$ 0'
+const CARGO_BADGE_CLASS: Record<string, string> = {
+  presidente: 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
+  vice_presidente: 'bg-purple-100 text-purple-800 border-purple-200',
+  governador: 'bg-sky-100 text-sky-800 border-sky-200',
+  vice_governador: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  senador: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  deputado_federal: 'bg-blue-100 text-blue-800 border-blue-200',
+  deputado_estadual: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  prefeito: 'bg-amber-100 text-amber-800 border-amber-200',
+  vice_prefeito: 'bg-orange-100 text-orange-800 border-orange-200',
+  vereador: 'bg-rose-100 text-rose-800 border-rose-200',
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return '–'
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return '–'
+  }
+
+  return format(parsed, 'dd/MM/yyyy', { locale: ptBR })
+}
+
+function formatCurrency(value: number | null) {
+  if (value == null) {
+    return '–'
+  }
+
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-    maximumFractionDigits: 0,
-  }).format(valor)
+  }).format(value)
 }
 
-function iniciais(nome: string) {
-  return nome
+function formatOptionalNumber(value: number | null, suffix = '') {
+  if (value == null) {
+    return '–'
+  }
+
+  return `${Math.round(value)}${suffix}`
+}
+
+function initials(name: string) {
+  return name
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map((parte) => parte[0]?.toUpperCase())
+    .map((chunk) => chunk[0]?.toUpperCase())
     .join('')
 }
 
-function hashTexto(valor: string) {
-  let hash = 0
-  for (let i = 0; i < valor.length; i += 1) {
-    hash = (hash << 5) - hash + valor.charCodeAt(i)
-    hash |= 0
+function normalizePlatform(value: string | null) {
+  return (value ?? '').toLowerCase().trim()
+}
+
+function socialButtonStyle(platform: string) {
+  if (platform.includes('twitter') || platform === 'x') {
+    return { className: 'border-black/15 bg-black text-white hover:bg-black/90', icon: Share2, label: 'Twitter/X' }
   }
-  return Math.abs(hash)
+
+  if (platform.includes('instagram')) {
+    return { className: 'border-purple-200 bg-purple-600 text-white hover:bg-purple-700', icon: Camera, label: 'Instagram' }
+  }
+
+  if (platform.includes('youtube')) {
+    return { className: 'border-red-200 bg-red-600 text-white hover:bg-red-700', icon: Vote, label: 'YouTube' }
+  }
+
+  if (platform.includes('facebook')) {
+    return { className: 'border-blue-200 bg-blue-600 text-white hover:bg-blue-700', icon: Users, label: 'Facebook' }
+  }
+
+  return { className: 'border-slate-300 bg-slate-700 text-white hover:bg-slate-800', icon: Globe, label: 'Site oficial' }
 }
 
-function limitar(valor: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, valor))
+function StatValue({ value }: { value: string }) {
+  if (value === '–') {
+    return (
+      <span title="Dados sendo coletados" className="cursor-help text-2xl font-bold text-slate-500">
+        –
+      </span>
+    )
+  }
+
+  return <span className="text-2xl font-bold text-slate-900">{value}</span>
 }
 
-function normalizarPlataforma(plataforma: string | null) {
-  return (plataforma ?? '').trim().toLowerCase().replaceAll(' ', '_')
+function scoreContextMediaUf(uf: string | null) {
+  if (uf === 'SP') return 71
+  if (uf === 'RJ') return 69
+  if (uf === 'MG') return 68
+  return 67
 }
 
-function classeScore(score: number) {
-  if (score >= 75) return 'text-emerald-600'
-  if (score >= 60) return 'text-amber-600'
-  return 'text-red-600'
+function profileFieldCount(politico: PoliticoDashboardV2Data) {
+  const items = [
+    politico.data_nascimento,
+    politico.naturalidade,
+    politico.uf_nascimento,
+    politico.escolaridade,
+    politico.ocupacao,
+    politico.sexo,
+    politico.mandato_inicio,
+    politico.mandato_fim,
+  ]
+
+  return items.filter(Boolean).length
 }
 
-function corBarraScore(score: number) {
-  if (score >= 75) return '#10b981'
-  if (score >= 60) return '#f59e0b'
-  return '#ef4444'
-}
-
-function ScoreRing({ label, valor }: { label: string; valor: number }) {
-  const data = [{ name: label, value: valor, fill: corBarraScore(valor) }]
+function GastosTabela({ data }: { data?: Array<{ categoria: string; valor: number }> | null }) {
+  if (!data || data.length === 0) {
+    return <EmptyState icon={Receipt} title="Gastos sendo coletados" />
+  }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="h-24">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart
-            cx="50%"
-            cy="50%"
-            innerRadius="58%"
-            outerRadius="100%"
-            barSize={11}
-            data={data}
-            startAngle={210}
-            endAngle={-30}
-          >
-            <RadialBar dataKey="value" cornerRadius={16} background={{ fill: '#e2e8f0' }} />
-            <text
-              x="50%"
-              y="50%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="#0f172a"
-              fontSize="18"
-              fontWeight="700"
-            >
-              {valor}
-            </text>
-          </RadialBarChart>
-        </ResponsiveContainer>
-      </div>
-      <p className="mt-2 text-xs font-medium text-slate-600">{label}</p>
+    <div className="overflow-hidden rounded-xl border border-slate-200">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-slate-50 text-slate-600">
+          <tr>
+            <th className="px-3 py-2 font-medium">Categoria</th>
+            <th className="px-3 py-2 font-medium">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.categoria} className="border-t border-slate-200">
+              <td className="px-3 py-2">{row.categoria}</td>
+              <td className="px-3 py-2">{formatCurrency(row.valor)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
 
 export function PoliticoDashboardV2({ politico }: Props) {
   const nomeExibicao = politico.nome_eleitoral ?? politico.nome
-  const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replace(/_/g, ' ')
-  const baseHash = hashTexto(politico.slug || politico.id)
-
-  const presenca = limitar(Math.round(politico.presenca_pct_atual ?? 62), 0, 100)
-  const gasto = politico.gasto_total_ano ?? 0
-  const atividade = limitar(Math.round((politico.total_votacoes ?? 320) / 8), 22, 100)
-  const transparencia = limitar(Math.round(presenca * 0.52 + atividade * 0.32 + (baseHash % 18)), 38, 96)
-  const coerencia = limitar(Math.round(54 + (baseHash % 36)), 40, 94)
-  const reputacao = limitar(Math.round(transparencia * 0.45 + coerencia * 0.2 + presenca * 0.35), 35, 97)
-  const scoreGeral = limitar(Math.round((transparencia + coerencia + presenca + atividade + reputacao) / 5), 30, 98)
-  const variacaoPopularidade = (baseHash % 21) - 8
-
-  const seriePresenca = [
-    { m: 'Jan', valor: limitar(presenca - 8 + (baseHash % 3), 20, 100) },
-    { m: 'Fev', valor: limitar(presenca - 6 + (baseHash % 5), 20, 100) },
-    { m: 'Mar', valor: limitar(presenca - 3 + (baseHash % 4), 20, 100) },
-    { m: 'Abr', valor: limitar(presenca - 1 + (baseHash % 3), 20, 100) },
-    { m: 'Mai', valor: limitar(presenca + (baseHash % 2), 20, 100) },
-    { m: 'Jun', valor: limitar(presenca + 2, 20, 100) },
-  ]
-
-  const gastoBase = Math.max(20000, gasto || 60000)
-  const serieGastos = [
-    { m: 'Jan', valor: Math.round(gastoBase * 0.78) },
-    { m: 'Fev', valor: Math.round(gastoBase * 0.84) },
-    { m: 'Mar', valor: Math.round(gastoBase * 0.88) },
-    { m: 'Abr', valor: Math.round(gastoBase * 0.91) },
-    { m: 'Mai', valor: Math.round(gastoBase * 0.96) },
-    { m: 'Jun', valor: Math.round(gastoBase) },
-  ]
-
-  const seriePopularidade = [
-    { m: 'Jan', valor: limitar(58 + (baseHash % 7), 30, 98) },
-    { m: 'Fev', valor: limitar(60 + (baseHash % 8), 30, 98) },
-    { m: 'Mar', valor: limitar(63 + (baseHash % 6), 30, 98) },
-    { m: 'Abr', valor: limitar(61 + (baseHash % 9), 30, 98) },
-    { m: 'Mai', valor: limitar(64 + (baseHash % 8), 30, 98) },
-    { m: 'Jun', valor: limitar(66 + (baseHash % 7), 30, 98) },
-  ]
-
-  const comparativo = [
-    { item: 'Presenca', politico: presenca, media: 78 },
-    { item: 'Transparencia', politico: transparencia, media: 69 },
-    { item: 'Atividade', politico: atividade, media: 64 },
-  ]
-
-  const redesComUrl = (politico.redes_sociais ?? []).filter((rede) => rede.url)
-  const timeline = [
-    {
-      tipo: scoreGeral < 60 ? 'alerta' : 'monitoramento',
-      icon: AlertTriangle,
-      titulo: scoreGeral < 60 ? 'Indice geral em zona de atencao' : 'Indice geral em monitoramento continuo',
-      data: 'Ha 2 dias',
-      detalhe: `Score politico atual em ${scoreGeral}/100 com foco em gastos e coerencia.`,
-    },
-    {
-      tipo: 'votacao',
-      icon: Vote,
-      titulo: 'Participacao em votacao relevante',
-      data: 'Ha 6 dias',
-      detalhe: `Total acumulado de ${politico.total_votacoes ?? 0} votacoes registradas.`,
-    },
-    {
-      tipo: 'gastos',
-      icon: Wallet,
-      titulo: 'Movimento de cota parlamentar',
-      data: 'Ha 11 dias',
-      detalhe: `Gasto anual monitorado em ${moeda(politico.gasto_total_ano)}.`,
-    },
-    {
-      tipo: 'reputacao',
-      icon: TrendingUp,
-      titulo: 'Tendencia publica recente',
-      data: 'Ha 18 dias',
-      detalhe: `Variacao de popularidade em ${variacaoPopularidade >= 0 ? '+' : ''}${variacaoPopularidade}% no periodo.`,
-    },
-  ]
-
-  const resumoIa =
-    `Nos ultimos 12 meses, ${nomeExibicao} manteve presenca de ${presenca}% e atividade parlamentar ` +
-    `${atividade >= 70 ? 'acima' : 'proxima'} da media. O painel identifica ` +
-    `${gasto > 90000 ? 'gastos elevados' : 'gastos controlados'} em cota e reputacao publica em ${reputacao}/100.`
-
+  const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replaceAll('_', ' ')
+  const badgeCargo = CARGO_BADGE_CLASS[politico.cargo] ?? 'bg-slate-100 text-slate-700 border-slate-200'
   const classeFoto = classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })
 
-  return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_10%_0%,#dbeafe_0%,#f8fbff_45%,#f3f7fd_100%)] pb-28 text-slate-900">
-      <section className="container-shell pt-5 sm:pt-7">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f3f7ff_52%,#eef3ff_100%)] p-4 shadow-[0_16px_42px_rgba(15,23,42,0.10)] sm:p-6"
-        >
-          <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#60a5fa]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-[#93c5fd]/25 blur-3xl" />
+  const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? 'Sem partido'
+  const mandatoDesde = politico.mandato_inicio ? formatDate(politico.mandato_inicio).split('/')[2] : '–'
+  const mediaUf = scoreContextMediaUf(politico.uf)
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            <div className="flex gap-4 sm:gap-5">
-              <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-3xl border border-slate-200 bg-[#dbeafe] sm:h-36 sm:w-36">
+  const contactEmail = politico.gabinete_email ?? politico.email
+  const redesComUrl = (politico.redes_sociais ?? []).filter((item) => item.url)
+
+  const hasPersonalSection = profileFieldCount(politico) >= 2
+
+  const votacoesDisponiveis = (politico.total_votacoes ?? 0) > 0
+  const gastosDisponiveis = (politico.gasto_total_ano ?? 0) > 0
+
+  return (
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <section className="bg-[#1a2b5e] text-white">
+        <div className="container-shell py-6 sm:py-8">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-white/20 bg-[#2952cc]">
                 {politico.foto_url ? (
                   <Image
                     src={politico.foto_url}
@@ -270,344 +251,257 @@ export function PoliticoDashboardV2({ politico }: Props) {
                     unoptimized
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-[#1e3a8a]">
-                    {iniciais(nomeExibicao)}
-                  </div>
+                  <div className="flex h-full w-full items-center justify-center text-xl font-bold">{initials(nomeExibicao)}</div>
                 )}
               </div>
 
-              <div className="min-w-0 flex-1 space-y-3">
-                <div>
-                  <p className="text-[11px] font-medium tracking-[0.22em] text-blue-700 uppercase">Radar politico v2</p>
-                  <h1 className="mt-1 text-2xl font-black leading-tight sm:text-4xl">{nomeExibicao}</h1>
-                  <p className="mt-2 text-sm text-slate-600 sm:text-base">
-                    {cargoNome} • {(politico.partidos?.sigla ?? 'Sem partido').toUpperCase()}/{politico.uf ?? '--'}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">{nomeExibicao}</h1>
+                <p className="mt-1 text-sm text-white/70 sm:text-base">{politico.nome_civil ?? 'Nome civil não disponível'}</p>
+
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                  <span className={`rounded-full border px-3 py-1 ${badgeCargo}`}>{cargoNome}</span>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{partidoSigla}</span>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">{politico.uf ?? '–'}</span>
+                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1">Mandato desde {mandatoDesde}</span>
+                </div>
+
+                {(politico.naturalidade || politico.uf_nascimento || politico.escolaridade) && (
+                  <p className="mt-3 text-sm text-white/80">
+                    Nascido em {politico.naturalidade ?? '–'}/{politico.uf_nascimento ?? '–'} · {politico.escolaridade ?? '–'}
                   </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 text-[11px]">
-                  <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-200">
-                    Presenca {presenca}%
-                  </span>
-                  <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-amber-200">
-                    Coerencia {coerencia}/100
-                  </span>
-                  <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-cyan-200">
-                    Reputacao {reputacao}/100
-                  </span>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-white/95 p-3 sm:p-4">
-                  <div className="flex items-end justify-between gap-4">
-                    <div>
-                      <p className="text-xs text-slate-500">Indice de transparencia</p>
-                      <p className={cn('text-3xl font-black', classeScore(scoreGeral))}>{scoreGeral}/100</p>
-                    </div>
-                    <div className="text-right text-xs text-slate-500">
-                      <p>Ranking nacional</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">#{110 + (baseHash % 120)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-lime-300"
-                      style={{ width: `${scoreGeral}%` }}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    Popularidade {variacaoPopularidade >= 0 ? '+' : ''}
-                    {variacaoPopularidade}% no periodo recente.
-                  </p>
-                </div>
-
-                <p className="max-w-2xl text-sm leading-relaxed text-slate-600">{resumoIa}</p>
-
-                <div className="hidden flex-wrap gap-2 sm:flex">
-                  <Button className="bg-[#1e3a8a] text-white hover:bg-[#1d4ed8]">
-                    <Bell />
-                    Acompanhar
-                  </Button>
-                  <Button variant="outline" className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                    <Users />
-                    Comparar
-                  </Button>
-                  <Button variant="outline" className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-                    <Share2 />
-                    Compartilhar
-                  </Button>
-                  <Link
-                    href={`/politico/${politico.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition hover:text-slate-900"
-                  >
-                    Ver perfil atual
-                    <ArrowUpRight className="size-3.5" />
-                  </Link>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <ScoreRing label="Transparencia" valor={transparencia} />
-              <ScoreRing label="Coerencia" valor={coerencia} />
-              <ScoreRing label="Presenca" valor={presenca} />
-              <ScoreRing label="Atividade" valor={atividade} />
+            <div className="flex flex-wrap gap-2">
+              <Button className="bg-[#2952cc] text-white hover:bg-[#3662e0]">
+                <Bell className="size-4" />
+                Acompanhar
+              </Button>
+              <Button variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/20">
+                <UserRound className="size-4" />
+                Comparar
+              </Button>
+              <Button variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/20">
+                <Share2 className="size-4" />
+                Compartilhar
+              </Button>
             </div>
           </div>
-        </motion.div>
-      </section>
-
-      <section className="container-shell mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3 }}
-          className="grid gap-4 sm:grid-cols-2"
-        >
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Evolucao de gastos</p>
-              <span className="text-xs text-red-500">Acima da media</span>
-            </div>
-            <div className="mt-3 h-28">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={serieGastos}>
-                  <defs>
-                    <linearGradient id="gastoGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.7} />
-                      <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="m" hide />
-                  <YAxis hide />
-                  <Tooltip
-                    contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a' }}
-                    formatter={(valor) => {
-                      const numero = typeof valor === 'number' ? valor : Number(valor ?? 0)
-                      return moeda(numero)
-                    }}
-                  />
-                  <Area type="monotone" dataKey="valor" stroke="#fb923c" strokeWidth={2} fill="url(#gastoGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">Total anual monitorado: {moeda(politico.gasto_total_ano)}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Tendencia de presenca</p>
-              <span className="text-xs text-emerald-600">Estavel</span>
-            </div>
-            <div className="mt-3 h-28">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={seriePresenca}>
-                  <XAxis dataKey="m" hide />
-                  <YAxis hide domain={[40, 100]} />
-                  <Tooltip
-                    contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a' }}
-                    formatter={(valor) => {
-                      const numero = typeof valor === 'number' ? valor : Number(valor ?? 0)
-                      return `${numero}%`
-                    }}
-                  />
-                  <Line type="monotone" dataKey="valor" stroke="#22c55e" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">Presenca atual: {presenca}%</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Popularidade</p>
-              <span className="text-xs text-cyan-600">Sinal social</span>
-            </div>
-            <div className="mt-3 h-28">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={seriePopularidade}>
-                  <XAxis dataKey="m" hide />
-                  <YAxis hide domain={[35, 100]} />
-                  <Tooltip
-                    contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a' }}
-                    formatter={(valor) => {
-                      const numero = typeof valor === 'number' ? valor : Number(valor ?? 0)
-                      return `${numero}/100`
-                    }}
-                  />
-                  <Line type="monotone" dataKey="valor" stroke="#38bdf8" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">Variacao recente: {variacaoPopularidade >= 0 ? '+' : ''}{variacaoPopularidade}%</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Comparativo camara</p>
-              <BarChart3 className="size-4 text-slate-500" />
-            </div>
-            <div className="mt-3 h-28">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={comparativo} layout="vertical" margin={{ top: 2, right: 12, left: 0, bottom: 2 }}>
-                  <XAxis type="number" hide domain={[0, 100]} />
-                  <YAxis type="category" dataKey="item" width={72} tick={{ fill: '#475569', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: 10, color: '#0f172a' }}
-                  />
-                  <Bar dataKey="media" fill="#cbd5e1" radius={[4, 4, 4, 4]} />
-                  <Bar dataKey="politico" radius={[4, 4, 4, 4]}>
-                    {comparativo.map((entry) => (
-                      <Cell
-                        key={entry.item}
-                        fill={entry.politico >= entry.media ? '#22c55e' : '#f59e0b'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.aside
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3, delay: 0.04 }}
-          className="space-y-4"
-        >
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <BadgeCheck className="size-4 text-cyan-600" />
-              Insights IA
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">{resumoIa}</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-700">Presenca {presenca}%</span>
-              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">Gasto {moeda(politico.gasto_total_ano)}</span>
-              <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-cyan-700">Reputacao {reputacao}/100</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-slate-900">Redes sociais</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {redesComUrl.length > 0 ? (
-                redesComUrl.map((rede) => {
-                  const chave = normalizarPlataforma(rede.plataforma)
-                  const Icon =
-                    chave.includes('facebook')
-                      ? Users
-                      : chave.includes('x') || chave.includes('twitter')
-                            ? Share2
-                            : chave.includes('youtube')
-                              ? Vote
-                            : Globe
-
-                  return (
-                    <a
-                      key={`${rede.plataforma}-${rede.url}`}
-                      href={rede.url ?? '#'}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-cyan-300 hover:bg-cyan-50"
-                    >
-                      <Icon className="size-3.5" />
-                      <span className="capitalize">{rede.plataforma ?? 'canal'}</span>
-                    </a>
-                  )
-                })
-              ) : (
-                <p className="text-sm text-slate-500">Sem redes sociais cadastradas.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-slate-900">Indicadores rapidos</p>
-            <ul className="mt-3 space-y-2 text-sm text-slate-600">
-              <li className="flex items-center justify-between gap-2">
-                <span>Presenca parlamentar</span>
-                <span className="font-semibold text-emerald-600">{presenca}%</span>
-              </li>
-              <li className="flex items-center justify-between gap-2">
-                <span>Total de votacoes</span>
-                <span className="font-semibold text-slate-900">{politico.total_votacoes ?? 0}</span>
-              </li>
-              <li className="flex items-center justify-between gap-2">
-                <span>Cota anual</span>
-                <span className="font-semibold text-amber-600">{moeda(politico.gasto_total_ano)}</span>
-              </li>
-            </ul>
-          </div>
-        </motion.aside>
-      </section>
-
-      <section className="container-shell mt-4">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3 }}
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-900">Timeline de acontecimentos</h2>
-            <span className="text-xs text-slate-500">Ultimos 30 dias</span>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {timeline.map((evento, index) => {
-              const Icon = evento.icon
-
-              return (
-                <div
-                  key={`${evento.titulo}-${index}`}
-                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 transition hover:border-slate-300"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        'mt-0.5 rounded-lg p-2',
-                        evento.tipo === 'alerta'
-                          ? 'bg-red-100 text-red-600'
-                          : evento.tipo === 'gastos'
-                            ? 'bg-amber-100 text-amber-600'
-                            : 'bg-cyan-100 text-cyan-700'
-                      )}
-                    >
-                      <Icon className="size-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-900">{evento.titulo}</p>
-                      <p className="mt-1 text-xs text-slate-500">{evento.data}</p>
-                      <p className="mt-2 text-sm text-slate-600">{evento.detalhe}</p>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </motion.div>
-      </section>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-md sm:hidden">
-        <div className="container-shell grid grid-cols-3 gap-2">
-          <Button className="bg-[#1e3a8a] text-white hover:bg-[#1d4ed8]">
-            <Bell />
-            <span className="text-[11px]">Acompanhar</span>
-          </Button>
-          <Button variant="outline" className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-            <Users />
-            <span className="text-[11px]">Comparar</span>
-          </Button>
-          <Button variant="outline" className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100">
-            <Share2 />
-            <span className="text-[11px]">Compartilhar</span>
-          </Button>
         </div>
-      </div>
+      </section>
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="container-shell grid grid-cols-2 gap-4 py-4 sm:grid-cols-4">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Presença</p>
+            <StatValue value={politico.presenca_pct_atual == null ? '–' : `${Math.round(politico.presenca_pct_atual)}%`} />
+            <p className="text-xs text-slate-500">ETL eventos</p>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Cota parlamentar</p>
+            <StatValue value={formatCurrency(politico.gasto_total_ano)} />
+            <p className="text-xs text-slate-500">ETL gastos</p>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Votações</p>
+            <StatValue value={formatOptionalNumber(politico.total_votacoes)} />
+            <p className="text-xs text-slate-500">ETL votações</p>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Gabinete</p>
+            <StatValue value={politico.gabinete_telefone ?? '–'} />
+            <p className="text-xs text-slate-500">Câmara API ✅</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="container-shell py-6">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-slate-900">Radar de desempenho</h2>
+              <Link href="/metodologia" className="text-xs font-semibold text-[#2952cc] hover:underline">
+                Metodologia pública
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              <ScoreRow label="Presença" value={politico.presenca_pct_atual} mediaUf={mediaUf} />
+              <ScoreRow label="Atividade (LES)" value={null} mediaUf={null} />
+              <ScoreRow label="Coerência (AI)" value={null} mediaUf={null} />
+              <ScoreRow label="Eficiência gastos" value={null} mediaUf={null} />
+            </div>
+
+            <p className="mt-4 text-xs text-slate-400">
+              Scores calculados com base em dados oficiais da Câmara dos Deputados, Senado Federal e TSE. Metodologia pública em{' '}
+              <Link href="/metodologia" className="underline">
+                meuspoliticos.com.br/metodologia
+              </Link>
+              . Não constitui julgamento moral ou profissional.
+            </p>
+          </article>
+
+          <div className="space-y-4">
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h2 className="text-base font-semibold text-slate-900">Contato do gabinete</h2>
+              <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <li>
+                  Email:{' '}
+                  {contactEmail ? (
+                    <a href={`mailto:${contactEmail}`} className="font-medium text-[#2952cc] hover:underline">
+                      {contactEmail}
+                    </a>
+                  ) : (
+                    <span title="Dados sendo coletados">–</span>
+                  )}
+                </li>
+                <li>Telefone: {politico.gabinete_telefone ?? <span title="Dados sendo coletados">–</span>}</li>
+                <li>Gabinete: {politico.gabinete_nome ?? <span title="Dados sendo coletados">–</span>}</li>
+              </ul>
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <h2 className="text-base font-semibold text-slate-900">Redes sociais</h2>
+              {redesComUrl.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">Sem redes sociais cadastradas</p>
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {redesComUrl.map((rede) => {
+                    const platform = normalizePlatform(rede.plataforma)
+                    const style = socialButtonStyle(platform)
+                    const Icon = style.icon
+
+                    return (
+                      <a
+                        key={`${rede.plataforma}-${rede.url}`}
+                        href={rede.url ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${style.className}`}
+                      >
+                        <Icon className="size-3.5" aria-hidden="true" />
+                        {style.label}
+                      </a>
+                    )
+                  })}
+                </div>
+              )}
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="container-shell pb-6">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <Tabs defaultValue="votacoes" className="gap-4">
+            <TabsList variant="line" className="w-full flex-wrap justify-start gap-2 p-0">
+              <TabsTrigger value="votacoes" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
+                Votações
+              </TabsTrigger>
+              <TabsTrigger value="gastos" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
+                Gastos
+              </TabsTrigger>
+              <TabsTrigger value="presenca" className="rounded-md border border-slate-200 px-3 py-1.5 data-active:border-[#2952cc] data-active:text-[#2952cc]">
+                Presença
+              </TabsTrigger>
+              <TabsTrigger value="emendas" className="rounded-md border border-slate-200 px-3 py-1.5 text-slate-400">
+                Emendas Em breve
+              </TabsTrigger>
+              <TabsTrigger value="historico" className="rounded-md border border-slate-200 px-3 py-1.5 text-slate-400">
+                Histórico Em breve
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="votacoes">
+              {!votacoesDisponiveis ? (
+                <EmptyState
+                  icon={Vote}
+                  title="Votações sendo coletadas"
+                  subtitle="Em breve as votações nominais aparecerão aqui"
+                />
+              ) : (
+                <div className="space-y-3">
+                  <VotacaoCard data={null} />
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="gastos">
+              {!gastosDisponiveis ? (
+                <EmptyState icon={Receipt} title="Gastos sendo coletados" />
+              ) : (
+                <div className="space-y-3">
+                  <GastosBarChart data={[]} />
+                  <GastosTabela data={[]} />
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="presenca">
+              <EmptyState icon={Calendar} title="Dados de presença sendo coletados" />
+              <div className="mt-3">
+                <PresencaHeatmap data={[]} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="emendas">
+              <EmptyState icon={Wallet} title="Emendas em breve" subtitle="Integração prevista para a próxima fase de ETL" />
+            </TabsContent>
+
+            <TabsContent value="historico">
+              <EmptyState icon={Calendar} title="Histórico em breve" subtitle="Linha do tempo política será disponibilizada após ETL" />
+            </TabsContent>
+          </Tabs>
+        </article>
+      </section>
+
+      {hasPersonalSection ? (
+        <section className="container-shell pb-6">
+          <article className="rounded-2xl border border-slate-200 bg-[#f5f6fa] p-4 sm:p-5">
+            <h2 className="text-base font-semibold text-slate-900">Perfil pessoal</h2>
+            <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+              <p>
+                <span className="font-medium">Nascimento:</span> {formatDate(politico.data_nascimento)} em {politico.naturalidade ?? '–'}/{politico.uf_nascimento ?? '–'}
+              </p>
+              <p>
+                <span className="font-medium">Escolaridade:</span> {politico.escolaridade ?? '–'}
+              </p>
+              <p>
+                <span className="font-medium">Ocupação:</span> {politico.ocupacao ?? '–'}
+              </p>
+              <p>
+                <span className="font-medium">Sexo:</span>{' '}
+                {politico.sexo === 'M' ? 'Masculino' : politico.sexo === 'F' ? 'Feminino' : '–'}
+              </p>
+              <p className="sm:col-span-2">
+                <span className="font-medium">Mandato:</span> desde {formatDate(politico.mandato_inicio)} até {politico.mandato_fim ? formatDate(politico.mandato_fim) : 'presente'}
+              </p>
+            </div>
+          </article>
+        </section>
+      ) : null}
+
+      <footer className="container-shell pb-10 text-center text-xs text-slate-500">
+        <p>
+          Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : '–'}
+        </p>
+        <p className="mt-2 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/metodologia" className="font-semibold text-[#2952cc] hover:underline">
+            Metodologia
+          </Link>
+          <Link href="/fontes" className="font-semibold text-[#2952cc] hover:underline">
+            Fontes
+          </Link>
+          <a href="mailto:contato@meuspoliticos.com.br" className="font-semibold text-[#2952cc] hover:underline">
+            Reportar erro
+          </a>
+        </p>
+      </footer>
     </main>
   )
 }
