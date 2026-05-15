@@ -2,12 +2,36 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Circle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px 16px',
+  border: '1px solid var(--line-strong)',
+  background: 'var(--panel)',
+  fontSize: 14,
+  marginBottom: 12,
+  outline: 'none',
+  boxSizing: 'border-box',
+  borderRadius: 0,
+  color: 'var(--ink)',
+}
+
+const oauthBtnBase: React.CSSProperties = {
+  width: '100%',
+  padding: '12px 20px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+  fontSize: 14,
+  fontWeight: 500,
+  cursor: 'pointer',
+  boxSizing: 'border-box',
+  borderRadius: 0,
+}
 
 export function CadastroForm() {
   const supabase = createClient()
@@ -109,151 +133,178 @@ export function CadastroForm() {
   const senhasConferem = confirmPassword.length > 0 && password === confirmPassword
 
   return (
-    <form onSubmit={cadastrarComEmail} className="space-y-5">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">Criar conta</h2>
-        <p className="text-sm leading-6 text-slate-600">
-          Comece com login social ou cadastre seus dados básicos de acesso.
-        </p>
+    <form onSubmit={cadastrarComEmail}>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>Criar conta</h2>
+
+      {/* Google */}
+      <button
+        type="button"
+        onClick={cadastrarComGoogle}
+        disabled={loadingGoogle}
+        style={{ ...oauthBtnBase, background: 'var(--panel)', border: '1px solid var(--line-strong)', marginBottom: 8, color: 'var(--ink)' }}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 16, height: 16, flexShrink: 0 }}>
+          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.6 2.3 12 2.3 6.9 2.3 2.8 6.4 2.8 11.5s4.1 9.2 9.2 9.2c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.6H12z" />
+        </svg>
+        {loadingGoogle ? 'Conectando...' : 'Continuar com Google'}
+      </button>
+
+      {/* X */}
+      <button
+        type="button"
+        onClick={cadastrarComX}
+        disabled={loadingTwitter}
+        style={{ ...oauthBtnBase, background: 'var(--ink)', color: 'white', border: 'none', marginBottom: 20 }}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 16, height: 16, fill: 'white', flexShrink: 0 }}>
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
+        </svg>
+        {loadingTwitter ? 'Conectando...' : 'Continuar com X'}
+      </button>
+
+      {/* Divisor */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+        <span className="mono" style={{ fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.1em' }}>OU</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
       </div>
 
-      <div className="space-y-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={cadastrarComGoogle}
-          disabled={loadingGoogle}
-          className="h-11 w-full border-slate-300 bg-white text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
-            <path
-              fill="#EA4335"
-              d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.6 2.3 12 2.3 6.9 2.3 2.8 6.4 2.8 11.5s4.1 9.2 9.2 9.2c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.6H12z"
-            />
-          </svg>
-          {loadingGoogle ? 'Conectando...' : 'Continuar com Google'}
-        </Button>
+      {/* Campos */}
+      <input
+        type="text"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        placeholder="Seu nome"
+        style={inputStyle}
+        required
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Seu e-mail"
+        style={inputStyle}
+        required
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Crie uma senha"
+        style={inputStyle}
+        required
+        minLength={8}
+        aria-describedby="password-requirements"
+      />
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={cadastrarComX}
-          disabled={loadingTwitter}
-          className="h-11 w-full border-black bg-black text-white shadow-sm hover:bg-slate-900 hover:text-white disabled:text-white [&_svg]:text-white"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-white">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
-          </svg>
-          {loadingTwitter ? 'Conectando...' : 'Continuar com X'}
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-3 text-xs text-slate-500">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span>ou com e-mail</span>
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
-
-      <div className="space-y-3">
-        <Input
-          type="text"
-          value={nome}
-          onChange={(event) => setNome(event.target.value)}
-          placeholder="Seu nome"
-          className="h-11 border-slate-300 bg-white"
-          required
-        />
-
-        <Input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Seu e-mail"
-          className="h-11 border-slate-300 bg-white"
-          required
-        />
-
-        <Input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Crie uma senha"
-          className="h-11 border-slate-300 bg-white"
-          required
-          minLength={8}
-          aria-describedby="password-requirements"
-        />
-
-        <div id="password-requirements" className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Requisitos da senha</p>
-          <ul className="mt-2 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-            {requisitosSenha.map((requisito) => {
-              const Icon = requisito.valido ? CheckCircle2 : Circle
-
-              return (
-                <li
-                  key={requisito.label}
-                  className={requisito.valido ? 'flex items-center gap-2 text-emerald-700' : 'flex items-center gap-2'}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                  <span>{requisito.label}</span>
-                </li>
-              )
-            })}
-          </ul>
+      {/* Requisitos da senha */}
+      <div
+        id="password-requirements"
+        style={{
+          padding: 12,
+          border: '1px solid var(--line)',
+          background: 'var(--bg)',
+          marginBottom: 12,
+        }}
+      >
+        <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', marginBottom: 8 }}>
+          REQUISITOS DA SENHA
         </div>
-
-        <Input
-          type="password"
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          placeholder="Repita a senha"
-          className="h-11 border-slate-300 bg-white"
-          required
-          minLength={8}
-          aria-invalid={confirmPassword.length > 0 && password !== confirmPassword}
-        />
-        {confirmPassword.length > 0 ? (
-          <p className={senhasConferem ? 'text-sm text-emerald-700' : 'text-sm text-red-600'}>
-            {senhasConferem ? 'As senhas conferem.' : 'As senhas ainda nao conferem.'}
-          </p>
-        ) : null}
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+          {requisitosSenha.map((req) => (
+            <li
+              key={req.label}
+              className="mono"
+              style={{ fontSize: 11, color: req.valido ? 'var(--pos)' : 'var(--mute)', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              <span>{req.valido ? '✓' : '○'}</span> {req.label}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-slate-600">
+      <input
+        type="password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        placeholder="Repita a senha"
+        style={inputStyle}
+        required
+        minLength={8}
+        aria-invalid={confirmPassword.length > 0 && password !== confirmPassword}
+      />
+      {confirmPassword.length > 0 ? (
+        <p
+          className="mono"
+          style={{ fontSize: 12, color: senhasConferem ? 'var(--pos)' : 'var(--neg)', marginBottom: 12, marginTop: -8 }}
+        >
+          {senhasConferem ? '✓ As senhas conferem.' : '✗ As senhas ainda não conferem.'}
+        </p>
+      ) : null}
+
+      {/* Aceite */}
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 8,
+          fontSize: 13,
+          color: 'var(--ink-3)',
+          marginBottom: 16,
+          cursor: 'pointer',
+        }}
+      >
         <input
           type="checkbox"
           checked={aceite}
-          onChange={(event) => setAceite(event.target.checked)}
-          className="mt-1 h-4 w-4 rounded border-slate-300"
+          onChange={(e) => setAceite(e.target.checked)}
+          style={{ marginTop: 2, flexShrink: 0 }}
         />
         <span>
           Concordo com os{' '}
-          <Link href="/termos" className="text-[#2952cc] hover:underline">
+          <Link href="/termos" style={{ color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>
             Termos de uso
           </Link>{' '}
           e{' '}
-          <Link href="/privacidade" className="text-[#2952cc] hover:underline">
-            Politica de privacidade
+          <Link href="/privacidade" style={{ color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>
+            Política de privacidade
           </Link>
         </span>
       </label>
 
-      <Button
+      {/* Submit */}
+      <button
         type="submit"
         disabled={loadingEmail}
-        className="h-11 w-full bg-[#2952cc] text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] hover:bg-[#2347b2]"
+        style={{
+          width: '100%',
+          padding: 14,
+          background: 'var(--brand)',
+          color: 'white',
+          border: 'none',
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: 'pointer',
+          boxSizing: 'border-box',
+          borderRadius: 0,
+        }}
       >
-        {loadingEmail ? 'Criando conta...' : 'Criar conta'}
-      </Button>
+        {loadingEmail ? 'Criando conta...' : 'Criar conta →'}
+      </button>
 
-      {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--neg)' }}>{errorMessage}</p>
+      ) : null}
 
-      <p className="text-sm text-slate-600">
-        Ja tem conta?{' '}
-        <Link href="/login" className="font-medium text-[#2952cc] hover:underline">
+      <div className="mono" style={{ marginTop: 16, fontSize: 12, color: 'var(--ink-3)' }}>
+        Já tem conta?{' '}
+        <Link href="/login" style={{ color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none' }}>
           Entre
         </Link>
+      </div>
+
+      <p className="mono" style={{ marginTop: 24, fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.06em', textAlign: 'center', lineHeight: 1.5 }}>
+        🔒 SEUS DADOS DE LOCALIZAÇÃO NUNCA SÃO ARMAZENADOS
       </p>
     </form>
   )

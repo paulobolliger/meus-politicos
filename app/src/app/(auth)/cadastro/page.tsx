@@ -4,8 +4,9 @@ import { CadastroForm } from '@/components/auth/CadastroForm'
 export default function CadastroPage() {
   return (
     <AuthShell
-      title="Crie sua conta"
-      description="Use a plataforma para acompanhar políticos, salvar interesses e acessar dados públicos com clareza institucional."
+      leftLabel="NOVA CONTA"
+      leftHeadline="Transparência para decidir melhor"
+      leftSub="Crie uma conta gratuita para salvar seus políticos, acompanhar votações e consultar dados públicos organizados."
     >
       <CadastroForm />
     </AuthShell>

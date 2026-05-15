@@ -1,11 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
 export function RecuperarSenhaForm() {
@@ -37,48 +34,83 @@ export function RecuperarSenhaForm() {
   }
 
   return (
-    <form onSubmit={enviarLink} className="space-y-5">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-950">Esqueci minha senha</h2>
-        <p className="text-sm leading-6 text-slate-600">
-          Informe o e-mail da sua conta para receber um link seguro de redefinicao.
-        </p>
-      </div>
+    <form onSubmit={enviarLink}>
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>Esqueci minha senha</h2>
 
-      <Input
+      <input
         type="email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(e) => setEmail(e.target.value)}
         placeholder="Seu e-mail"
-        className="h-11 border-slate-300 bg-white"
+        style={{
+          width: '100%',
+          padding: '12px 16px',
+          border: '1px solid var(--line-strong)',
+          background: 'var(--panel)',
+          fontSize: 14,
+          marginBottom: 16,
+          outline: 'none',
+          boxSizing: 'border-box',
+          borderRadius: 0,
+          color: 'var(--ink)',
+        }}
         required
       />
 
-      <Button
+      <button
         type="submit"
         disabled={loading}
-        className="h-11 w-full bg-[#2952cc] text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] hover:bg-[#2347b2]"
+        style={{
+          width: '100%',
+          padding: 14,
+          background: 'var(--brand)',
+          color: 'white',
+          border: 'none',
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: 'pointer',
+          boxSizing: 'border-box',
+          borderRadius: 0,
+        }}
       >
-        {loading ? 'Enviando...' : 'Enviar link de recuperação'}
-      </Button>
+        {loading ? 'Enviando...' : 'Enviar link de recuperação →'}
+      </button>
 
       {sentEmail ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
-          <div className="flex gap-2">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <p>
-              <span className="font-semibold">Link enviado!</span> Verifique sua caixa de entrada em{' '}
-              <span className="font-semibold">{sentEmail}</span>. O link expira em 1 hora.
-            </p>
+        <div
+          style={{
+            marginTop: 16,
+            padding: 16,
+            border: '1px solid var(--pos)',
+            background: 'var(--bg)',
+          }}
+        >
+          <div className="mono" style={{ fontSize: 11, color: 'var(--pos)', letterSpacing: '0.1em', marginBottom: 6 }}>
+            LINK ENVIADO
           </div>
+          <p style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+            Verifique sua caixa de entrada em <strong>{sentEmail}</strong>. O link expira em 1 hora.
+          </p>
         </div>
       ) : null}
 
-      {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--neg)' }}>{errorMessage}</p>
+      ) : null}
 
-      <Link href="/login" className="inline-flex text-sm font-medium text-[#2952cc] transition hover:underline">
-        ← Voltar para o login
-      </Link>
+      <div style={{ marginTop: 20 }}>
+        <Link
+          href="/login"
+          className="mono"
+          style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
+        >
+          ← Voltar para o login
+        </Link>
+      </div>
+
+      <p className="mono" style={{ marginTop: 24, fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.06em', textAlign: 'center', lineHeight: 1.5 }}>
+        🔒 SEUS DADOS DE LOCALIZAÇÃO NUNCA SÃO ARMAZENADOS
+      </p>
     </form>
   )
 }

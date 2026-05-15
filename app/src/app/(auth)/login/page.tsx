@@ -4,8 +4,9 @@ import { LoginForm } from '@/components/auth/LoginForm'
 export default function LoginPage() {
   return (
     <AuthShell
-      title="Acesse sua conta"
-      description="Acompanhe representantes, consulte dados públicos e mantenha sua leitura cívica organizada em um ambiente seguro."
+      leftLabel="ACESSO À PLATAFORMA"
+      leftHeadline="Acompanhe seus políticos"
+      leftSub="Dados públicos organizados para uma leitura cívica clara e rastreável. Acompanhe representantes e fique por dentro das atividades."
     >
       <LoginForm />
     </AuthShell>
