@@ -38,6 +38,15 @@ export const metadata: Metadata = {
     description:
       "Dados publicos. Fontes oficiais. Sem opiniao.",
   },
+  icons: {
+    icon: [
+      { url: "/logos_meus-politicos_iconecolorido_fundobranco.png", type: "image/png" },
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: ["/logos_meus-politicos_iconecolorido_fundobranco.png", "/favicon.ico"],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 }
 
 export default function RootLayout({

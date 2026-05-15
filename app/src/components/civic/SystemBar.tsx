@@ -65,9 +65,9 @@ export function SystemBar() {
           onClick={toggle}
           className="mono"
           style={{
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.7)',
+            background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'var(--panel)',
+            border: theme === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--line-strong)',
+            color: theme === 'dark' ? 'rgba(255,255,255,0.85)' : 'var(--ink-3)',
             cursor: 'pointer',
             padding: '2px 8px',
             fontSize: 10,
