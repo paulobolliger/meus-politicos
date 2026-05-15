@@ -37,16 +37,16 @@ function GridBackdrop() {
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.35 }}
     >
       <defs>
-        <pattern id="grid-light" width="6" height="6" patternUnits="userSpaceOnUse">
+        <pattern id="grid-home" width="6" height="6" patternUnits="userSpaceOnUse">
           <path d="M 6 0 L 0 0 0 6" fill="none" stroke="var(--line)" strokeWidth="0.5" />
         </pattern>
       </defs>
-      <rect width="100" height="100" fill="url(#grid-light)" />
+      <rect width="100" height="100" fill="url(#grid-home)" />
     </svg>
   )
 }
 
-export function HomeAppLight() {
+export function HomeApp() {
   const router = useRouter()
   const [tab, setTab] = useState<SearchTab>('nome')
   const [query, setQuery] = useState('')
