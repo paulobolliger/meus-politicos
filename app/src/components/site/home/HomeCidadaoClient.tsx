@@ -46,28 +46,28 @@ const STATES: StateDot[] = [
 const UF_NOMES: Record<string, string> = {
   AM: 'Amazonas',
   RR: 'Roraima',
-  AP: 'Amapa',
-  PA: 'Para',
+  AP: 'Amapá',
+  PA: 'Pará',
   AC: 'Acre',
-  RO: 'Rondonia',
+  RO: 'Rondônia',
   TO: 'Tocantins',
-  MA: 'Maranhao',
-  PI: 'Piaui',
-  CE: 'Ceara',
+  MA: 'Maranhão',
+  PI: 'Piauí',
+  CE: 'Ceará',
   RN: 'Rio Grande do Norte',
-  PB: 'Paraiba',
+  PB: 'Paraíba',
   PE: 'Pernambuco',
   AL: 'Alagoas',
   SE: 'Sergipe',
   BA: 'Bahia',
   MT: 'Mato Grosso',
-  GO: 'Goias',
+  GO: 'Goiás',
   DF: 'Distrito Federal',
   MG: 'Minas Gerais',
-  ES: 'Espirito Santo',
+  ES: 'Espírito Santo',
   RJ: 'Rio de Janeiro',
-  SP: 'Sao Paulo',
-  PR: 'Parana',
+  SP: 'São Paulo',
+  PR: 'Paraná',
   SC: 'Santa Catarina',
   RS: 'Rio Grande do Sul',
   MS: 'Mato Grosso do Sul',
@@ -263,7 +263,7 @@ export function HomeCidadaoClient() {
               }}
             >
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--pos)' }} />
-              Plataforma independente · dados publicos
+              Plataforma independente · dados públicos
             </div>
 
             <h1
@@ -277,7 +277,7 @@ export function HomeCidadaoClient() {
             >
               Quem te representa
               <br />
-              <span style={{ color: 'var(--brand-2)' }}>em Brasilia?</span>
+              <span style={{ color: 'var(--brand-2)' }}>em Brasília?</span>
             </h1>
 
             <p
@@ -289,7 +289,7 @@ export function HomeCidadaoClient() {
                 maxWidth: 860,
               }}
             >
-              Digite seu CEP e descubra, em 30 segundos, quem decide por voce - e como cada um vota, gasta e participa.
+              Digite seu CEP e descubra, em 30 segundos, quem decide por você — e como cada um vota, gasta e participa.
             </p>
 
             <form
@@ -319,7 +319,7 @@ export function HomeCidadaoClient() {
                     cursor: 'pointer',
                   }}
                 >
-                  Pelo CEP | mais facil
+                  Pelo CEP | mais fácil
                 </button>
                 <button
                   type="button"
@@ -335,7 +335,7 @@ export function HomeCidadaoClient() {
                     cursor: 'pointer',
                   }}
                 >
-                  Por nome | politico especifico
+                  Por nome | político específico
                 </button>
               </div>
 
@@ -356,7 +356,7 @@ export function HomeCidadaoClient() {
                   <input
                     value={tab === 'cep' ? cep : nome}
                     onChange={(e) => (tab === 'cep' ? setCep(e.target.value) : setNome(e.target.value))}
-                    placeholder={tab === 'cep' ? 'Digite seu CEP (00000-000)' : 'Digite o nome do politico'}
+                    placeholder={tab === 'cep' ? 'Digite seu CEP (00000-000)' : 'Digite o nome do político'}
                     style={{
                       border: 'none',
                       outline: 'none',
@@ -390,7 +390,7 @@ export function HomeCidadaoClient() {
               </div>
 
               <div style={{ padding: '0 14px 14px', fontSize: 12, color: 'var(--ink-3)' }}>
-                🔒 Seu CEP e usado so para encontrar a UF. Nao armazenamos nada.
+                🔒 Seu CEP é usado só para encontrar a UF. Não armazenamos nada.
               </div>
             </form>
 
@@ -423,12 +423,12 @@ export function HomeCidadaoClient() {
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ maxWidth: 900 }}>
             <div className="label" style={{ marginBottom: 14 }}>
-              EM 3 PERGUNTAS, VOCE ENTENDE QUALQUER POLITICO
+              EM 3 PERGUNTAS, VOCÊ ENTENDE QUALQUER POLÍTICO
             </div>
             <h2 style={{ fontSize: 'clamp(34px, 4.7vw, 56px)', lineHeight: 1.08, letterSpacing: '-0.03em', margin: 0, color: 'var(--ink)' }}>
-              Sem jargao. Sem ranking moral.
+              Sem jargão. Sem ranking moral.
               <br />
-              <span style={{ color: 'var(--ink-3)' }}>So o que importa.</span>
+              <span style={{ color: 'var(--ink-3)' }}>Só o que importa.</span>
             </h2>
           </div>
 
@@ -438,9 +438,9 @@ export function HomeCidadaoClient() {
                 01 · 📊
               </div>
               <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>Aparece pra trabalhar?</h3>
-              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--pos)' }}>Helena: 94% presenca</p>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--pos)' }}>Helena: 94% presença</p>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                Frequencia em sessoes deliberativas e presenca comparada com pares da mesma UF.
+                Frequência em sessões deliberativas e presença comparada com pares da mesma UF.
               </p>
               <div style={{ borderTop: '1px dashed var(--line-strong)', marginTop: 16, paddingTop: 16 }}>
                 <PresencaRingMini value={94} />
@@ -451,10 +451,10 @@ export function HomeCidadaoClient() {
               <div className="mono" style={{ fontSize: 12, letterSpacing: '0.08em', color: 'var(--ink-3)' }}>
                 02 · 💰
               </div>
-              <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro publico?</h3>
-              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>R$ 28k/mes de R$ 50k</p>
+              <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>R$ 28k/mês de R$ 50k</p>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                Cota parlamentar organizada por categoria com comparacao percentual com o teto permitido.
+                Cota parlamentar organizada por categoria com comparação percentual com o teto permitido.
               </p>
               <div style={{ borderTop: '1px dashed var(--line-strong)', marginTop: 16, paddingTop: 16 }}>
                 <UsageBar pct={56} />
@@ -468,7 +468,7 @@ export function HomeCidadaoClient() {
               <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>Como vota?</h3>
               <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--warn)' }}>95% com o partido</p>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                Historico das votacoes nominais para entender alinhamento, divergencia e abstencoes.
+                Histórico das votações nominais para entender alinhamento, divergência e abstenções.
               </p>
               <div style={{ borderTop: '1px dashed var(--line-strong)', marginTop: 16, paddingTop: 16 }}>
                 <VoteMini />
@@ -488,10 +488,10 @@ export function HomeCidadaoClient() {
               <h2 style={{ margin: 0, fontSize: 'clamp(34px, 5vw, 58px)', lineHeight: 1.08, letterSpacing: '-0.03em' }}>
                 Toque no mapa.
                 <br />
-                <span style={{ color: 'var(--brand-2)' }}>Conheca seus deputados.</span>
+                <span style={{ color: 'var(--brand-2)' }}>Conheça seus deputados.</span>
               </h2>
               <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-3)', maxWidth: 520 }}>
-                Cada ponto representa um estado, com tamanho proporcional ao numero de cadeiras na Camara. Selecione uma UF para
+                Cada ponto representa um estado, com tamanho proporcional ao número de cadeiras na Câmara. Selecione uma UF para
                 abrir os representantes.
               </p>
 
@@ -543,17 +543,17 @@ export function HomeCidadaoClient() {
                 {
                   n: '1',
                   h: 'Coletamos',
-                  d: 'Diariamente, robos leem dados publicos da Camara, Senado, TSE e Portal da Transparencia.',
+                  d: 'Diariamente, robôs leem dados públicos da Câmara, Senado, TSE e Portal da Transparência.',
                 },
                 {
                   n: '2',
                   h: 'Organizamos',
-                  d: 'Convertemos tudo em linguagem clara, com etiquetas, comparacoes e graficos.',
+                  d: 'Convertemos tudo em linguagem clara, com etiquetas, comparações e gráficos.',
                 },
                 {
                   n: '3',
                   h: 'Mostramos',
-                  d: 'Voce consulta de graca. Toda informacao tem link direto para a fonte original.',
+                  d: 'Você consulta de graça. Toda informação tem link direto para a fonte original.',
                 },
               ].map((step) => (
                 <article key={step.n} style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 20 }}>
@@ -597,7 +597,7 @@ export function HomeCidadaoClient() {
             <span className="mono" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--ink-3)' }}>
               NOSSAS FONTES OFICIAIS:
             </span>
-            {['Camara dos Deputados', 'Senado Federal', 'TSE', 'Portal da Transparencia', 'IBGE'].map((f) => (
+            {['Câmara dos Deputados', 'Senado Federal', 'TSE', 'Portal da Transparência', 'IBGE'].map((f) => (
               <span key={f} style={{ fontSize: 13, color: 'var(--ink-2)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--pos)' }} />
                 {f}
@@ -612,21 +612,21 @@ export function HomeCidadaoClient() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28, alignItems: 'start' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 'clamp(34px, 4.6vw, 56px)', lineHeight: 1.1, letterSpacing: '-0.03em' }}>
-                Sem opiniao. Sem patrocinio. Sem rankings.
+                Sem opinião. Sem patrocínio. Sem rankings.
               </h2>
               <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-3)', maxWidth: 520 }}>
-                Nosso compromisso e com dados oficiais, contexto e cidadania informada. A plataforma existe para ajudar voce a
-                interpretar, nao para dizer em quem votar.
+                Nosso compromisso é com dados oficiais, contexto e cidadania informada. A plataforma existe para ajudar você a
+                interpretar, não para dizer em quem votar.
               </p>
             </div>
 
             <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: 'var(--panel)', overflow: 'hidden' }}>
               {[
                 { s: '✓', tone: 'var(--pos)', t: 'Dados oficiais com rastreabilidade' },
-                { s: '✓', tone: 'var(--pos)', t: 'Codigo aberto' },
-                { s: '✓', tone: 'var(--pos)', t: 'Sem patrocinio de campanhas' },
-                { s: '✕', tone: 'var(--neg)', t: 'Nao fazemos ranking ideologico' },
-                { s: '✕', tone: 'var(--neg)', t: 'Nao permitimos comentarios' },
+                { s: '✓', tone: 'var(--pos)', t: 'Código aberto' },
+                { s: '✓', tone: 'var(--pos)', t: 'Sem patrocínio de campanhas' },
+                { s: '✕', tone: 'var(--neg)', t: 'Não fazemos ranking ideológico' },
+                { s: '✕', tone: 'var(--neg)', t: 'Não permitimos comentários' },
               ].map((item, idx) => (
                 <div
                   key={item.t}
@@ -695,7 +695,7 @@ export function HomeCidadaoClient() {
                   Quer ir fundo? Use o app.
                 </h2>
                 <p style={{ marginTop: 14, color: 'rgba(255,255,255,0.78)', fontSize: 16, lineHeight: 1.6, maxWidth: 560 }}>
-                  Analise historicos de votacao, gasto parlamentar, contato de gabinete e acompanhamento individual em um ambiente de
+                  Analise históricos de votação, gasto parlamentar, contato de gabinete e acompanhamento individual em um ambiente de
                   leitura densa.
                 </p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 20 }}>
@@ -732,7 +732,7 @@ export function HomeCidadaoClient() {
                       textDecoration: 'none',
                     }}
                   >
-                    Ver a documentacao da API
+                    Ver a documentação da API
                   </a>
                 </div>
               </div>
