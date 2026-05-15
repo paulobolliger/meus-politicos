@@ -107,6 +107,9 @@ dist
 # Dados locais e arquivos grandes de ETL/geoespacial
 /data/
 
+# Clone mirror temporário usado para limpeza de histórico
+/meus-politicos-bfg/
+
 # Docusaurus cache and generated files
 .docusaurus
 
