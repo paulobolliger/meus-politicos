@@ -1,9 +1,6 @@
 import type { Metadata } from "next"
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 
-import { Footer } from "@/components/layout/Footer"
-import { Header } from "@/components/layout/Header"
-
 import "./globals.css"
 
 const sans = IBM_Plex_Sans({
@@ -51,11 +48,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${sans.variable} ${mono.variable} antialiased`}>
       <body className="min-h-screen">
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <div className="flex-1 pt-16 lg:pt-20">{children}</div>
-          <Footer />
-        </div>
+        {children}
       </body>
     </html>
   )
