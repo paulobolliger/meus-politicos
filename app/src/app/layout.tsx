@@ -1,15 +1,21 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google"
 
 import { Footer } from "@/components/layout/Footer"
 import { Header } from "@/components/layout/Header"
 
 import "./globals.css"
 
-const inter = Inter({
+const sans = IBM_Plex_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
-  display: "swap",
+})
+
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
 })
 
 export const metadata: Metadata = {
@@ -43,8 +49,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} antialiased`}>
-      <body className="min-h-screen bg-[#f5f6fa] text-slate-900">
+    <html lang="pt-BR" className={`${sans.variable} ${mono.variable} antialiased`}>
+      <body className="min-h-screen">
         <div className="flex min-h-screen flex-col">
           <Header />
           <div className="flex-1 pt-16 lg:pt-20">{children}</div>
