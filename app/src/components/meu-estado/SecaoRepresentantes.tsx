@@ -1,20 +1,37 @@
-import { Badge } from '@/components/ui/badge'
+import { Panel, PanelHeader } from '@/components/civic'
 
 type SecaoRepresentantesProps = {
   titulo: string
   badge: string
-  badgeClassName: string
+  quantidade: number
+  sub?: string
   children: React.ReactNode
 }
 
-export function SecaoRepresentantes({ titulo, badge, badgeClassName, children }: SecaoRepresentantesProps) {
+export function SecaoRepresentantes({ titulo, badge, quantidade, sub, children }: SecaoRepresentantesProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Badge className={badgeClassName}>{badge}</Badge>
-        <h2 className="text-lg font-semibold text-slate-900">{titulo}</h2>
-      </div>
-      {children}
-    </section>
+    <Panel>
+      <PanelHeader
+        title={`${badge} ${titulo}`}
+        sub={sub}
+        action={
+          <span
+            className="mono"
+            style={{
+              border: '1px solid var(--line-strong)',
+              background: 'var(--bg-2)',
+              color: 'var(--ink-2)',
+              fontSize: 10.5,
+              letterSpacing: '0.08em',
+              padding: '4px 8px',
+            }}
+          >
+            {quantidade}
+          </span>
+        }
+      />
+
+      <div style={{ padding: 14 }}>{children}</div>
+    </Panel>
   )
 }

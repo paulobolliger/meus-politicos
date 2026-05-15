@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import { Pool } from 'pg'
-import { BarChart3, MapPin, Users2 } from 'lucide-react'
 
-import { CardPolitico, type PoliticoCard } from '@/components/busca/CardPolitico'
 import { CepForm } from '@/components/meu-estado/CepForm'
 import { CardRepresentante } from '@/components/meu-estado/CardRepresentante'
-import { MapaBrasilRegioes } from '@/components/meu-estado/MapaBrasilRegioes'
 import { SecaoRepresentantes } from '@/components/meu-estado/SecaoRepresentantes'
 import { createClient } from '@/lib/supabase/server'
 
@@ -23,7 +20,6 @@ type ViaCepResponse = {
 }
 
 type NominatimResponse = {
-  display_name?: string
   address?: {
     city?: string
     town?: string
@@ -32,8 +28,20 @@ type NominatimResponse = {
     county?: string
     state?: string
     state_code?: string
-    country_code?: string
   }
+}
+
+type Representante = {
+  id: string
+  slug: string
+  nome: string
+  nome_eleitoral: string | null
+  cargo: string
+  uf: string | null
+  presenca_pct_atual: number | null
+  gasto_total_ano: number | null
+  total_votacoes: number | null
+  partidos: { sigla: string | null } | null
 }
 
 type DeputadoPg = {
@@ -41,42 +49,15 @@ type DeputadoPg = {
   slug: string
   nome: string
   nome_eleitoral: string | null
-  foto_url: string | null
   cargo: string
   uf: string | null
   presenca_pct_atual: number | null
+  gasto_total_ano: number | null
+  total_votacoes: number | null
   sigla: string | null
 }
 
-const REGIAO_POR_UF: Record<string, string> = {
-  AC: 'Norte',
-  AP: 'Norte',
-  AM: 'Norte',
-  PA: 'Norte',
-  RO: 'Norte',
-  RR: 'Norte',
-  TO: 'Norte',
-  AL: 'Nordeste',
-  BA: 'Nordeste',
-  CE: 'Nordeste',
-  MA: 'Nordeste',
-  PB: 'Nordeste',
-  PE: 'Nordeste',
-  PI: 'Nordeste',
-  RN: 'Nordeste',
-  SE: 'Nordeste',
-  DF: 'Centro-Oeste',
-  GO: 'Centro-Oeste',
-  MT: 'Centro-Oeste',
-  MS: 'Centro-Oeste',
-  ES: 'Sudeste',
-  MG: 'Sudeste',
-  RJ: 'Sudeste',
-  SP: 'Sudeste',
-  PR: 'Sul',
-  RS: 'Sul',
-  SC: 'Sul',
-}
+type CargoConsulta = 'presidente' | 'governador' | 'senador' | 'deputado_federal'
 
 const UF_POR_ESTADO: Record<string, string> = {
   acre: 'AC',
@@ -108,6 +89,13 @@ const UF_POR_ESTADO: Record<string, string> = {
   tocantins: 'TO',
 }
 
+const CARGO_LABEL: Record<string, string> = {
+  presidente: 'Presidente',
+  governador: 'Governador',
+  senador: 'Senador',
+  deputado_federal: 'Dep. Federal',
+}
+
 function parseTexto(valor?: string | string[]) {
   if (!valor) return ''
   const texto = Array.isArray(valor) ? valor[0] : valor
@@ -123,15 +111,13 @@ function normalizarTexto(texto: string) {
 }
 
 function nomeParaUf(nomeEstado?: string, stateCode?: string) {
-  if (stateCode) {
-    return stateCode.toUpperCase()
-  }
-
-  if (!nomeEstado) {
-    return ''
-  }
-
+  if (stateCode) return stateCode.toUpperCase()
+  if (!nomeEstado) return ''
   return UF_POR_ESTADO[normalizarTexto(nomeEstado)] ?? ''
+}
+
+function nomeExibicao(rep: Representante) {
+  return rep.nome_eleitoral ?? rep.nome
 }
 
 async function resolverLocalidade(entrada: string) {
@@ -150,13 +136,13 @@ async function resolverLocalidade(entrada: string) {
     const local = (await viaCep.json()) as ViaCepResponse
 
     if (!viaCep.ok || local.erro) {
-      return { cidade: '', uf: '', ibge: '', erro: 'CEP invalido. Tente novamente.' }
+      return { cidade: '', uf: '', ibge: '', erro: 'CEP inválido. Tente novamente.' }
     }
 
     const uf = local.uf ?? ''
 
     if (!uf) {
-      return { cidade: '', uf: '', ibge: '', erro: 'Nao foi possivel identificar a UF para este CEP.' }
+      return { cidade: '', uf: '', ibge: '', erro: 'Não foi possível identificar a UF para este CEP.' }
     }
 
     return {
@@ -178,7 +164,7 @@ async function resolverLocalidade(entrada: string) {
   )
 
   if (!buscaCidade.ok) {
-    return { cidade: '', uf: '', ibge: '', erro: 'Nao foi possivel buscar a cidade. Tente novamente.' }
+    return { cidade: '', uf: '', ibge: '', erro: 'Não foi possível buscar a cidade. Tente novamente.' }
   }
 
   const resultados = (await buscaCidade.json()) as NominatimResponse[]
@@ -198,7 +184,7 @@ async function resolverLocalidade(entrada: string) {
       cidade: '',
       uf: '',
       ibge: '',
-      erro: 'Nao encontramos a UF dessa cidade. Tente CEP ou nome completo da cidade.',
+      erro: 'Não encontramos a UF dessa cidade. Tente CEP ou nome completo da cidade.',
     }
   }
 
@@ -210,7 +196,7 @@ async function resolverLocalidade(entrada: string) {
   }
 }
 
-async function buscarDeputadosViaPostgres(uf: string): Promise<PoliticoCard[]> {
+async function buscarDeputadosViaPostgres(uf: string): Promise<Representante[]> {
   const host = process.env.SUPABASE_DB_HOST
   const password = process.env.SUPABASE_DB_PASSWORD
 
@@ -237,10 +223,11 @@ async function buscarDeputadosViaPostgres(uf: string): Promise<PoliticoCard[]> {
           p.slug,
           p.nome,
           p.nome_eleitoral,
-          p.foto_url,
           p.cargo::text AS cargo,
           p.uf,
           p.presenca_pct_atual,
+          p.gasto_total_ano,
+          p.total_votacoes,
           pa.sigla
         FROM politicos p
         LEFT JOIN partidos pa ON pa.id = p.partido_id
@@ -257,17 +244,47 @@ async function buscarDeputadosViaPostgres(uf: string): Promise<PoliticoCard[]> {
       slug: row.slug,
       nome: row.nome,
       nome_eleitoral: row.nome_eleitoral,
-      foto_url: row.foto_url,
       cargo: row.cargo,
       uf: row.uf,
       presenca_pct_atual: row.presenca_pct_atual,
-      gasto_total_ano: null,
-      mandato_inicio: null,
+      gasto_total_ano: row.gasto_total_ano,
+      total_votacoes: row.total_votacoes,
       partidos: { sigla: row.sigla },
     }))
   } finally {
     await pool.end()
   }
+}
+
+async function buscarPorCargo(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  cargo: CargoConsulta,
+  uf?: string,
+  limite?: number
+): Promise<Representante[]> {
+  let query = supabase
+    .from('politicos')
+    .select('id, slug, nome, nome_eleitoral, cargo, uf, presenca_pct_atual, gasto_total_ano, total_votacoes, partidos(sigla)')
+    .eq('cargo', cargo)
+    .eq('dado_estado', 'oficial')
+    .is('removido_em', null)
+    .order('nome_eleitoral')
+
+  if (uf) {
+    query = query.eq('uf', uf)
+  }
+
+  if (limite) {
+    query = query.limit(limite)
+  }
+
+  const { data, error } = await query
+
+  if (error || !data) {
+    return []
+  }
+
+  return data as unknown as Representante[]
 }
 
 export default async function MeuEstadoPage({ searchParams }: PageProps) {
@@ -278,7 +295,6 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
   let uf = ''
   let ibge = ''
   let erroCep = ''
-  let deputados: PoliticoCard[] = []
 
   if (localidade) {
     const resultado = await resolverLocalidade(localidade)
@@ -288,161 +304,199 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
     erroCep = resultado.erro
   }
 
+  let presidente: Representante[] = []
+  let governador: Representante[] = []
+  let senadores: Representante[] = []
+  let deputados: Representante[] = []
+
   if (uf) {
     const supabase = await createClient()
 
-    const { data: deputadosData, error } = await supabase
-      .from('politicos')
-      .select('id, slug, nome, nome_eleitoral, foto_url, cargo, uf, presenca_pct_atual, partidos(sigla)')
-      .eq('cargo', 'deputado_federal')
-      .eq('uf', uf)
-      .is('removido_em', null)
-      .order('nome_eleitoral')
+    presidente = await buscarPorCargo(supabase, 'presidente', undefined, 1)
+    governador = await buscarPorCargo(supabase, 'governador', uf, 1)
+    senadores = await buscarPorCargo(supabase, 'senador', uf)
+    deputados = await buscarPorCargo(supabase, 'deputado_federal', uf)
 
-    if (deputadosData && !error) {
-      deputados = deputadosData.map((item) => ({
-        slug: item.slug,
-        nome: item.nome,
-        nome_eleitoral: item.nome_eleitoral,
-        foto_url: item.foto_url,
-        cargo: item.cargo,
-        uf: item.uf,
-        presenca_pct_atual: item.presenca_pct_atual,
-        partidos: item.partidos,
-        gasto_total_ano: null,
-        mandato_inicio: null,
-      }))
-    } else {
+    if (deputados.length === 0) {
       deputados = await buscarDeputadosViaPostgres(uf)
     }
   }
 
   const mostrarSecoes = Boolean(localidade && !erroCep && uf)
-  const deputadosPreview = deputados.slice(0, 5)
-  const regiaoAtual = uf ? REGIAO_POR_UF[uf] ?? '' : ''
 
   return (
-    <main className="bg-[#f5f6fa] pb-12">
-      <section className="bg-[#1a2b5e] text-white">
-        <div className="container-shell py-10 sm:py-12">
-          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-            <div className="space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/70">
-                <Users2 className="size-3.5" aria-hidden="true" />
-                Quem me representa?
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Digite sua cidade ou CEP e descubra seus representantes.</h1>
-              <p className="max-w-xl text-base leading-7 text-white/78 sm:text-lg">
-                Comece pela cidade se quiser pensar como cidadão. O sistema transforma isso em UF, mapa e representantes em poucos segundos.
-              </p>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <MapPin className="size-5 text-[#9fb7ff]" aria-hidden="true" />
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">UF detectada</p>
-                  <p className="mt-1 text-2xl font-bold tracking-tight">{uf || '—'}</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <BarChart3 className="size-5 text-[#9fb7ff]" aria-hidden="true" />
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">Deputados</p>
-                  <p className="mt-1 text-2xl font-bold tracking-tight">{deputados.length || '—'}</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <Users2 className="size-5 text-[#9fb7ff]" aria-hidden="true" />
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/55">Região</p>
-                  <p className="mt-1 text-lg font-bold tracking-tight">{regiaoAtual || '—'}</p>
-                </div>
-              </div>
-
-              <CepForm defaultLocalidade={localidade} />
-
-              {erroCep ? (
-                <p className="rounded-lg bg-[#ffd8d8] px-3 py-2 text-sm text-[#7b1d1d]">{erroCep}</p>
-              ) : null}
-
-              {mostrarSecoes ? (
-                <div className="rounded-2xl border border-white/25 bg-white/15 px-4 py-3 text-sm text-white backdrop-blur">
-                  📍 {cidade} · {uf}
-                  {ibge ? ` (IBGE ${ibge})` : ''}
-                </div>
-              ) : null}
+    <main style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <section style={{ background: '#1a2b5e', color: '#fff' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '40px 24px 44px' }}>
+          <div style={{ maxWidth: 900 }}>
+            <div className="mono" style={{ fontSize: 11, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.75)' }}>
+              QUEM ME REPRESENTA
             </div>
 
-            <div className="lg:pt-2">
-              <MapaBrasilRegioes ufAtual={uf} />
+            <h1 style={{ margin: '16px 0 0', fontSize: 'clamp(36px, 6vw, 62px)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
+              Seus representantes em Brasília
+            </h1>
+
+            <p style={{ margin: '16px 0 0', fontSize: 'clamp(17px, 2.1vw, 21px)', color: 'rgba(255,255,255,0.84)', maxWidth: 760 }}>
+              Digite seu CEP ou use sua localização para ver quem decide por você.
+            </p>
+
+            <div style={{ marginTop: 22, maxWidth: 740 }}>
+              <CepForm defaultLocalidade={localidade} />
+              {erroCep ? (
+                <p style={{ margin: '10px 0 0', fontSize: 12, color: '#fecaca' }}>{erroCep}</p>
+              ) : null}
             </div>
           </div>
         </div>
       </section>
 
       {mostrarSecoes ? (
-        <div className="container-shell mt-6 space-y-4">
-          <SecaoRepresentantes
-            badge="Federal"
-            badgeClassName="border-[#cdd9ff] bg-[#e8eefb] text-[#1a2b5e]"
-            titulo="Presidente"
-          >
-            <CardRepresentante nome="Luiz Inacio Lula da Silva" legenda="PT · Em breve" />
-          </SecaoRepresentantes>
+        <section style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ maxWidth: 1320, margin: '0 auto', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+            <div className="mono" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--ink-2)' }}>
+              📍 {cidade || 'Cidade não informada'} · {uf} · IBGE {ibge || '—'}
+            </div>
+            <span
+              className="mono"
+              style={{
+                background: 'var(--pos-soft)',
+                color: 'var(--pos)',
+                border: '1px solid var(--pos)',
+                fontSize: 10.5,
+                letterSpacing: '0.1em',
+                padding: '4px 8px',
+              }}
+            >
+              LOCALIZAÇÃO IDENTIFICADA
+            </span>
+          </div>
+        </section>
+      ) : null}
 
-          <SecaoRepresentantes
-            badge="Estadual"
-            badgeClassName="border-[#cce9da] bg-[#e8f5ee] text-[#085041]"
-            titulo="Governador"
-          >
-            <CardRepresentante nome="Em breve" legenda="Fase 2" />
-          </SecaoRepresentantes>
-
-          <SecaoRepresentantes
-            badge="Federal"
-            badgeClassName="border-[#cdd9ff] bg-[#e8eefb] text-[#1a2b5e]"
-            titulo="Senadores"
-          >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <CardRepresentante nome="Em breve" legenda="Fase 2" />
-              <CardRepresentante nome="Em breve" legenda="Fase 2" />
-              <CardRepresentante nome="Em breve" legenda="Fase 2" />
+      {mostrarSecoes ? (
+        <section style={{ maxWidth: 1320, margin: '0 auto', padding: '16px 24px 26px', display: 'grid', gap: 12 }}>
+          <SecaoRepresentantes titulo="Presidente" badge="[Federal]" quantidade={presidente.length}>
+            <div className="rep-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+              {presidente.length > 0 ? (
+                presidente.map((rep) => (
+                  <CardRepresentante
+                    key={rep.id}
+                    nome={nomeExibicao(rep)}
+                    partido={rep.partidos?.sigla}
+                    uf={rep.uf}
+                    cargo={CARGO_LABEL[rep.cargo] ?? rep.cargo}
+                    presencaPct={rep.presenca_pct_atual}
+                    gastoTotalAno={rep.gasto_total_ano}
+                    href={`/politicos/${rep.slug}`}
+                  />
+                ))
+              ) : (
+                <CardRepresentante nome="Não identificado" legenda="Dados oficiais em atualização" />
+              )}
             </div>
           </SecaoRepresentantes>
 
-          <SecaoRepresentantes
-            badge="Federal"
-            badgeClassName="border-[#cdd9ff] bg-[#e8eefb] text-[#1a2b5e]"
-            titulo="Deputados Federais"
-          >
+          <SecaoRepresentantes titulo={`Deputados Federais (${deputados.length} de ${uf})`} badge="[Federal]" quantidade={deputados.length}>
+            <div className="rep-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+              {deputados.length > 0 ? (
+                deputados.map((rep) => (
+                  <CardRepresentante
+                    key={rep.id}
+                    nome={nomeExibicao(rep)}
+                    partido={rep.partidos?.sigla}
+                    uf={rep.uf}
+                    cargo={CARGO_LABEL[rep.cargo] ?? rep.cargo}
+                    presencaPct={rep.presenca_pct_atual}
+                    gastoTotalAno={rep.gasto_total_ano}
+                    href={`/politicos/${rep.slug}`}
+                  />
+                ))
+              ) : (
+                <CardRepresentante nome="Nenhum deputado encontrado" legenda="Tente outro CEP" />
+              )}
+            </div>
+
             {deputados.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {deputadosPreview.map((deputado) => (
-                    <CardPolitico key={deputado.slug} politico={deputado} />
-                  ))}
-                </div>
-
-                {deputados.length > 5 ? (
-                  <div className="mt-4">
-                    <Link
-                      href={`/busca?cargo=deputado_federal&uf=${uf}`}
-                      className="inline-flex items-center rounded-lg border border-[#2952cc] px-3 py-2 text-sm font-medium text-[#2952cc] hover:bg-[#e8eefb]"
-                    >
-                      Ver todos os {deputados.length} deputados de {uf}
-                    </Link>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <CardRepresentante nome="Nenhum deputado encontrado" legenda="Tente outro CEP" />
-            )}
+              <div style={{ marginTop: 12 }}>
+                <Link
+                  href={`/busca?cargo=deputado_federal&uf=${uf}`}
+                  style={{
+                    border: '1px solid var(--line-strong)',
+                    background: 'transparent',
+                    color: 'var(--ink)',
+                    padding: '7px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                  }}
+                >
+                  Ver todos os {deputados.length} deputados de {uf} →
+                </Link>
+              </div>
+            ) : null}
           </SecaoRepresentantes>
 
-          <SecaoRepresentantes
-            badge="Municipal"
-            badgeClassName="border-[#dfd0ff] bg-[#f0e8ff] text-[#3c1489]"
-            titulo="Prefeito e Vereadores"
+          <SecaoRepresentantes titulo="Governador" badge="[Estadual]" quantidade={governador.length}>
+            <div className="rep-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+              {governador.length > 0 ? (
+                governador.map((rep) => (
+                  <CardRepresentante
+                    key={rep.id}
+                    nome={nomeExibicao(rep)}
+                    partido={rep.partidos?.sigla}
+                    uf={rep.uf}
+                    cargo={CARGO_LABEL[rep.cargo] ?? rep.cargo}
+                    presencaPct={rep.presenca_pct_atual}
+                    gastoTotalAno={rep.gasto_total_ano}
+                    href={`/politicos/${rep.slug}`}
+                  />
+                ))
+              ) : (
+                <CardRepresentante nome="Não identificado" legenda="Dados oficiais em atualização" />
+              )}
+            </div>
+          </SecaoRepresentantes>
+
+          <SecaoRepresentantes titulo={`Senadores (${senadores.length} de ${uf})`} badge="[Estadual]" quantidade={senadores.length}>
+            <div className="rep-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
+              {senadores.length > 0 ? (
+                senadores.map((rep) => (
+                  <CardRepresentante
+                    key={rep.id}
+                    nome={nomeExibicao(rep)}
+                    partido={rep.partidos?.sigla}
+                    uf={rep.uf}
+                    cargo={CARGO_LABEL[rep.cargo] ?? rep.cargo}
+                    presencaPct={rep.presenca_pct_atual}
+                    gastoTotalAno={rep.gasto_total_ano}
+                    href={`/politicos/${rep.slug}`}
+                  />
+                ))
+              ) : (
+                <CardRepresentante nome="Não identificado" legenda="Dados oficiais em atualização" />
+              )}
+            </div>
+          </SecaoRepresentantes>
+        </section>
+      ) : (
+        <section style={{ maxWidth: 1320, margin: '0 auto', padding: '28px 24px 34px' }}>
+          <div
+            style={{
+              border: '1px dashed var(--line-strong)',
+              background: 'var(--panel)',
+              padding: '40px 16px',
+              textAlign: 'center',
+            }}
           >
-            <CardRepresentante nome="Em breve" legenda="Fase 4" />
-          </SecaoRepresentantes>
-        </div>
-      ) : null}
+            <div style={{ fontSize: 36, lineHeight: 1 }}>📍</div>
+            <h2 style={{ margin: '12px 0 0', fontSize: 'clamp(22px, 3.2vw, 30px)', color: 'var(--ink)' }}>
+              Digite seu CEP acima para ver seus representantes
+            </h2>
+          </div>
+        </section>
+      )}
     </main>
   )
 }
