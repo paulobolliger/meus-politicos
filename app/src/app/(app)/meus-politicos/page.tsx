@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Activity, ArrowUpRight, Bell, Mail, Settings, Users } from 'lucide-react'
 
 import { BotaoSair } from '@/components/meus-politicos/BotaoSair'
 import { CardAcompanhamento, type PoliticoAcompanhado } from '@/components/meus-politicos/CardAcompanhamento'
+import { Panel, PanelHeader, StatusDot } from '@/components/civic'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -24,36 +24,6 @@ type AcompanhamentoRow = {
 function normalizarPolitico(valor: AcompanhamentoRow['politicos']) {
   if (Array.isArray(valor)) return valor[0] ?? null
   return valor
-}
-
-function EmptyPanel({
-  icon: Icon,
-  title,
-  description,
-  action,
-}: {
-  icon: typeof Users
-  title: string
-  description: string
-  action?: { href: string; label: string }
-}) {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-2xl border border-[#dbe4ff] bg-[#f4f7ff] text-[#2952cc]">
-        <Icon className="size-6" aria-hidden="true" />
-      </div>
-      <h3 className="mt-5 text-lg font-bold tracking-tight text-slate-950">{title}</h3>
-      <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">{description}</p>
-      {action ? (
-        <Link
-          href={action.href}
-          className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-[#2952cc] px-4 text-sm font-semibold text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] transition hover:bg-[#2349bb]"
-        >
-          {action.label}
-        </Link>
-      ) : null}
-    </div>
-  )
 }
 
 export default async function MeusPoliticosPage() {
@@ -82,124 +52,186 @@ export default async function MeusPoliticosPage() {
   const saudacao = perfilUsuario?.nome || user.email || 'usuario'
 
   return (
-    <main className="min-h-screen bg-[#f5f6fa]">
-      <section className="border-b border-slate-200 bg-linear-to-b from-white to-slate-50">
-        <div className="container-shell py-8 sm:py-10">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-                <span className="inline-block size-2 rounded-full bg-emerald-400" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  Painel do usuario
-                </span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Ola, {saudacao}</h1>
-                <p className="mt-2 text-base leading-7 text-slate-600">
-                  Acompanhe seus politicos e fique por dentro das ultimas atividades.
-                </p>
-              </div>
-            </div>
+    <main className="min-h-screen bg-[var(--bg)]">
+      <div className="container-shell py-8 sm:py-10">
 
+        {/* Page header */}
+        <div style={{ borderBottom: '1px solid var(--line)', paddingBottom: 24, marginBottom: 32 }}>
+          <div className="label" style={{ marginBottom: 8 }}>PAINEL DO USUÁRIO</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
+              Olá, {saudacao}
+            </h1>
             <BotaoSair />
           </div>
+          <p style={{ color: 'var(--ink-3)', fontSize: 14, marginTop: 6 }}>
+            Acompanhe seus políticos e fique por dentro das últimas atividades.
+          </p>
         </div>
-      </section>
 
-      <div className="container-shell grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-8">
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm sm:p-6">
-            <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-950">Politicos que voce acompanha</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Atalhos para os perfis salvos na sua conta.
-                </p>
-              </div>
-              <Link
-                href="/busca"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#dbe4ff] bg-[#eef3ff] px-4 text-sm font-semibold text-[#2952cc] transition hover:bg-[#e3ebff]"
-              >
-                + Explorar mais
-              </Link>
-            </div>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
 
-            <div className="mt-5">
-              {politicosAcompanhados.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {politicosAcompanhados.map((politico) => (
-                    <CardAcompanhamento key={politico.id} politico={politico} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyPanel
-                  icon={Users}
-                  title="Voce ainda nao acompanha nenhum politico"
-                  description="Explore a base publica e acompanhe representantes para criar seu painel pessoal."
-                  action={{ href: '/busca', label: 'Explorar politicos' }}
-                />
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm sm:p-6">
-            <div className="border-b border-slate-200 pb-5">
-              <h2 className="text-xl font-bold tracking-tight text-slate-950">Feed de atividades</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-600">Atualizacoes relevantes aparecerao aqui.</p>
-            </div>
-            <div className="mt-5">
-              <EmptyPanel
-                icon={Activity}
-                title="Nenhuma atividade ainda"
-                description="Quando os politicos que voce acompanha tiverem novidades, elas aparecerao aqui."
+            {/* Políticos acompanhados */}
+            <Panel>
+              <PanelHeader
+                title={`POLÍTICOS QUE VOCÊ ACOMPANHA${politicosAcompanhados.length > 0 ? ` · ${politicosAcompanhados.length}` : ''}`}
+                action={
+                  <Link
+                    href="/busca"
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid var(--line)',
+                      background: 'var(--bg)',
+                      color: 'var(--brand-2)',
+                      fontSize: 11,
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    + EXPLORAR
+                  </Link>
+                }
               />
-            </div>
-          </section>
-        </div>
-
-        <aside className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#dbe4ff] bg-[#f4f7ff] text-[#2952cc]">
-                <Settings className="size-5" aria-hidden="true" />
+              <div style={{ padding: 20 }}>
+                {politicosAcompanhados.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                    {politicosAcompanhados.map((politico) => (
+                      <CardAcompanhamento key={politico.id} politico={politico} />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: '48px 24px',
+                      textAlign: 'center',
+                      border: '2px dashed var(--line)',
+                      color: 'var(--ink-3)',
+                    }}
+                  >
+                    <div className="mono" style={{ fontSize: 32, marginBottom: 12 }}>[ ]</div>
+                    <div style={{ fontWeight: 600, marginBottom: 8 }}>Você ainda não acompanha nenhum político</div>
+                    <div style={{ fontSize: 13, marginBottom: 20 }}>Explore a base e acompanhe representantes</div>
+                    <Link
+                      href="/busca"
+                      style={{
+                        padding: '10px 20px',
+                        background: 'var(--brand)',
+                        color: 'white',
+                        textDecoration: 'none',
+                        fontSize: 13,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Explorar políticos →
+                    </Link>
+                  </div>
+                )}
               </div>
-              <div>
-                <h2 className="text-lg font-bold tracking-tight text-slate-950">Configuracoes rapidas</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600">Preferencias essenciais da sua conta.</p>
-              </div>
-            </div>
+            </Panel>
 
-            <div className="mt-6 space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  <Mail className="size-4" aria-hidden="true" />
-                  Email
+            {/* Feed de atividades */}
+            <Panel>
+              <PanelHeader
+                title="ATIVIDADES RECENTES"
+                action={<StatusDot tone="live" />}
+              />
+              <div style={{ padding: 20 }}>
+                <div
+                  style={{
+                    padding: '32px 24px',
+                    background: 'var(--bg-2)',
+                    border: '1px solid var(--line)',
+                  }}
+                >
+                  <div className="mono" style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '0.1em' }}>
+                    AGUARDANDO DADOS
+                  </div>
+                  <div style={{ marginTop: 8, color: 'var(--ink-3)', fontSize: 13 }}>
+                    Quando os políticos que você acompanha tiverem novidades, elas aparecerão aqui.
+                  </div>
                 </div>
-                <p className="mt-2 break-words text-sm font-medium text-slate-900">{user.email}</p>
               </div>
+            </Panel>
+          </div>
 
-              <div className="grid gap-2">
-                <Link
-                  href="/conta"
-                  className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+          {/* Conta */}
+          <aside>
+            <Panel>
+              <PanelHeader title="CONTA" />
+              <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div
+                  style={{
+                    padding: 12,
+                    background: 'var(--bg)',
+                    border: '1px solid var(--line)',
+                  }}
                 >
-                  Gerenciar conta
-                  <ArrowUpRight className="size-4" aria-hidden="true" />
-                </Link>
-                <Link
-                  href="/conta/notificacoes"
-                  className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                  <div
+                    className="mono"
+                    style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', marginBottom: 6 }}
+                  >
+                    EMAIL
+                  </div>
+                  <div
+                    className="mono"
+                    style={{ fontSize: 12, color: 'var(--ink-2)', wordBreak: 'break-all' }}
+                  >
+                    {user.email}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <Link
+                    href="/conta"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      border: '1px solid var(--line)',
+                      color: 'var(--ink-3)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      background: 'var(--panel)',
+                    }}
+                  >
+                    Gerenciar conta
+                    <span style={{ color: 'var(--mute)' }}>→</span>
+                  </Link>
+                  <Link
+                    href="/conta/notificacoes"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      border: '1px solid var(--line)',
+                      color: 'var(--ink-3)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      background: 'var(--panel)',
+                    }}
+                  >
+                    Notificações
+                    <span style={{ color: 'var(--mute)' }}>→</span>
+                  </Link>
+                </div>
+
+                <div
+                  className="mono"
+                  style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em', lineHeight: 1.5 }}
                 >
-                  <span className="inline-flex items-center gap-2">
-                    <Bell className="size-4" aria-hidden="true" />
-                    Notificacoes
-                  </span>
-                  <ArrowUpRight className="size-4" aria-hidden="true" />
-                </Link>
+                  Seus dados de localização não são armazenados.
+                </div>
               </div>
-            </div>
-          </section>
-        </aside>
+            </Panel>
+          </aside>
+        </div>
       </div>
     </main>
   )

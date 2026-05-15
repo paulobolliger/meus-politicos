@@ -45,38 +45,100 @@ function cargoLabel(cargo: string | null) {
 }
 
 export function CardAcompanhamento({ politico }: { politico: PoliticoAcompanhado }) {
-  const nome = politico.nome_eleitoral ?? 'Politico acompanhado'
+  const nome = politico.nome_eleitoral ?? 'Político acompanhado'
 
   return (
     <Link
       href={`/politicos/${politico.slug}`}
-      className="group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:ring-3 focus-visible:ring-[#2952cc]/20 focus-visible:outline-none"
+      style={{
+        display: 'block',
+        border: '1px solid var(--line)',
+        background: 'var(--panel)',
+        padding: 12,
+        textDecoration: 'none',
+        transition: 'border-color 0.15s',
+      }}
     >
-      <div className="flex items-center gap-3">
-        <div className="relative size-14 shrink-0 overflow-hidden rounded-2xl bg-[#2952cc] text-white">
-          {politico.foto_url ? (
-            <Image
-              src={politico.foto_url}
-              alt={`Foto de ${nome}`}
-              fill
-              className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })}`}
-              sizes="56px"
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm font-bold">
-              {iniciais(nome)}
-            </div>
-          )}
-        </div>
+      {/* Avatar */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1',
+          background: 'var(--brand)',
+          color: 'white',
+          marginBottom: 10,
+          overflow: 'hidden',
+        }}
+      >
+        {politico.foto_url ? (
+          <Image
+            src={politico.foto_url}
+            alt={`Foto de ${nome}`}
+            fill
+            className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })}`}
+            sizes="(max-width: 768px) 50vw, 25vw"
+            unoptimized
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: 20,
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            {iniciais(nome)}
+          </div>
+        )}
+      </div>
 
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-slate-950">{nome}</h3>
-          <p className="mt-1 truncate text-xs text-slate-500">{cargoLabel(politico.cargo)}</p>
-          <p className="mt-2 text-xs font-medium text-slate-700">
-            {politico.partidos?.sigla ?? 'Sem partido'} · {politico.uf ?? 'UF nao informada'}
-          </p>
+      {/* Info */}
+      <div>
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: 13,
+            color: 'var(--ink)',
+            marginBottom: 4,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {nome}
         </div>
+        <div
+          className="mono"
+          style={{
+            fontSize: 11,
+            color: 'var(--mute)',
+            marginBottom: 2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {cargoLabel(politico.cargo)}
+        </div>
+        <div
+          className="mono"
+          style={{ fontSize: 11, color: 'var(--ink-3)' }}
+        >
+          {politico.partidos?.sigla ?? '—'} · {politico.uf ?? '—'}
+        </div>
+      </div>
+
+      <div
+        className="mono"
+        style={{ fontSize: 11, color: 'var(--brand-2)', marginTop: 10 }}
+      >
+        Ver perfil →
       </div>
     </Link>
   )
