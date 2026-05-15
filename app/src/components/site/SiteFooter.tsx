@@ -12,7 +12,7 @@ export function SiteFooter() {
       }}
     >
       <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', gap: 40 }}>
           <div>
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
@@ -53,6 +53,13 @@ export function SiteFooter() {
                 { label: 'Sobre', href: '/sobre' },
                 { label: 'Privacidade', href: '/privacidade' },
                 { label: 'Termos', href: '/termos' },
+              ],
+            },
+            {
+              h: 'App Analitico',
+              l: [
+                { label: 'app.meuspoliticos.com.br ->', href: 'https://app.meuspoliticos.com.br' },
+                { label: 'Documentacao da API', href: '/api-docs' },
               ],
             },
           ].map((col) => (

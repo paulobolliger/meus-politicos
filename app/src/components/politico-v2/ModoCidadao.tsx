@@ -258,6 +258,46 @@ export function ModoCidadao({ politico }: Props) {
             </div>
           </QuestionCard>
         </div>
+
+        <div
+          style={{
+            marginTop: 40,
+            padding: '20px 24px',
+            background: 'var(--ink)',
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <div className="label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
+              QUER IR FUNDO?
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>Use o app analitico.</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+              Votacoes detalhadas, scores cientificos, radar de desempenho.
+            </div>
+          </div>
+          <a
+            href={`https://app.meuspoliticos.com.br/politicos/${politico.slug}`}
+            style={{
+              padding: '12px 24px',
+              background: 'var(--accent)',
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            Abrir no app -&gt;
+          </a>
+        </div>
       </section>
 
       <section style={{ maxWidth: 1320, margin: '18px auto 0', padding: '0 24px' }}>

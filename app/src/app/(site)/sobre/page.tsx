@@ -197,7 +197,7 @@ export default function SobrePage() {
                   <ArrowUpRight className="size-4" aria-hidden="true" />
                 </Link>
                 <Link
-                  href="/como-funciona"
+                  href="https://app.meuspoliticos.com.br"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--brand-2)] px-5 text-sm font-semibold text-white transition hover:brightness-110"
                 >
                   Entender como funciona
