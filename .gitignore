@@ -104,6 +104,9 @@ dist
 # vitepress cache directory
 **/.vitepress/cache
 
+# Dados locais e arquivos grandes de ETL/geoespacial
+/data/
+
 # Docusaurus cache and generated files
 .docusaurus
 
