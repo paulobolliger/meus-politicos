@@ -151,19 +151,19 @@ const secoes = [
 function TableOfContents({ activeSection }: { activeSection: string }) {
   return (
     <nav
-      className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="sticky top-[80px] max-h-[calc(100vh-5rem)] space-y-1 overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 shadow-sm"
       aria-label="Navegação da página"
     >
-      <h3 className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Sumário</h3>
-      <ul className="space-y-1">
+      <h3 className="mono px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--mute)]">Sumário</h3>
+      <ul className="space-y-0.5">
         {secoes.map((secao) => (
           <li key={secao.id}>
             <a
               href={`#${secao.id}`}
-              className={`block rounded-lg px-3 py-2 text-sm transition ${
+              className={`mono block py-2 text-[11px] uppercase tracking-[0.12em] transition ${
                 activeSection === secao.id
-                  ? 'bg-[#eef3ff] font-medium text-[#2952cc]'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'border-l-2 border-l-[var(--brand-2)] bg-[var(--brand-soft)] pl-2 font-semibold text-[var(--brand-2)]'
+                  : 'pl-3 text-[var(--ink-3)] hover:bg-[var(--bg)] hover:text-[var(--ink)]'
               }`}
             >
               {secao.numero}. {secao.titulo}
@@ -207,14 +207,14 @@ export default function PrivacyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-slate-50 to-white">
+    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
       {/* Hero Section */}
-      <section className="border-b border-slate-200 bg-linear-to-b from-slate-900 via-[#1a2f5a] to-slate-800">
+      <section className="border-b border-[var(--line)] bg-linear-to-b from-slate-900 via-[var(--brand)] to-slate-800">
         <div className="container-shell py-16 sm:py-24">
           <div className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-800/50 px-3 py-1 backdrop-blur-sm">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-300">Política Institucional</span>
+              <span className="mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">Política Institucional</span>
             </div>
 
             <div className="space-y-4">
@@ -260,19 +260,19 @@ export default function PrivacyPage() {
                 id={secao.id}
                 className="scroll-mt-20 animate-in fade-in duration-500"
               >
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md sm:p-8">
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm transition hover:shadow-md sm:p-8">
                   {/* Section Header */}
                   <div className="mb-6 flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#eef3ff] font-semibold text-[#2952cc]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--bg)] font-semibold text-[var(--brand-2)]">
                       {secao.numero}
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-slate-900">{secao.titulo}</h2>
+                      <h2 className="text-2xl font-bold text-[var(--ink)]">{secao.titulo}</h2>
                     </div>
                   </div>
 
                   {/* Section Content */}
-                  <div className="space-y-4 text-slate-700">
+                  <div className="space-y-4 text-[var(--ink-3)]">
                     {secao.conteudo.map((paragrafo, idx) => {
                       // Handle contact email
                       if (paragrafo === 'contato@meuspoliticos.com.br') {
@@ -280,7 +280,7 @@ export default function PrivacyPage() {
                           <p key={idx} className="text-base leading-relaxed">
                             <a
                               href="mailto:contato@meuspoliticos.com.br"
-                              className="font-semibold text-[#2952cc] hover:underline"
+                              className="font-semibold text-[var(--brand-2)] hover:underline"
                             >
                               contato@meuspoliticos.com.br
                             </a>
@@ -312,7 +312,7 @@ export default function PrivacyPage() {
                   </div>
 
                   {/* Divider */}
-                  {index < secoes.length - 1 && <div className="mt-6 border-t border-slate-200" />}
+                  {index < secoes.length - 1 && <div className="mt-6 border-t border-[var(--line)]" />}
                 </div>
               </section>
             ))}
@@ -321,12 +321,12 @@ export default function PrivacyPage() {
       </div>
 
       {/* Footer Navigation */}
-      <section className="border-t border-slate-200 bg-slate-50">
+      <section className="border-t border-[var(--line)] bg-[var(--bg)]">
         <div className="container-shell py-8 sm:py-12">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/"
-              className="group inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              className="group inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-4 py-2.5 font-medium text-[var(--ink-3)] transition hover:border-[var(--line-strong)] hover:bg-[var(--bg)]"
             >
               <svg className="h-4 w-4 transition group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -336,7 +336,7 @@ export default function PrivacyPage() {
 
             <Link
               href="/termos"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#dbe4ff] bg-[#eef3ff] px-4 py-2.5 font-medium text-[#2952cc] transition hover:bg-[#e3ebff]"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--brand-soft)] px-4 py-2.5 font-medium text-[var(--brand-2)] transition hover:brightness-95"
             >
               Ver Termos de Uso
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,10 +351,10 @@ export default function PrivacyPage() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white shadow-lg transition hover:bg-slate-50 lg:bottom-8 lg:right-8"
+          className="fixed bottom-6 right-6 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--panel)] shadow-lg transition hover:bg-[var(--bg)] lg:bottom-8 lg:right-8"
           aria-label="Voltar ao topo"
         >
-          <ChevronUp className="h-5 w-5 text-slate-700" />
+          <ChevronUp className="h-5 w-5 text-[var(--ink-3)]" />
         </button>
       )}
     </main>
