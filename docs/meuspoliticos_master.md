@@ -782,12 +782,12 @@ Camada 4 — Interface
 |---|---|---|
 | `/` | Home — busca + CEP + todos os níveis | ✅ |
 | `/busca` | Resultados da busca com filtros | ✅ |
-| `/politico/[id]` | Perfil do político | ✅ |
-| `/politico/[id]` → votações | Como votou (descrição via IA) | ✅ |
-| `/politico/[id]` → gastos | Cota parlamentar + custo total | ✅ |
-| `/politico/[id]` → presença | % nas sessões + histórico | ✅ |
-| `/politico/[id]` → emendas | Destino e valores | fase 2 |
-| `/politico/[id]` → histórico | Mandatos anteriores | fase 2 |
+| `/politicos/[id]` | Perfil do político | ✅ |
+| `/politicos/[id]` → votações | Como votou (descrição via IA) | ✅ |
+| `/politicos/[id]` → gastos | Cota parlamentar + custo total | ✅ |
+| `/politicos/[id]` → presença | % nas sessões + histórico | ✅ |
+| `/politicos/[id]` → emendas | Destino e valores | fase 2 |
+| `/politicos/[id]` → histórico | Mandatos anteriores | fase 2 |
 | `/meu-estado` | Quem me representa — por CEP/UF | ✅ |
 | `/candidato/[id]` | Perfil do candidato 2026 (3 perfis) | ✅ |
 
@@ -1393,7 +1393,7 @@ Nenhuma mudança visual favorece candidatos específicos. Todos os candidatos do
 **Páginas de dados:**
 - `/` Home
 - `/busca` Busca e resultados
-- `/politico/[id]` Perfil com abas: votações, gastos, presença
+- `/politicos/[id]` Perfil com abas: votações, gastos, presença
 - `/meu-estado` Quem me representa por CEP
 - `/candidato/[id]` Perfil do candidato 2026
 
@@ -1728,7 +1728,7 @@ Não precisam de ação separada — vêm por padrão:
 - **Meta tags dinâmicas e OG tags** — Next.js `generateMetadata` por página
 - **Core Web Vitals** — Vercel + Next.js já otimiza LCP, CLS e INP
 - **Otimização de imagens** — `next/image` com WebP, lazy loading e cache
-- **URLs semânticas** — `/politico/nikolas-ferreira` em vez de `/p/93hf`
+- **URLs semânticas** — `/politicos/nikolas-ferreira` em vez de `/p/93hf`
 - **EEAT forte** — neutralidade + fontes rastreáveis + auditoria = confiança algorítmica
 - **Canonical tags e robots.txt** — configuração de 30 minutos no Next.js
 - **Conteúdo citável por IA** — tom editorial factual + dados com fonte + glossário

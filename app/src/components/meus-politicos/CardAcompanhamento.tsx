@@ -49,7 +49,7 @@ export function CardAcompanhamento({ politico }: { politico: PoliticoAcompanhado
 
   return (
     <Link
-      href={`/politico/${politico.slug}`}
+      href={`/politicos/${politico.slug}`}
       className="group block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:ring-3 focus-visible:ring-[#2952cc]/20 focus-visible:outline-none"
     >
       <div className="flex items-center gap-3">

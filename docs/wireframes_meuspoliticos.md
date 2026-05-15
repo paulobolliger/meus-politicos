@@ -68,7 +68,7 @@ Primeira impressão. Comunicar escopo nacional (presidente ao vereador) e conver
 
 ---
 
-## 2. Perfil do político `/politico/[id]`
+## 2. Perfil do político `/politicos/[id]`
 
 > ✅ Aprovado
 

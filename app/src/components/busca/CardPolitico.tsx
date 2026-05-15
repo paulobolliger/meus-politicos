@@ -85,7 +85,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
 
   return (
     <Link
-      href={`/politico/${politico.slug}`}
+      href={`/politicos/${politico.slug}`}
       className="group block rounded-xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
     >
       <div className="flex items-start gap-3">

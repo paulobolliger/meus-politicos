@@ -231,7 +231,7 @@ export function ModoAnalista({ politico }: Props) {
             </div>
 
             <div className="mt-4">
-              <Link href={`/politico/${politico.slug}`} className="text-sm font-semibold text-[#2952cc] hover:underline">
+              <Link href={`/politicos/${politico.slug}`} className="text-sm font-semibold text-[#2952cc] hover:underline">
                 Ver todas
               </Link>
             </div>

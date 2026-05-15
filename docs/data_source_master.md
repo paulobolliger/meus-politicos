@@ -2200,7 +2200,7 @@ collected_at       timestamptz  -- quando foi coletado
 
 ### GEO readiness — cada entidade precisa de
 
-- URL canônica (`/politico/[slug]`)
+- URL canônica (`/politicos/[slug]`)
 - Schema.org JSON-LD (`Person`, `Organization`)
 - OpenGraph dinâmico via `opengraph-image.tsx`
 - `llms.txt` com mapeamento de entidades
