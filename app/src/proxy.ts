@@ -7,7 +7,21 @@ const PROTECTED_ROUTES = ['/meus-politicos', '/admin']
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
 
+  const host = request.headers.get('host')?.toLowerCase() ?? ''
   const { pathname } = request.nextUrl
+
+  const isAppHost =
+    host.startsWith('app.localhost') ||
+    host.startsWith('app.meuspoliticos.com.br') ||
+    host.startsWith('app.meuspoliticos.com.br:')
+
+  // Evita conflito de route groups na rota raiz: app host usa /home internamente.
+  if (isAppHost && pathname === '/') {
+    const rewritten = request.nextUrl.clone()
+    rewritten.pathname = '/home'
+    return NextResponse.rewrite(rewritten)
+  }
+
   const isProtected = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   )
