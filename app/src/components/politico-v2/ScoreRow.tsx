@@ -54,7 +54,7 @@ export function ScoreRow({ label, value, mediaUf, unit = '%' }: ScoreRowProps) {
           </span>
         ) : (
           <p className={`text-sm font-semibold ${palette.text}`}>
-            {value.toFixed(0)}
+            {Number(value).toFixed(0)}
             {unit}
           </p>
         )}
