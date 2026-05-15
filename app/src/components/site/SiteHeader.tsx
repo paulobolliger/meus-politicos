@@ -59,14 +59,13 @@ export function SiteHeader() {
             gap: 32,
           }}
         >
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', height: 70 }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center' }}>
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
               alt="Meus Politicos"
-              height={64}
-              width={315}
-              style={{ height: 64, width: 'auto' }}
-              priority
+              height={24}
+              width={120}
+              style={{ height: 24, width: 'auto' }}
             />
           </Link>
           <nav style={{ display: 'flex', gap: 28, marginLeft: 32 }}>
@@ -94,41 +93,26 @@ export function SiteHeader() {
           <Link
             href="/login"
             style={{
-              padding: '0 14px',
-              height: 38,
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'transparent',
-              border: '1px solid var(--line-strong)',
-              fontSize: 13,
-              color: 'var(--ink-2)',
-              fontWeight: 500,
-              textDecoration: 'none',
-              borderRadius: 2,
-            }}
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/cadastro"
-            style={{
-              padding: '0 16px',
-              height: 38,
+              padding: '0 20px',
+              height: 40,
               display: 'inline-flex',
               alignItems: 'center',
               background: 'var(--brand)',
-              border: 'none',
               color: 'white',
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 600,
               textDecoration: 'none',
               borderRadius: 2,
             }}
           >
-            Criar conta
+            Acessar conta →
           </Link>
         </div>
       </div>
     </>
   )
 }
+
+
+
+

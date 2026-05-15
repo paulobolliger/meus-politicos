@@ -317,43 +317,36 @@ export function AppSidebar() {
           >
             {collapsed ? 'SITE' : '<- SITE PUBLICO'}
           </a>
-          <div style={{ display: 'grid', gap: 6 }}>
+          {collapsed ? (
             <Link
               href="/login"
-              className="mono"
-              style={{
-                border: '1px solid var(--line-strong)',
-                height: 32,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
-                color: 'var(--ink-2)',
-                fontSize: 10.5,
-                letterSpacing: '0.08em',
-              }}
+              title="Entrar / Criar conta"
+              style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
             >
-              {collapsed ? 'IN' : 'ENTRAR'}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
             </Link>
+          ) : (
             <Link
-              href="/cadastro"
-              className="mono"
+              href="/login"
               style={{
-                border: '1px solid var(--brand)',
+                display: 'block',
+                padding: '10px 16px',
+                textAlign: 'center',
                 background: 'var(--brand)',
-                height: 32,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
                 color: 'white',
-                fontSize: 10.5,
-                letterSpacing: '0.08em',
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontFamily: 'IBM Plex Mono, monospace',
+                letterSpacing: '0.06em',
               }}
             >
-              {collapsed ? 'UP' : 'CRIAR CONTA'}
+              ENTRAR / CRIAR CONTA →
             </Link>
-          </div>
+          )}
         </div>
       </div>
 
@@ -433,45 +426,24 @@ export function AppSidebar() {
             >
               {'<- SITE PUBLICO'}
             </a>
-            <div style={{ display: 'grid', gap: 6 }}>
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="mono"
-                style={{
-                  border: '1px solid var(--line-strong)',
-                  height: 34,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textDecoration: 'none',
-                  color: 'var(--ink-2)',
-                  fontSize: 11,
-                  letterSpacing: '0.08em',
-                }}
-              >
-                ENTRAR
-              </Link>
-              <Link
-                href="/cadastro"
-                onClick={() => setMobileOpen(false)}
-                className="mono"
-                style={{
-                  border: '1px solid var(--brand)',
-                  background: 'var(--brand)',
-                  height: 34,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textDecoration: 'none',
-                  color: 'white',
-                  fontSize: 11,
-                  letterSpacing: '0.08em',
-                }}
-              >
-                CRIAR CONTA
-              </Link>
-            </div>
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              style={{
+                display: 'block',
+                padding: '10px 16px',
+                textAlign: 'center',
+                background: 'var(--brand)',
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontFamily: 'IBM Plex Mono, monospace',
+                letterSpacing: '0.06em',
+              }}
+            >
+              ENTRAR / CRIAR CONTA →
+            </Link>
           </aside>
         </>
       )}

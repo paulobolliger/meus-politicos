@@ -92,6 +92,10 @@ export function SiteFooter() {
           }}
         >
           <span>transparencia · dados · cidadania</span>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <Link href="/login" style={{ fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none' }}>Entrar</Link>
+            <Link href="/cadastro" style={{ fontSize: 13, color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>Criar conta →</Link>
+          </div>
           <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.06em' }}>
             meuspoliticos.com.br
           </span>
