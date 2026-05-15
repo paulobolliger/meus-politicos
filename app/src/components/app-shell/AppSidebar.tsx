@@ -160,9 +160,9 @@ export function AppSidebar() {
           <Image
             src="/logos_meus-politicos_colorido_semfundo.png"
             alt="Meus Politicos"
-            height={55}
-            width={270}
-            style={{ height: 55, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+            height={50}
+            width={246}
+            style={{ height: 50, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
           />
         </Link>
         <a
@@ -200,14 +200,14 @@ export function AppSidebar() {
         >
           <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '100%' }} title="Inicio">
             {collapsed ? (
-              <Image src="/icon.png" alt="Meus Politicos" height={72} width={72} style={{ height: 72, width: 72, filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
+              <Image src="/icon.png" alt="Meus Politicos" height={48} width={48} style={{ height: 48, width: 48, filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
             ) : (
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={64}
-                width={312}
-                style={{ height: 64, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={56}
+                width={276}
+                style={{ height: 56, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
             )}
           </Link>
@@ -331,9 +331,9 @@ export function AppSidebar() {
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={60}
-                width={290}
-                style={{ height: 60, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={52}
+                width={256}
+                style={{ height: 52, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
               <button
                 type="button"

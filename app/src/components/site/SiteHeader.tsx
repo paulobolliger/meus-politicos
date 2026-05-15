@@ -63,9 +63,9 @@ export function SiteHeader() {
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
               alt="Meus Politicos"
-              height={70}
-              width={340}
-              style={{ height: 70, width: 'auto' }}
+              height={64}
+              width={315}
+              style={{ height: 64, width: 'auto' }}
               priority
             />
           </Link>
