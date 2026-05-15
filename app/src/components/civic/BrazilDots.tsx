@@ -37,6 +37,14 @@ const STATES: StateDot[] = [
   { uf: 'MS', x: 45, y: 68, n: 8 },
 ]
 
+// Contorno simplificado do Brasil adaptado para viewBox 0 0 100 100
+// Norte largo, nordeste com saliência à direita, sul afunilado
+const BRAZIL_OUTLINE =
+  'M26,14 L30,11 L35,10 L40,11 L46,10 L52,11 L57,9 L63,11 L68,10 L74,12 L79,14 L83,18 L85,23 L84,29 ' +
+  'L87,35 L86,40 L83,43 L85,47 L84,52 L81,56 L83,59 L80,63 L77,66 L75,70 L72,72 L69,76 L66,77 ' +
+  'L63,74 L59,77 L55,80 L52,86 L50,91 L47,95 L44,93 L42,88 L40,82 L36,79 L32,81 L28,78 ' +
+  'L24,74 L20,69 L17,63 L15,57 L13,50 L11,44 L13,38 L11,32 L13,26 L17,20 L21,16 Z'
+
 type BrazilDotsProps = {
   active: string
   onPick: (uf: string) => void
@@ -50,6 +58,15 @@ export function BrazilDots({ active, onPick, dark = false, height = 420 }: Brazi
   return (
     <div style={{ position: 'relative', height, width: '100%' }}>
       <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+        <path
+          d={BRAZIL_OUTLINE}
+          fill="none"
+          stroke="var(--line-strong)"
+          strokeWidth="0.7"
+          opacity="0.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
         {STATES.map((s) => {
           const r = 1.2 + (s.n / maxN) * 2.6
           const isActive = s.uf === active

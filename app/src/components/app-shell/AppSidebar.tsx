@@ -3,13 +3,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useTheme } from '@/components/app-shell/ThemeProvider'
 
 type NavItem = {
   label: string
-  short: string
   href: string
+  icon: ReactNode
 }
 
 type NavSection = {
@@ -21,20 +21,77 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'EXPLORACAO',
     items: [
-      { label: 'Inicio', short: 'IN', href: '/home' },
-      { label: 'Buscar', short: 'BU', href: '/busca' },
-      { label: 'Meu estado', short: 'UF', href: '/meu-estado' },
+      {
+        label: 'Inicio',
+        href: '/home',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Buscar',
+        href: '/busca',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Meu estado',
+        href: '/meu-estado',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        ),
+      },
     ],
   },
   {
     title: 'MONITORAMENTO',
-    items: [{ label: 'Meus politicos', short: 'MP', href: '/meus-politicos' }],
+    items: [
+      {
+        label: 'Meus politicos',
+        href: '/meus-politicos',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
     title: 'REFERENCIA',
     items: [
-      { label: 'Metodologia', short: 'ME', href: '/metodologia' },
-      { label: 'Fontes', short: 'FO', href: '/fontes' },
+      {
+        label: 'Metodologia',
+        href: '/metodologia',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        ),
+      },
+      {
+        label: 'Fontes',
+        href: '/fontes',
+        icon: (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        ),
+      },
     ],
   },
 ]
@@ -76,6 +133,7 @@ function SidebarBlock({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: collapsed ? 'center' : 'flex-start',
+                    gap: collapsed ? 0 : 8,
                     padding: collapsed ? '0 8px' : '0 10px',
                     border: `1px solid ${active ? 'var(--brand-2)' : 'var(--line)'}`,
                     background: active ? 'var(--brand-soft)' : 'var(--panel)',
@@ -87,7 +145,8 @@ function SidebarBlock({
                   }}
                   title={item.label}
                 >
-                  {collapsed ? item.short : item.label}
+                  {item.icon}
+                  {!collapsed && item.label}
                 </Link>
               )
             })}
@@ -158,12 +217,12 @@ export function AppSidebar() {
         </button>
         <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
           <Image
-            src="/logos_meus-politicos_colorido_semfundo.png"
-            alt="Meus Politicos"
-            height={50}
-            width={246}
-            style={{ height: 50, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
-          />
+                src="/logos_meus-politicos_colorido_semfundo.png"
+                alt="Meus Politicos"
+                height={247}
+                width={1009}
+                style={{ height: '100%', width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+              />
         </Link>
         <a
           href="https://meuspoliticos.com.br"
@@ -205,9 +264,9 @@ export function AppSidebar() {
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={56}
-                width={276}
-                style={{ height: 56, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={247}
+                width={1009}
+                style={{ height: '100%', width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
             )}
           </Link>
@@ -331,9 +390,9 @@ export function AppSidebar() {
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={52}
-                width={256}
-                style={{ height: 52, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={247}
+                width={1009}
+                style={{ height: '100%', width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
               <button
                 type="button"
@@ -435,3 +494,7 @@ export function AppSidebar() {
     </>
   )
 }
+
+
+
+
