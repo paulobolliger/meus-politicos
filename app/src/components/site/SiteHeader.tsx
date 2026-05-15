@@ -59,13 +59,14 @@ export function SiteHeader() {
             gap: 32,
           }}
         >
-          <Link href="/">
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', height: 70 }}>
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
               alt="Meus Politicos"
-              height={32}
-              width={160}
-              style={{ height: 32, width: 'auto' }}
+              height={70}
+              width={340}
+              style={{ height: 70, width: 'auto' }}
+              priority
             />
           </Link>
           <nav style={{ display: 'flex', gap: 28, marginLeft: 32 }}>

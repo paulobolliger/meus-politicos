@@ -156,13 +156,13 @@ export function AppSidebar() {
         >
           MENU
         </button>
-        <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
           <Image
             src="/logos_meus-politicos_colorido_semfundo.png"
             alt="Meus Politicos"
-            height={24}
-            width={118}
-            style={{ height: 24, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+            height={55}
+            width={270}
+            style={{ height: 55, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
           />
         </Link>
         <a
@@ -198,16 +198,16 @@ export function AppSidebar() {
             gap: collapsed ? 10 : 8,
           }}
         >
-          <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
+          <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '100%' }} title="Inicio">
             {collapsed ? (
-              <Image src="/icon.png" alt="Meus Politicos" height={28} width={28} style={{ height: 28, width: 28, filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
+              <Image src="/icon.png" alt="Meus Politicos" height={72} width={72} style={{ height: 72, width: 72, filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }} />
             ) : (
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={24}
-                width={118}
-                style={{ height: 24, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={64}
+                width={312}
+                style={{ height: 64, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
             )}
           </Link>
@@ -331,9 +331,9 @@ export function AppSidebar() {
               <Image
                 src="/logos_meus-politicos_colorido_semfundo.png"
                 alt="Meus Politicos"
-                height={24}
-                width={118}
-                style={{ height: 24, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                height={60}
+                width={290}
+                style={{ height: 60, width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
               />
               <button
                 type="button"
