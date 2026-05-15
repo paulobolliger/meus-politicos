@@ -63,9 +63,9 @@ export function SiteHeader() {
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
               alt="Meus Politicos"
-              height={24}
-              width={120}
-              style={{ height: 24, width: 'auto' }}
+              height={36}
+              width={180}
+              style={{ height: 36, width: 'auto', objectFit: 'contain' }}
             />
           </Link>
           <nav style={{ display: 'flex', gap: 28, marginLeft: 32 }}>
