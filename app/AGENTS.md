@@ -27,3 +27,17 @@ Para status de campo, fallback e exibicao de dados cadastrais do perfil
 
 Nao duplicar regras de fallback em AGENTS.md; este arquivo deve apenas
 referenciar o contrato oficial em docs.
+
+## Arquitetura de subdomínios (refactor/civic-terminal)
+
+O projeto usa route groups para servir dois produtos do mesmo deploy:
+
+- `(site)/` -> meuspoliticos.com.br - site publico, linguagem cidadao
+- `(app)/` -> app.meuspoliticos.com.br - app analitico, linguagem tecnica
+- `(auth)/` -> compartilhado entre os dois
+
+Diferenciacao por host e feita no `proxy.ts`.
+Cookie Supabase: dominio `.meuspoliticos.com.br` em producao.
+
+Componentes civicos: `src/components/civic/` - usar sempre antes de criar novo componente visual.
+Tokens: ver `src/app/globals.css` secao `:root`.
