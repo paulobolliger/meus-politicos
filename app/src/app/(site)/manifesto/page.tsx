@@ -64,23 +64,23 @@ const blocos = [
 
 export default function ManifestoPage() {
   return (
-    <main className="min-h-screen bg-linear-to-b from-slate-50 to-white">
-      <section className="relative overflow-hidden border-b border-slate-200">
+    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
+      <section className="relative overflow-hidden border-b border-[var(--line)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff] to-transparent" />
-        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[#2952cc]/8 blur-3xl" />
+        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
 
         <div className="container-shell relative py-14 sm:py-20">
           <div className="max-w-4xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1 shadow-sm">
               <span className="inline-block size-2 rounded-full bg-emerald-400" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Manifesto público</span>
+              <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--mute)]">Manifesto público</span>
             </div>
 
             <div className="space-y-5">
               <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
                 Somos infraestrutura. O sistema operacional da cidadania política brasileira.
               </h1>
-              <p className="max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+              <p className="max-w-3xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
                 Este é o texto público que resume a tese do projeto para imprensa, investidores, entrevistas e
                 apresentações. O objetivo é simples: transformar dados públicos em clareza cidadã.
               </p>
@@ -89,14 +89,14 @@ export default function ManifestoPage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/sobre"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#2952cc] px-5 text-sm font-semibold text-white transition hover:bg-[#3a63de]"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--brand-2)] px-5 text-sm font-semibold text-white transition hover:brightness-110"
               >
                 Ver sobre
                 <ArrowUpRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/como-funciona"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-5 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--bg)]"
               >
                 Entender a operação
                 <ArrowUpRight className="size-4" aria-hidden="true" />
@@ -109,17 +109,17 @@ export default function ManifestoPage() {
       <section className="container-shell py-12 sm:py-16">
         <div className="grid gap-4 lg:grid-cols-2">
           {blocos.map((bloco) => (
-            <article key={bloco.eyebrow} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2952cc]">{bloco.eyebrow}</p>
+            <article key={bloco.eyebrow} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm sm:p-7">
+              <p className="mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">{bloco.eyebrow}</p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">{bloco.title}</h2>
 
 
               {bloco.description ? (
                 <>
-                  <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">{bloco.description}</p>
+                  <p className="mt-3 text-sm leading-6 text-[var(--ink-3)] sm:text-base">{bloco.description}</p>
                   {bloco.eyebrow === "7. Uma promessa simples" && (
                     <div className="mt-2">
-                      <Link href="/metodologia" className="font-semibold text-[#2952cc] hover:underline">Ver metodologia completa →</Link>
+                      <Link href="/metodologia" className="font-semibold text-[var(--brand-2)] hover:underline">Ver metodologia completa →</Link>
                     </div>
                   )}
                 </>
@@ -128,8 +128,8 @@ export default function ManifestoPage() {
               {bloco.bullets ? (
                 <ul className="mt-4 grid gap-3">
                   {bloco.bullets.map((item) => (
-                    <li key={item} className="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[#2952cc]" aria-hidden="true" />
+                    <li key={item} className="flex gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
+                      <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--brand-2)]" aria-hidden="true" />
                       <span className="text-sm leading-6 text-slate-700">{item}</span>
                     </li>
                   ))}
@@ -137,8 +137,8 @@ export default function ManifestoPage() {
               ) : null}
 
               {bloco.closing ? (
-                <div className="mt-4 rounded-2xl border border-[#dbe4ff] bg-[#f4f7ff] p-4">
-                  <p className="text-sm font-semibold uppercase tracking-widest text-[#2952cc]">Posicionamento final</p>
+                <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-4">
+                  <p className="mono text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">Posicionamento final</p>
                   <p className="mt-2 text-lg font-bold tracking-tight text-slate-950">{bloco.closing}</p>
                 </div>
               ) : null}
@@ -147,14 +147,14 @@ export default function ManifestoPage() {
         </div>
       </section>
 
-      <section className="border-y border-slate-200 bg-white py-12 sm:py-16">
+      <section className="border-y border-[var(--line)] bg-[var(--panel)] py-12 sm:py-16">
         <div className="container-shell">
-          <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-slate-950 via-[#11244d] to-slate-900 p-6 text-white shadow-[0_24px_60px_-44px_rgba(15,23,42,0.9)] sm:p-8 lg:p-10">
+          <div className="rounded-2xl border border-[var(--line)] bg-linear-to-br from-slate-950 via-[#11244d] to-slate-900 p-6 text-white shadow-[0_24px_60px_-44px_rgba(15,23,42,0.9)] sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div className="max-w-2xl">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1">
                   <Sparkles className="size-4 text-[#9fb7ff]" aria-hidden="true" />
-                  <span className="text-xs font-semibold uppercase tracking-widest text-white/70">
+                  <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
                     Promessa operacional
                   </span>
                 </div>
