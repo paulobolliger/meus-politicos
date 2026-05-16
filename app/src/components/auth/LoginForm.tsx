@@ -79,7 +79,7 @@ export function LoginForm() {
     setLoadingTwitter(true)
 
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
+      provider: 'x',
       options: {
         redirectTo: painelCallbackUrl(),
       },
