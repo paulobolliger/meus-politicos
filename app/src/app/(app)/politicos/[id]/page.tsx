@@ -29,11 +29,23 @@ export default async function AppPerfilPage({ params }: PageProps) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: politico } = await supabase
+  let { data: politico } = await supabase
     .from('politicos')
     .select('*, partidos(sigla, nome, numero), redes_sociais(plataforma, url)')
-    .or(`slug.eq.${id},id.eq.${id}`)
+    .eq('slug', id)
     .maybeSingle()
+
+  if (!politico) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(id)) {
+      const { data } = await supabase
+        .from('politicos')
+        .select('*, partidos(sigla, nome, numero), redes_sociais(plataforma, url)')
+        .eq('id', id)
+        .maybeSingle()
+      politico = data
+    }
+  }
 
   if (!politico) notFound()
 
