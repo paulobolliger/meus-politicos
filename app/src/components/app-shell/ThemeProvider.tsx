@@ -17,17 +17,13 @@ const ThemeCtx = createContext<ThemeContextValue>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme | null>(null)
 
-  // Lê o localStorage uma única vez após montar — evita inconsistência de hydration
   useEffect(() => {
     const saved = localStorage.getItem('mp-theme') as Theme | null
     setTheme(saved === 'light' || saved === 'dark' ? saved : 'dark')
   }, [])
 
-  // Aplica a classe no <html> sempre que o tema mudar
   useEffect(() => {
     if (theme === null) return
-    document.documentElement.setAttribute('data-theme', theme)
-    document.documentElement.classList.toggle('theme-dark', theme === 'dark')
     localStorage.setItem('mp-theme', theme)
   }, [theme])
 
@@ -40,7 +36,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         toggle: () => setTheme((current) => (current === 'light' ? 'dark' : 'light')),
       }}
     >
-      {children}
+      <div
+        className={resolvedTheme === 'dark' ? 'theme-dark' : ''}
+        style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}
+      >
+        {children}
+      </div>
     </ThemeCtx.Provider>
   )
 }

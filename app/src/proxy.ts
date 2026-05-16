@@ -22,6 +22,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(rewritten)
   }
 
+  // /busca no app host usa rota interna /app-busca (sidebar, sem conflito com (site)/)
+  if (isAppHost && pathname === '/busca') {
+    const rewritten = request.nextUrl.clone()
+    rewritten.pathname = '/app-busca'
+    return NextResponse.rewrite(rewritten)
+  }
+
   const isProtected = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   )
