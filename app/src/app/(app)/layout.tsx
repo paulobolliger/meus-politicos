@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { AppFooter } from '@/components/app-shell/AppFooter'
-import { AppSidebar } from '@/components/app-shell/AppSidebar'
+import { AppMobileTopbar, AppSidebar } from '@/components/app-shell/AppSidebar'
 import { SystemBar } from '@/components/civic'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,13 +16,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SystemBar />
+
+      {/* Topbar mobile — ocupa largura total, visível apenas em < 1024px */}
+      <div className="app-mobile-only">
+        <AppMobileTopbar />
+      </div>
+
+      {/* Flex row: sidebar desktop + conteúdo */}
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'calc(100vh - 32px)' }}>
-        <AppSidebar />
+        <div className="app-desktop-only">
+          <AppSidebar />
+        </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <main style={{ flex: 1 }}>{children}</main>
           <AppFooter />
         </div>
       </div>
+
+      <style>{`
+        .app-mobile-only { display: block; }
+        .app-desktop-only { display: none; }
+        @media (min-width: 1024px) {
+          .app-mobile-only { display: none; }
+          .app-desktop-only { display: block; }
+        }
+      `}</style>
     </>
   )
 }

@@ -156,30 +156,18 @@ function SidebarBlock({
   )
 }
 
-export function AppSidebar() {
+// Topbar mobile — deve ser renderizado FORA do flex row horizontal do layout
+export function AppMobileTopbar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('mp-sidebar-collapsed')
-    if (saved === '1') setCollapsed(true)
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('mp-sidebar-collapsed', collapsed ? '1' : '0')
-  }, [collapsed])
 
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
-  const sidebarWidth = useMemo(() => (collapsed ? 74 : 224), [collapsed])
-
   return (
     <>
       <div
-        className="app-mobile-topbar"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -215,12 +203,12 @@ export function AppSidebar() {
         </button>
         <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
           <Image
-                src="/logos_meus-politicos_colorido_semfundo.png"
-                alt="Meus Politicos"
-                height={247}
-                width={1009}
-                style={{ height: '100%', width: 'auto', filter: 'brightness(0) invert(1)' }}
-              />
+            src="/logos_meus-politicos_colorido_semfundo.png"
+            alt="Meus Politicos"
+            height={247}
+            width={1009}
+            style={{ height: '100%', width: 'auto', filter: 'brightness(0) invert(1)' }}
+          />
         </Link>
         <a
           href="https://meuspoliticos.com.br"
@@ -231,141 +219,10 @@ export function AppSidebar() {
         </a>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          width: sidebarWidth,
-          minWidth: sidebarWidth,
-          borderRight: '1px solid var(--line)',
-          background: 'var(--bg)',
-          padding: collapsed ? '14px 10px' : '16px 14px',
-          position: 'sticky',
-          top: 32,
-          height: 'calc(100vh - 32px)',
-          overflow: 'hidden',
-          transition: 'width 0.18s ease, min-width 0.18s ease, padding 0.18s ease',
-        }}
-        className="app-sidebar-desktop"
-      >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: collapsed ? 'column' : 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 14,
-            gap: collapsed ? 10 : 8,
-          }}
-        >
-          <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
-            {collapsed ? (
-              <Image
-                src="/icon.png"
-                alt="Meus Politicos"
-                height={32}
-                width={32}
-                style={{ height: 32, width: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
-              />
-            ) : (
-              <Image
-                src="/logos_meus-politicos_colorido_semfundo.png"
-                alt="Meus Politicos"
-                height={32}
-                width={130}
-                style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
-              />
-            )}
-          </Link>
-          <button
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            className="mono"
-            style={{
-              width: 28,
-              height: 28,
-              border: '1px solid var(--line)',
-              background: 'var(--panel)',
-              color: 'var(--ink-3)',
-              fontSize: 10,
-              cursor: 'pointer',
-            }}
-            title={collapsed ? 'Expandir' : 'Recolher'}
-          >
-            {collapsed ? '→' : '←'}
-          </button>
-        </div>
-
-        <SidebarBlock collapsed={collapsed} pathname={pathname} />
-
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {!collapsed && (
-            <span className="mono" style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em' }}>
-              513 deputados monitorados
-            </span>
-          )}
-          <a
-            href="https://meuspoliticos.com.br"
-            className="mono"
-            style={{
-              border: '1px solid var(--line)',
-              height: 32,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              color: 'var(--ink-3)',
-              fontSize: 10.5,
-              letterSpacing: '0.08em',
-              background: 'transparent',
-            }}
-          >
-            {collapsed ? 'SITE' : '<- SITE PUBLICO'}
-          </a>
-          {collapsed ? (
-            <Link
-              href="/login"
-              title="Entrar / Criar conta"
-              style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              style={{
-                display: 'block',
-                padding: '10px 16px',
-                textAlign: 'center',
-                background: 'var(--brand-2)',
-                color: 'white',
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-                fontFamily: 'IBM Plex Mono, monospace',
-                letterSpacing: '0.06em',
-              }}
-            >
-              ENTRAR →
-            </Link>
-          )}
-        </div>
-      </div>
-
       {mobileOpen && (
         <>
           <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(10,14,26,0.48)',
-              zIndex: 40,
-            }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(10,14,26,0.48)', zIndex: 40 }}
             onClick={() => setMobileOpen(false)}
           />
           <aside
@@ -454,26 +311,150 @@ export function AppSidebar() {
           </aside>
         </>
       )}
-
-      <style>{`
-        .app-sidebar-desktop {
-          display: none;
-        }
-        @media (min-width: 1024px) {
-          .app-sidebar-desktop {
-            display: flex;
-          }
-        }
-        @media (min-width: 1024px) {
-          .app-mobile-topbar {
-            display: none !important;
-          }
-        }
-      `}</style>
     </>
   )
 }
 
+// Sidebar desktop — visível apenas em telas >= 1024px
+export function AppSidebar() {
+  const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
 
+  useEffect(() => {
+    const saved = localStorage.getItem('mp-sidebar-collapsed')
+    if (saved === '1') setCollapsed(true)
+  }, [])
 
+  useEffect(() => {
+    localStorage.setItem('mp-sidebar-collapsed', collapsed ? '1' : '0')
+  }, [collapsed])
 
+  const sidebarWidth = useMemo(() => (collapsed ? 74 : 224), [collapsed])
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
+        borderRight: '1px solid var(--line)',
+        background: 'var(--bg)',
+        padding: collapsed ? '14px 10px' : '16px 14px',
+        position: 'sticky',
+        top: 32,
+        height: 'calc(100vh - 32px)',
+        overflow: 'hidden',
+        transition: 'width 0.18s ease, min-width 0.18s ease, padding 0.18s ease',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: collapsed ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 14,
+          gap: collapsed ? 10 : 8,
+        }}
+      >
+        <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
+          {collapsed ? (
+            <Image
+              src="/icon.png"
+              alt="Meus Politicos"
+              height={32}
+              width={32}
+              style={{ height: 32, width: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+            />
+          ) : (
+            <Image
+              src="/logos_meus-politicos_colorido_semfundo.png"
+              alt="Meus Politicos"
+              height={32}
+              width={130}
+              style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+            />
+          )}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          className="mono"
+          style={{
+            width: 28,
+            height: 28,
+            border: '1px solid var(--line)',
+            background: 'var(--panel)',
+            color: 'var(--ink-3)',
+            fontSize: 10,
+            cursor: 'pointer',
+          }}
+          title={collapsed ? 'Expandir' : 'Recolher'}
+        >
+          {collapsed ? '→' : '←'}
+        </button>
+      </div>
+
+      <SidebarBlock collapsed={collapsed} pathname={pathname} />
+
+      <div style={{ flex: 1 }} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {!collapsed && (
+          <span className="mono" style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em' }}>
+            513 deputados monitorados
+          </span>
+        )}
+        <a
+          href="https://meuspoliticos.com.br"
+          className="mono"
+          style={{
+            border: '1px solid var(--line)',
+            height: 32,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            color: 'var(--ink-3)',
+            fontSize: 10.5,
+            letterSpacing: '0.08em',
+            background: 'transparent',
+          }}
+        >
+          {collapsed ? 'SITE' : '<- SITE PUBLICO'}
+        </a>
+        {collapsed ? (
+          <Link
+            href="/login"
+            title="Entrar / Criar conta"
+            style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            style={{
+              display: 'block',
+              padding: '10px 16px',
+              textAlign: 'center',
+              background: 'var(--brand-2)',
+              color: 'white',
+              fontSize: 12,
+              fontWeight: 600,
+              textDecoration: 'none',
+              fontFamily: 'IBM Plex Mono, monospace',
+              letterSpacing: '0.06em',
+            }}
+          >
+            ENTRAR →
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}

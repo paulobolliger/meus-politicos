@@ -15,11 +15,26 @@ export async function proxy(request: NextRequest) {
     host.startsWith('app.meuspoliticos.com.br') ||
     host.startsWith('app.meuspoliticos.com.br:')
 
-  // Evita conflito de route groups na rota raiz: app host usa /home internamente.
+  // OAuth ocorre no domínio principal; evita iniciar login no subdomínio app.
+  if (isAppHost && pathname === '/login') {
+    const destination = request.nextUrl.clone()
+    destination.hostname = host.startsWith('app.localhost') ? 'localhost' : 'meuspoliticos.com.br'
+    destination.protocol = host.startsWith('app.localhost') ? 'http:' : 'https:'
+    destination.port = host.startsWith('app.localhost') ? '3000' : ''
+    destination.pathname = '/login'
+    return NextResponse.redirect(destination)
+  }
+
+  // No host app, a raiz redireciona para /painel (logado) ou /home (não logado).
   if (isAppHost && pathname === '/') {
-    const rewritten = request.nextUrl.clone()
-    rewritten.pathname = '/home'
-    return NextResponse.rewrite(rewritten)
+    const destination = request.nextUrl.clone()
+    destination.pathname = user ? '/painel' : '/home'
+    return NextResponse.redirect(destination)
+  }
+
+  // No host app, serve rotas do grupo (app) via rewrite interno.
+  if (isAppHost) {
+    return supabaseResponse
   }
 
   // /busca no app host usa rota interna /app-busca (sidebar, sem conflito com (site)/)
