@@ -31,24 +31,40 @@ export default async function AppPerfilPage({ params }: PageProps) {
 
   const { data: politico } = await supabase
     .from('politicos')
-    .select(
-      `
-      *,
-      partidos(sigla, nome, numero),
-      redes_sociais(plataforma, url),
-      gastos(valor, categoria, mes, ano),
-      presenca(percentual, mes, ano, total_sessoes, presencas),
-      votacoes(id, voto, descricao_simples, data, proposicao)
-      `
-    )
+    .select('*, partidos(sigla, nome, numero), redes_sociais(plataforma, url)')
     .or(`slug.eq.${id},id.eq.${id}`)
-    .order('data', { referencedTable: 'votacoes', ascending: false })
-    .limit(8, { referencedTable: 'votacoes' })
-    .limit(24, { referencedTable: 'gastos' })
-    .limit(24, { referencedTable: 'presenca' })
     .maybeSingle()
 
   if (!politico) notFound()
 
-  return <PerfilApp politico={politico} />
+  const [{ data: votacoes }, { data: gastos }, { data: presenca }] = await Promise.all([
+    supabase
+      .from('votacoes')
+      .select('id, voto, descricao_simples, data, proposicao')
+      .eq('politico_id', politico.id)
+      .order('data', { ascending: false })
+      .limit(8),
+    supabase
+      .from('gastos')
+      .select('valor, categoria, mes, ano')
+      .eq('politico_id', politico.id)
+      .eq('ano', 2025)
+      .limit(100),
+    supabase
+      .from('presenca')
+      .select('percentual, mes, ano, total_sessoes, presencas')
+      .eq('politico_id', politico.id)
+      .order('ano', { ascending: false })
+      .order('mes', { ascending: false })
+      .limit(24),
+  ])
+
+  return (
+    <PerfilApp
+      politico={politico}
+      votacoes={votacoes ?? []}
+      gastos={gastos ?? []}
+      presenca={presenca ?? []}
+    />
+  )
 }

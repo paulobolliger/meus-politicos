@@ -74,13 +74,13 @@ type Politico = {
   cpf?: string | null
   partidos: { sigla: string | null; nome: string | null; numero: number | null } | null
   redes_sociais: Array<{ plataforma: string | null; url: string | null }> | null
-  gastos: GastoItem[] | null
-  presenca: PresencaItem[] | null
-  votacoes: VotacaoItem[] | null
 }
 
 type Props = {
   politico: Politico
+  votacoes: VotacaoItem[]
+  gastos: GastoItem[]
+  presenca: PresencaItem[]
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -228,7 +228,7 @@ function RadarCard({
 
 // ── main component ─────────────────────────────────────────────────────────────
 
-export function PerfilApp({ politico }: Props) {
+export function PerfilApp({ politico, votacoes, gastos, presenca }: Props) {
   const [tab, setTab] = useState<Tab>('Visão geral')
   const [mode, setMode] = useState<'analista' | 'cidadao'>('analista')
 
@@ -244,9 +244,7 @@ export function PerfilApp({ politico }: Props) {
       ? Math.max(0, Math.min(100, Math.round((politico.gasto_total_ano / tetoUf) * 100)))
       : null
 
-  const gastos = politico.gastos ?? []
-  const presencaRows = politico.presenca ?? []
-  const votacoes = politico.votacoes ?? []
+  const presencaRows = presenca
 
   // Gastos mensais para sparkline e mini bars
   const gastosPorMes = gastos.reduce<Record<string, number>>((acc, g) => {
