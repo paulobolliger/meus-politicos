@@ -395,7 +395,7 @@ export function AppSidebar() {
                 display: 'block',
                 padding: '10px 16px',
                 textAlign: 'center',
-                background: 'var(--brand)',
+                background: 'var(--brand-2)',
                 color: 'white',
                 fontSize: 12,
                 fontWeight: 600,
@@ -404,7 +404,7 @@ export function AppSidebar() {
                 letterSpacing: '0.06em',
               }}
             >
-              ENTRAR / CRIAR CONTA →
+              ENTRAR →
             </Link>
           )}
         </div>
@@ -494,7 +494,7 @@ export function AppSidebar() {
                 display: 'block',
                 padding: '10px 16px',
                 textAlign: 'center',
-                background: 'var(--brand)',
+                background: 'var(--brand-2)',
                 color: 'white',
                 fontSize: 12,
                 fontWeight: 600,
@@ -503,7 +503,7 @@ export function AppSidebar() {
                 letterSpacing: '0.06em',
               }}
             >
-              ENTRAR / CRIAR CONTA →
+              ENTRAR →
             </Link>
           </aside>
         </>
