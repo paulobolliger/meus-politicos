@@ -4,7 +4,7 @@ import { SystemBar } from '@/components/civic'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="theme-dark" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+    <div className="theme-dark" style={{ minHeight: '100vh' }}>
       <SystemBar />
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'calc(100vh - 32px)' }}>
         <AppSidebar />
