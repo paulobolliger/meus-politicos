@@ -14,12 +14,18 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Em desenvolvimento (painel.localhost), mantém no mesmo host
   const host = request.headers.get('host') ?? ''
+
+  // Em desenvolvimento: callback chega em localhost:3000, redireciona para painel.localhost:3000
+  if (host === 'localhost:3000' || host === '127.0.0.1:3000') {
+    return NextResponse.redirect(`http://painel.localhost:3000${redirectTo}`)
+  }
+
+  // painel.localhost direto (caso chegue aqui)
   if (host.startsWith('painel.localhost')) {
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 
-  // Em produção, sempre redireciona para painel.meuspoliticos.com.br
+  // Produção: redireciona para painel.meuspoliticos.com.br
   return NextResponse.redirect(`${PAINEL_URL}${redirectTo}`)
 }

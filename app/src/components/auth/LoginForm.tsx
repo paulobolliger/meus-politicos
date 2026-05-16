@@ -47,10 +47,14 @@ export function LoginForm() {
 
   const redirectTo = searchParams.get('redirectTo') || '/painel'
 
-  // OAuth callback: usa sempre o origin atual (painel.localhost ou painel.meuspoliticos.com.br)
-  // O Supabase valida contra Redirect URLs — ambos devem estar cadastrados
+  // OAuth callback: Google não aceita subdomínios de localhost.
+  // Em dev, força localhost:3000 como base. Em produção, usa painel.*
   function painelCallbackUrl() {
-    return `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+    const isDev = window.location.hostname.includes('localhost')
+    const base = isDev
+      ? 'http://localhost:3000'
+      : (process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br')
+    return `${base}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
   }
 
   async function entrarComGoogle() {
