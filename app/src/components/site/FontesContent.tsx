@@ -1,95 +1,89 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { BookOpen, Building2, CheckCircle2, Database, FileSearch, Globe2, MapPin, RefreshCw, ShieldCheck, Timer, Newspaper, Lock, AlertTriangle, Users } from "lucide-react"
-import { StatusDot } from "@/components/civic"
-
-export const metadata: Metadata = {
-  title: "Fontes de dados",
-  description: "De onde vêm os dados exibidos no Meus Políticos: rastreabilidade e transparência.",
-}
+import Link from 'next/link'
+import { AlertTriangle, BookOpen, Database, FileSearch, Globe2, MapPin, Newspaper, ShieldCheck, Users, Building2 } from 'lucide-react'
+import { StatusDot } from '@/components/civic'
 
 const fontesAtivas = [
   {
-    nome: "Câmara dos Deputados",
+    nome: 'Câmara dos Deputados',
     icone: Building2,
-    fornece: ["Votações", "gastos CEAP", "presenças", "discursos", "projetos de lei"],
-    url: "https://dadosabertos.camara.leg.br",
-    frequencia: "Diária",
-    status: "ATIVO",
-    tone: "pos" as const,
+    fornece: ['Votações', 'gastos CEAP', 'presenças', 'discursos', 'projetos de lei'],
+    url: 'https://dadosabertos.camara.leg.br',
+    frequencia: 'Diária',
+    status: 'ATIVO',
+    tone: 'pos' as const,
   },
   {
-    nome: "TSE",
+    nome: 'TSE',
     icone: ShieldCheck,
-    fornece: ["Candidaturas", "bens declarados", "financiamento de campanha"],
-    url: "https://dadosabertos.tse.jus.br",
-    frequencia: "Por eleição",
-    status: "ATIVO",
-    tone: "pos" as const,
+    fornece: ['Candidaturas', 'bens declarados', 'financiamento de campanha'],
+    url: 'https://dadosabertos.tse.jus.br',
+    frequencia: 'Por eleição',
+    status: 'ATIVO',
+    tone: 'pos' as const,
   },
   {
-    nome: "Portal da Transparência",
+    nome: 'Portal da Transparência',
     icone: Globe2,
-    fornece: ["Emendas parlamentares", "transferências", "viagens"],
-    url: "https://portaldatransparencia.gov.br",
-    frequencia: "Diária",
-    status: "ATIVO",
-    tone: "pos" as const,
+    fornece: ['Emendas parlamentares', 'transferências', 'viagens'],
+    url: 'https://portaldatransparencia.gov.br',
+    frequencia: 'Diária',
+    status: 'ATIVO',
+    tone: 'pos' as const,
   },
   {
-    nome: "IBGE",
+    nome: 'IBGE',
     icone: MapPin,
-    fornece: ["Municípios", "estados", "códigos geográficos"],
-    url: "https://servicodados.ibge.gov.br",
-    frequencia: "Anual",
-    status: "ATIVO",
-    tone: "pos" as const,
+    fornece: ['Municípios', 'estados', 'códigos geográficos'],
+    url: 'https://servicodados.ibge.gov.br',
+    frequencia: 'Anual',
+    status: 'ATIVO',
+    tone: 'pos' as const,
   },
   {
-    nome: "ViaCEP",
+    nome: 'ViaCEP',
     icone: FileSearch,
     fornece: ["Consulta de CEP — 'Quem me representa'"],
-    url: "https://viacep.com.br",
-    frequencia: "Tempo real",
-    status: "ATIVO",
-    tone: "pos" as const,
+    url: 'https://viacep.com.br',
+    frequencia: 'Tempo real',
+    status: 'ATIVO',
+    tone: 'pos' as const,
   },
 ]
 
 const fontesFuturas = [
   {
-    nome: "Senado Federal",
+    nome: 'Senado Federal',
     icone: Users,
-    fornece: ["Votações", "discursos", "comissões dos senadores"],
-    status: "EM BREVE",
-    tone: "warn" as const,
+    fornece: ['Votações', 'discursos', 'comissões dos senadores'],
+    status: 'EM BREVE',
+    tone: 'warn' as const,
   },
   {
-    nome: "Diário Oficial da União",
+    nome: 'Diário Oficial da União',
     icone: Newspaper,
-    fornece: ["Decretos", "nomeações", "exonerações"],
-    status: "EM BREVE",
-    tone: "warn" as const,
+    fornece: ['Decretos', 'nomeações', 'exonerações'],
+    status: 'EM BREVE',
+    tone: 'warn' as const,
   },
   {
-    nome: "SIOP",
+    nome: 'SIOP',
     icone: Database,
-    fornece: ["Plano Plurianual — promessas vs execução do governo federal"],
-    status: "FASE 2",
-    tone: "mute" as const,
+    fornece: ['Plano Plurianual — promessas vs execução do governo federal'],
+    status: 'FASE 2',
+    tone: 'mute' as const,
   },
   {
-    nome: "Agência Brasil (EBC)",
+    nome: 'Agência Brasil (EBC)',
     icone: BookOpen,
     fornece: ["Notícias oficiais — seção 'Na imprensa'"],
-    status: "FASE 2",
-    tone: "mute" as const,
+    status: 'FASE 2',
+    tone: 'mute' as const,
   },
 ]
 
-export default function FontesPage() {
+export function FontesContent() {
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[var(--line)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#eef3ff] to-transparent" />
@@ -172,7 +166,7 @@ export default function FontesPage() {
         </div>
       </section>
 
-      {/* COMO VERIFICAR UM DADO */}
+      {/* COMO VERIFICAR */}
       <section className="container-shell py-8">
         <div className="rounded-2xl bg-[#1e2a47] p-6 text-white shadow-md">
           <h2 className="mb-2 text-lg font-bold">Como verificar um dado</h2>
@@ -212,6 +206,6 @@ export default function FontesPage() {
           <Link href="/metodologia" className="font-semibold text-[var(--brand-2)] hover:underline">Metodologia</Link>
         </nav>
       </section>
-    </main>
+    </div>
   )
 }

@@ -6,12 +6,6 @@ import { CardRepresentante } from '@/components/meu-estado/CardRepresentante'
 import { SecaoRepresentantes } from '@/components/meu-estado/SecaoRepresentantes'
 import { createClient } from '@/lib/supabase/server'
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>
-
-type PageProps = {
-  searchParams: SearchParams
-}
-
 type ViaCepResponse = {
   localidade?: string
   uf?: string
@@ -96,16 +90,10 @@ const CARGO_LABEL: Record<string, string> = {
   deputado_federal: 'Dep. Federal',
 }
 
-function parseTexto(valor?: string | string[]) {
-  if (!valor) return ''
-  const texto = Array.isArray(valor) ? valor[0] : valor
-  return texto.trim()
-}
-
 function normalizarTexto(texto: string) {
   return texto
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .trim()
 }
@@ -287,9 +275,18 @@ async function buscarPorCargo(
   return data as unknown as Representante[]
 }
 
-export default async function MeuEstadoPage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const localidade = parseTexto(params.local || params.cep)
+type Props = {
+  searchParams: Record<string, string | string[] | undefined>
+}
+
+export async function MeuEstadoContent({ searchParams }: Props) {
+  function parseTexto(valor?: string | string[]) {
+    if (!valor) return ''
+    const texto = Array.isArray(valor) ? valor[0] : valor
+    return texto.trim()
+  }
+
+  const localidade = parseTexto(searchParams.local || searchParams.cep)
 
   let cidade = ''
   let uf = ''
@@ -325,7 +322,7 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
   const mostrarSecoes = Boolean(localidade && !erroCep && uf)
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       <section style={{ background: '#1a2b5e', color: '#fff' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '40px 24px 44px' }}>
           <div style={{ maxWidth: 900 }}>
@@ -497,6 +494,6 @@ export default async function MeuEstadoPage({ searchParams }: PageProps) {
           </div>
         </section>
       )}
-    </main>
+    </div>
   )
 }

@@ -52,7 +52,7 @@ export default async function MeusPoliticosPage() {
   const saudacao = perfilUsuario?.nome || user.email || 'usuario'
 
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       <div className="container-shell py-8 sm:py-10">
 
         {/* Page header */}
@@ -233,7 +233,7 @@ export default async function MeusPoliticosPage() {
           </aside>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
 

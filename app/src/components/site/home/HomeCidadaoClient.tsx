@@ -773,13 +773,9 @@ export function HomeCidadaoClient() {
         </div>
       </section>
 
-      <style jsx>{`
-        @media (max-width: 767px) {
-          .home-steps-line {
-            display: none;
-          }
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 767px) { .home-steps-line { display: none; } }
+      ` }} />
     </main>
   )
 }

@@ -1,92 +1,76 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { BadgeCheck, BookOpen, Calculator, CheckCircle2, FileText, FlaskConical, Info, ListChecks, Lock, Scale, ShieldCheck, Users, Wrench } from "lucide-react"
-import { SourceCite } from "@/components/civic"
-
-export const metadata: Metadata = {
-  title: "Metodologia",
-  description: "Como calculamos os dados: metodologia científica dos scores do Meus Políticos.",
-}
+import Link from 'next/link'
+import { BookOpen, Calculator, FileText, FlaskConical, ListChecks, Scale, ShieldCheck, Wrench } from 'lucide-react'
+import { SourceCite } from '@/components/civic'
 
 const scores = [
   {
     number: 1,
-    name: "Presença",
-    source: "NDI Parliamentary Guidelines",
-    base: "NDI Parliamentary Monitoring Guidelines",
-    authors: "NDI (2016)",
-    formula: "[(P_ord × 1.0) + (P_extra × 1.2) + (P_com × 0.8) + (P_sol × 0.2)] ÷ Total Ponderado",
-    description: "Mede a presença do parlamentar em sessões ordinárias, extraordinárias, comissões e eventos solenes, ponderando cada tipo de participação.",
-    leitura: "Presença 12% acima da média de deputados de SP",
-    limitacao: "Ausências em missões diplomáticas ou lideranças de partido podem ser legítimas e são excluídas do cálculo quando registradas oficialmente.",
+    name: 'Presença',
+    source: 'NDI Parliamentary Guidelines',
+    base: 'NDI Parliamentary Monitoring Guidelines',
+    authors: 'NDI (2016)',
+    formula: '[(P_ord × 1.0) + (P_extra × 1.2) + (P_com × 0.8) + (P_sol × 0.2)] ÷ Total Ponderado',
+    description: 'Mede a presença do parlamentar em sessões ordinárias, extraordinárias, comissões e eventos solenes, ponderando cada tipo de participação.',
+    leitura: 'Presença 12% acima da média de deputados de SP',
+    limitacao: 'Ausências em missões diplomáticas ou lideranças de partido podem ser legítimas e são excluídas do cálculo quando registradas oficialmente.',
   },
   {
     number: 2,
-    name: "Atividade Legislativa (LES)",
-    source: "Volden & Wiseman, Cambridge 2014",
-    base: "Legislative Effectiveness Score — Volden & Wiseman (Cambridge, 2014)",
-    authors: "Volden & Wiseman (2014)",
-    formula: "Ponderação por estágio (1→7) × tipo (1, 5, 10) ÷ média da legislatura",
-    description: "Avalia a efetividade legislativa considerando o avanço e o tipo dos projetos apresentados pelo parlamentar.",
-    leitura: "3 projetos sancionados — 2.3× a média da legislatura",
-    limitacao: "Favorece parlamentares da base governista, que têm mais facilidade de aprovação. Exibimos junto com dado de bancada para contextualizar.",
+    name: 'Atividade Legislativa (LES)',
+    source: 'Volden & Wiseman, Cambridge 2014',
+    base: 'Legislative Effectiveness Score — Volden & Wiseman (Cambridge, 2014)',
+    authors: 'Volden & Wiseman (2014)',
+    formula: 'Ponderação por estágio (1→7) × tipo (1, 5, 10) ÷ média da legislatura',
+    description: 'Avalia a efetividade legislativa considerando o avanço e o tipo dos projetos apresentados pelo parlamentar.',
+    leitura: '3 projetos sancionados — 2.3× a média da legislatura',
+    limitacao: 'Favorece parlamentares da base governista, que têm mais facilidade de aprovação. Exibimos junto com dado de bancada para contextualizar.',
   },
   {
     number: 3,
-    name: "Transparência",
-    source: "AID Banco Mundial + OCDE",
-    base: "AID (Banco Mundial) + Financial Disclosure Index (OCDE)",
-    authors: "World Bank (2012), OCDE",
-    formula: "(prazo × 0.30) + (completude × 0.30) + (sem pendências × 0.20) + (agenda pública × 0.20)",
-    description: "Verifica se o parlamentar entrega declarações no prazo, preenche todos os campos obrigatórios, não possui pendências e publica agenda de gabinete.",
-    leitura: "Checklist visual dos 4 critérios",
-    limitacao: "Qualidade do preenchimento no TSE pode ser baixa por erro técnico, não necessariamente má-fé.",
+    name: 'Transparência',
+    source: 'AID Banco Mundial + OCDE',
+    base: 'AID (Banco Mundial) + Financial Disclosure Index (OCDE)',
+    authors: 'World Bank (2012), OCDE',
+    formula: '(prazo × 0.30) + (completude × 0.30) + (sem pendências × 0.20) + (agenda pública × 0.20)',
+    description: 'Verifica se o parlamentar entrega declarações no prazo, preenche todos os campos obrigatórios, não possui pendências e publica agenda de gabinete.',
+    leitura: 'Checklist visual dos 4 critérios',
+    limitacao: 'Qualidade do preenchimento no TSE pode ser baixa por erro técnico, não necessariamente má-fé.',
   },
   {
     number: 4,
-    name: "Coerência Partidária (Agreement Index)",
-    source: "Hix, Noury & Roland — VoteWatch Europa",
-    base: "Agreement Index — Hix, Noury & Roland · VoteWatch Europa, TheyWorkForYou (UK)",
-    authors: "Hix, Noury & Roland (2007)",
-    formula: "[max(y,n,a) - 0.5 × (Σ - max)] ÷ Σ",
-    description: "Mede o quanto o parlamentar vota de acordo com a maioria do seu partido nas votações nominais.",
-    leitura: "Vota com o partido em 87% das votações nominais — média do partido: 82%",
-    limitacao: "Alta coesão pode ser disciplina imposta por líderes — não necessariamente convergência real de preferências.",
+    name: 'Coerência Partidária (Agreement Index)',
+    source: 'Hix, Noury & Roland — VoteWatch Europa',
+    base: 'Agreement Index — Hix, Noury & Roland · VoteWatch Europa, TheyWorkForYou (UK)',
+    authors: 'Hix, Noury & Roland (2007)',
+    formula: '[max(y,n,a) - 0.5 × (Σ - max)] ÷ Σ',
+    description: 'Mede o quanto o parlamentar vota de acordo com a maioria do seu partido nas votações nominais.',
+    leitura: 'Vota com o partido em 87% das votações nominais — média do partido: 82%',
+    limitacao: 'Alta coesão pode ser disciplina imposta por líderes — não necessariamente convergência real de preferências.',
   },
   {
     number: 5,
-    name: "Eficiência de Gastos CEAP",
-    source: "Normalização regional por UF",
-    base: "Normalização regional — Ranking dos Políticos (BR) + tetos oficiais da Câmara por UF",
-    authors: "DIAP (2023), Câmara dos Deputados",
-    formula: "100 × (1 - Gasto_Real ÷ Média_Regional_UF)",
-    description: "Compara o gasto do parlamentar com a média dos deputados do mesmo estado, normalizando por UF.",
-    leitura: "Gastou R$ 38.000 — 12% abaixo da média de deputados do Amazonas",
-    limitacao: "Gastar pouco não é sempre positivo — pode indicar mandato inativo. Cruzamos com Score de Atividade.",
+    name: 'Eficiência de Gastos CEAP',
+    source: 'Normalização regional por UF',
+    base: 'Normalização regional — Ranking dos Políticos (BR) + tetos oficiais da Câmara por UF',
+    authors: 'DIAP (2023), Câmara dos Deputados',
+    formula: '100 × (1 - Gasto_Real ÷ Média_Regional_UF)',
+    description: 'Compara o gasto do parlamentar com a média dos deputados do mesmo estado, normalizando por UF.',
+    leitura: 'Gastou R$ 38.000 — 12% abaixo da média de deputados do Amazonas',
+    limitacao: 'Gastar pouco não é sempre positivo — pode indicar mandato inativo. Cruzamos com Score de Atividade.',
   },
 ]
 
 const referencias = [
-  {
-    texto: "Volden, C. & Wiseman, A. (2014). Legislative Effectiveness in the United States Congress. Cambridge University Press.",
-  },
-  {
-    texto: "Hix, S., Noury, A. & Roland, G. (2007). Democratic Politics in the European Parliament. Cambridge University Press.",
-  },
-  {
-    texto: "World Bank (2012). Public Officials Financial Disclosure: A Tool to Prevent Corruption.",
-  },
-  {
-    texto: "NDI (2016). Strengthening Parliamentary Accountability, Citizen Engagement and Access to Information.",
-  },
-  {
-    texto: "DIAP (2023). Quem Foi Quem — Metodologia. Brasília.",
-  },
+  { texto: 'Volden, C. & Wiseman, A. (2014). Legislative Effectiveness in the United States Congress. Cambridge University Press.' },
+  { texto: 'Hix, S., Noury, A. & Roland, G. (2007). Democratic Politics in the European Parliament. Cambridge University Press.' },
+  { texto: 'World Bank (2012). Public Officials Financial Disclosure: A Tool to Prevent Corruption.' },
+  { texto: 'NDI (2016). Strengthening Parliamentary Accountability, Citizen Engagement and Access to Information.' },
+  { texto: 'DIAP (2023). Quem Foi Quem — Metodologia. Brasília.' },
 ]
 
-export default function MetodologiaPage() {
+export function MetodologiaContent() {
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[var(--line)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#eef3ff] to-transparent" />
@@ -195,6 +179,6 @@ export default function MetodologiaPage() {
           <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">Fontes</Link>
         </nav>
       </section>
-    </main>
+    </div>
   )
 }

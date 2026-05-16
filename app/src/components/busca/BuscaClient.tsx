@@ -33,10 +33,6 @@ type BuscaResponse = {
   }
 }
 
-type Props = {
-  variant: 'site' | 'app'
-}
-
 const CARGO_LABEL: Record<string, string> = {
   deputado_federal: 'Dep. Federal',
   senador: 'Senador',
@@ -81,7 +77,10 @@ function filterLabel(value: string, fallback = 'todos') {
   return value || fallback
 }
 
-export function BuscaClient({ variant }: Props) {
+const UF_VISIBLE_COUNT = 9
+const PARTIDO_VISIBLE_COUNT = 6
+
+export function BuscaClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -96,6 +95,8 @@ export function BuscaClient({ variant }: Props) {
   const [data, setData] = useState<BuscaResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [ufExpanded, setUfExpanded] = useState(false)
+  const [partidoExpanded, setPartidoExpanded] = useState(false)
 
   useEffect(() => {
     setQueryInput(qParam)
@@ -173,10 +174,44 @@ export function BuscaClient({ variant }: Props) {
     ['votacoes', 'VOTAÇÕES'],
   ] as const
 
-  const isApp = variant === 'app'
+  // Dynamic UF list from API chips
+  const allUfs = data?.chips.ufs ?? []
+  const visibleUfs = ufExpanded ? allUfs : allUfs.slice(0, UF_VISIBLE_COUNT)
+  const hiddenUfCount = allUfs.length - UF_VISIBLE_COUNT
+
+  // Dynamic partido list from API chips
+  const allPartidos = data?.chips.partidos ?? []
+  const visiblePartidos = partidoExpanded ? allPartidos : allPartidos.slice(0, PARTIDO_VISIBLE_COUNT)
+  const hiddenPartidoCount = allPartidos.length - PARTIDO_VISIBLE_COUNT
+
+  // Cargo chips from API
+  const cargosChips = data?.chips.cargos ?? []
+
+  const chipStyle = (active: boolean): React.CSSProperties => ({
+    border: '1px solid var(--line-strong)',
+    background: active ? 'var(--ink)' : 'var(--panel)',
+    color: active ? 'var(--bg)' : 'var(--ink-2)',
+    padding: '6px 12px',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'var(--font-mono)',
+    letterSpacing: '0.04em',
+  })
+
+  const expandBtnStyle: React.CSSProperties = {
+    border: 'none',
+    background: 'transparent',
+    color: 'var(--brand-2)',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'var(--font-mono)',
+    padding: '6px 4px',
+  }
 
   return (
-    <main style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       <section style={{ background: 'var(--panel)', borderBottom: '1px solid var(--line)' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '18px 24px 16px' }}>
           <div className="mono" style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--ink-3)', marginBottom: 10 }}>
@@ -200,7 +235,7 @@ export function BuscaClient({ variant }: Props) {
                 <input
                   value={queryInput}
                   onChange={(e) => setQueryInput(e.target.value)}
-                  placeholder="Buscar por nome eleitoral"
+                  placeholder="Nome, partido (PT-SP), CEP ou estado..."
                   style={{
                     border: 'none',
                     outline: 'none',
@@ -225,6 +260,7 @@ export function BuscaClient({ variant }: Props) {
                   fontWeight: 700,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
+                  fontFamily: 'var(--font-mono)',
                 }}
               >
                 Buscar →
@@ -232,80 +268,107 @@ export function BuscaClient({ variant }: Props) {
             </div>
 
             <div style={{ display: 'grid', gap: 8 }}>
+              {/* CARGO */}
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>CARGO:</span>
-                {[
-                  ['', `Todos ${totalIndexados}`],
-                  ['deputado_federal', 'Dep. Federal'],
-                  ['senador', 'Senador'],
-                ].map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => navigateWith({ cargo: id || null })}
-                    style={{
-                      border: '1px solid var(--line-strong)',
-                      background: cargo === id ? 'var(--ink)' : 'transparent',
-                      color: cargo === id ? 'var(--bg)' : 'var(--ink-2)',
-                      padding: '6px 12px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
+                <button
+                  key="cargo-todos"
+                  type="button"
+                  onClick={() => navigateWith({ cargo: null })}
+                  style={chipStyle(cargo === '')}
+                >
+                  Todos {totalIndexados > 0 ? totalIndexados : ''}
+                </button>
+                {cargosChips.length > 0
+                  ? cargosChips.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => navigateWith({ cargo: c.id })}
+                      style={chipStyle(cargo === c.id)}
+                    >
+                      {CARGO_LABEL[c.id] ?? c.label}
+                      {c.total != null ? ` ${c.total}` : ''}
+                    </button>
+                  ))
+                  : [
+                    ['deputado_federal', 'Dep. Federal'],
+                    ['senador', 'Senador'],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => navigateWith({ cargo: id })}
+                      style={chipStyle(cargo === id)}
+                    >
+                      {label}
+                    </button>
+                  ))
+                }
               </div>
 
+              {/* UF */}
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>UF:</span>
-                {['', 'SP', 'MG', 'RJ', 'BA'].map((item) => (
+                <button
+                  type="button"
+                  onClick={() => navigateWith({ uf: null })}
+                  style={chipStyle(uf === '')}
+                >
+                  Todos
+                </button>
+                {visibleUfs.map((item) => (
                   <button
-                    key={item || 'todos'}
+                    key={item}
                     type="button"
-                    onClick={() => navigateWith({ uf: item || null })}
-                    style={{
-                      border: '1px solid var(--line-strong)',
-                      background: uf === item ? 'var(--ink)' : 'transparent',
-                      color: uf === item ? 'var(--bg)' : 'var(--ink-2)',
-                      padding: '6px 12px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
+                    onClick={() => navigateWith({ uf: item })}
+                    style={chipStyle(uf === item)}
                   >
-                    {item || 'Todos'}
+                    {item}
                   </button>
                 ))}
-                <button type="button" style={{ border: 'none', background: 'transparent', color: 'var(--brand-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                  + mais
-                </button>
+                {!ufExpanded && hiddenUfCount > 0 && (
+                  <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(true)}>
+                    + {hiddenUfCount} UF
+                  </button>
+                )}
+                {ufExpanded && (
+                  <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(false)}>
+                    − menos
+                  </button>
+                )}
               </div>
 
+              {/* PARTIDO */}
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>PARTIDO:</span>
-                {['', 'PL', 'PT', 'UNIÃO', 'PP', 'PSD'].map((item) => (
+                <button
+                  type="button"
+                  onClick={() => navigateWith({ partido: null })}
+                  style={chipStyle(partido === '')}
+                >
+                  Todos
+                </button>
+                {visiblePartidos.map((item) => (
                   <button
-                    key={item || 'todos'}
+                    key={item}
                     type="button"
-                    onClick={() => navigateWith({ partido: item || null })}
-                    style={{
-                      border: '1px solid var(--line-strong)',
-                      background: partido === item ? 'var(--ink)' : 'transparent',
-                      color: partido === item ? 'var(--bg)' : 'var(--ink-2)',
-                      padding: '6px 12px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
+                    onClick={() => navigateWith({ partido: item })}
+                    style={chipStyle(partido === item)}
                   >
-                    {item || 'Todos'}
+                    {item}
                   </button>
                 ))}
-                <button type="button" style={{ border: 'none', background: 'transparent', color: 'var(--brand-2)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                  + mais
-                </button>
+                {!partidoExpanded && hiddenPartidoCount > 0 && (
+                  <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(true)}>
+                    + {hiddenPartidoCount} partidos
+                  </button>
+                )}
+                {partidoExpanded && (
+                  <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(false)}>
+                    − menos
+                  </button>
+                )}
               </div>
             </div>
           </form>
@@ -333,6 +396,7 @@ export function BuscaClient({ variant }: Props) {
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                   cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
                 }}
               >
                 {label}
@@ -349,9 +413,7 @@ export function BuscaClient({ variant }: Props) {
               className="mono"
               style={{
                 display: 'grid',
-                gridTemplateColumns: isApp
-                  ? '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr 80px'
-                  : '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
+                gridTemplateColumns: '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
                 gap: 10,
                 fontSize: 10,
                 letterSpacing: '0.12em',
@@ -367,8 +429,6 @@ export function BuscaClient({ variant }: Props) {
               <span>presença</span>
               <span>gasto/mês</span>
               <span>votações</span>
-              {isApp ? <span>LES</span> : null}
-              {isApp ? <span>coerência</span> : null}
               <span>ações</span>
             </div>
           </div>
@@ -400,9 +460,7 @@ export function BuscaClient({ variant }: Props) {
                       onClick={() => router.push(`/politicos/${item.slug}`)}
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: isApp
-                          ? '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 0.5fr 0.5fr 80px'
-                          : '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
+                        gridTemplateColumns: '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
                         gap: 10,
                         alignItems: 'center',
                         padding: '11px 12px',
@@ -432,8 +490,8 @@ export function BuscaClient({ variant }: Props) {
                         <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {nomeExibicao}
                         </div>
-                        <div className="mono" style={{ marginTop: 3, fontSize: 11.5, color: 'var(--brand-2)', display: 'flex', gap: 6 }}>
-                          <span>{item.partidos?.sigla ?? '—'}</span>
+                        <div className="mono" style={{ marginTop: 3, fontSize: 11.5, display: 'flex', gap: 6 }}>
+                          <span style={{ color: 'var(--brand-2)' }}>{item.partidos?.sigla ?? '—'}</span>
                           <span style={{ color: 'var(--ink-3)' }}>· {item.uf ?? '—'}</span>
                         </div>
                       </div>
@@ -458,18 +516,6 @@ export function BuscaClient({ variant }: Props) {
                       <div className="mono tnum" style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>
                         {item.total_votacoes == null ? '–' : item.total_votacoes}
                       </div>
-
-                      {isApp ? (
-                        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
-                          em breve
-                        </div>
-                      ) : null}
-
-                      {isApp ? (
-                        <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
-                          em breve
-                        </div>
-                      ) : null}
 
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button
@@ -618,6 +664,7 @@ export function BuscaClient({ variant }: Props) {
                     fontSize: 11,
                     fontWeight: 700,
                     cursor: 'pointer',
+                    fontFamily: 'var(--font-mono)',
                   }}
                 >
                   {p}
@@ -627,26 +674,14 @@ export function BuscaClient({ variant }: Props) {
         </div>
       </section>
 
-      <style jsx>{`
-        .busca-row:hover {
-          background: var(--bg-2);
-        }
-
-        .busca-table-mobile {
-          display: none;
-        }
-
+      <style dangerouslySetInnerHTML={{ __html: `
+        .busca-row:hover { background: var(--bg-2); }
+        .busca-table-mobile { display: none; }
         @media (max-width: 920px) {
-          .busca-table-header,
-          .busca-table-desktop {
-            display: none;
-          }
-
-          .busca-table-mobile {
-            display: block;
-          }
+          .busca-table-header, .busca-table-desktop { display: none; }
+          .busca-table-mobile { display: block; }
         }
-      `}</style>
-    </main>
+      ` }} />
+    </div>
   )
 }

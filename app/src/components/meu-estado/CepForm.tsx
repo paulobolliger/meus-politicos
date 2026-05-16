@@ -164,13 +164,9 @@ export function CepForm({ defaultLocalidade = '' }: CepFormProps) {
 
       <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.74)' }}>🔒 Sua localidade não é armazenada</p>
 
-      <style jsx>{`
-        @media (max-width: 720px) {
-          form > div:first-child {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 720px) { form > div:first-child { grid-template-columns: 1fr; } }
+      ` }} />
     </form>
   )
 }

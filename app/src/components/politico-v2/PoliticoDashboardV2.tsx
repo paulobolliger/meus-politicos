@@ -39,7 +39,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
 
   return (
     <>
-      <main className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-slate-50 text-slate-900">
         <section className="relative overflow-hidden bg-[#1a2b5e] text-white">
           <div className="pointer-events-none absolute -left-20 top-8 h-56 w-56 rounded-full bg-[#2952cc]/25 blur-3xl" />
           <div className="pointer-events-none absolute -right-12 top-0 h-72 w-72 rounded-full bg-[#6f8fff]/20 blur-3xl" />
@@ -213,7 +213,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
         </div>
 
         {mode === 'cidadao' ? <ModoCidadao politico={politico} /> : <ModoAnalista politico={politico} />}
-      </main>
+      </div>
     </>
   )
 }
