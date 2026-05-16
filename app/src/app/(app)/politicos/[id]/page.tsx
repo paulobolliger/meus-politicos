@@ -12,11 +12,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params
   const supabase = await createClient()
 
-  const { data } = await supabase
+  let { data } = await supabase
     .from('politicos')
     .select('nome, nome_eleitoral')
-    .or(`slug.eq.${id},id.eq.${id}`)
+    .eq('slug', id)
     .maybeSingle()
+
+  if (!data) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(id)) {
+      const { data: byId } = await supabase
+        .from('politicos')
+        .select('nome, nome_eleitoral')
+        .eq('id', id)
+        .maybeSingle()
+      data = byId
+    }
+  }
 
   if (!data) return { title: 'Político não encontrado' }
 
@@ -31,7 +43,7 @@ export default async function AppPerfilPage({ params }: PageProps) {
 
   let { data: politico } = await supabase
     .from('politicos')
-    .select('*, partidos(sigla, nome, numero), redes_sociais(plataforma, url)')
+    .select('*')
     .eq('slug', id)
     .maybeSingle()
 
@@ -40,7 +52,7 @@ export default async function AppPerfilPage({ params }: PageProps) {
     if (uuidRegex.test(id)) {
       const { data } = await supabase
         .from('politicos')
-        .select('*, partidos(sigla, nome, numero), redes_sociais(plataforma, url)')
+        .select('*')
         .eq('id', id)
         .maybeSingle()
       politico = data

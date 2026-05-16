@@ -72,8 +72,8 @@ type Politico = {
   dado_estado: string | null
   collected_at: string | null
   cpf?: string | null
-  partidos: { sigla: string | null; nome: string | null; numero: number | null } | null
-  redes_sociais: Array<{ plataforma: string | null; url: string | null }> | null
+  partidos?: { sigla: string | null; nome: string | null; numero: number | null } | null
+  redes_sociais?: Array<{ plataforma: string | null; url: string | null }> | null
 }
 
 type Props = {
@@ -307,6 +307,7 @@ export function PerfilApp({ politico, votacoes, gastos, presenca }: Props) {
           ...politico,
           uf_nascimento: politico.uf_nascimento ?? null,
           sexo: politico.sexo ?? null,
+          partidos: politico.partidos ?? null,
           redes_sociais: politico.redes_sociais ?? [],
         }} />
       </div>
