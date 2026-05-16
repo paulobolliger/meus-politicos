@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { StatusDot } from './StatusDot'
-import { useTheme } from '@/components/app-shell/ThemeProvider'
 
 export function SystemBar() {
   const [time, setTime] = useState('')
-  const { theme, toggle } = useTheme()
 
   useEffect(() => {
     const fmt = () => {
@@ -61,21 +59,6 @@ export function SystemBar() {
         </span>
         <div style={{ flex: 1 }} />
         <span>BSB / UTC-3 · {time}</span>
-        <button
-          onClick={toggle}
-          className="mono"
-          style={{
-            background: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'var(--panel)',
-            border: theme === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--line-strong)',
-            color: theme === 'dark' ? 'rgba(255,255,255,0.85)' : 'var(--ink-3)',
-            cursor: 'pointer',
-            padding: '2px 8px',
-            fontSize: 10,
-            letterSpacing: '0.08em',
-          }}
-        >
-          {theme === 'dark' ? '☀ LIGHT' : '● DARK'}
-        </button>
       </div>
     </div>
   )

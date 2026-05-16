@@ -1,11 +1,10 @@
 import { AppFooter } from '@/components/app-shell/AppFooter'
 import { AppSidebar } from '@/components/app-shell/AppSidebar'
-import { ThemeProvider } from '@/components/app-shell/ThemeProvider'
 import { SystemBar } from '@/components/civic'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
+    <div className="theme-dark" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
       <SystemBar />
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'calc(100vh - 32px)' }}>
         <AppSidebar />
@@ -14,6 +13,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <AppFooter />
         </div>
       </div>
-    </ThemeProvider>
+    </div>
   )
 }

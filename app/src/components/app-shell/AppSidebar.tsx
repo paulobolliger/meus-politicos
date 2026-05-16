@@ -4,57 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useTheme } from '@/components/app-shell/ThemeProvider'
-
-function ThemeToggle({ collapsed }: { collapsed: boolean }) {
-  const { theme, toggle } = useTheme()
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      className="mono"
-      title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
-      style={{
-        width: '100%',
-        height: 32,
-        border: '1px solid var(--line)',
-        background: 'var(--panel-2)',
-        color: 'var(--ink-3)',
-        fontSize: 10.5,
-        letterSpacing: '0.08em',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-      }}
-    >
-      {theme === 'dark' ? (
-        <>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-          {!collapsed && 'CLARO'}
-        </>
-      ) : (
-        <>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-          {!collapsed && 'ESCURO'}
-        </>
-      )}
-    </button>
-  )
-}
 
 type NavItem = {
   label: string
@@ -209,7 +158,6 @@ function SidebarBlock({
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { theme } = useTheme()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -271,7 +219,7 @@ export function AppSidebar() {
                 alt="Meus Politicos"
                 height={247}
                 width={1009}
-                style={{ height: '100%', width: 'auto', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                style={{ height: '100%', width: 'auto', filter: 'brightness(0) invert(1)' }}
               />
         </Link>
         <a
@@ -317,7 +265,7 @@ export function AppSidebar() {
                 alt="Meus Politicos"
                 height={32}
                 width={32}
-                style={{ height: 32, width: 32, objectFit: 'contain', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                style={{ height: 32, width: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               />
             ) : (
               <Image
@@ -325,7 +273,7 @@ export function AppSidebar() {
                 alt="Meus Politicos"
                 height={32}
                 width={130}
-                style={{ height: 32, width: 'auto', objectFit: 'contain', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               />
             )}
           </Link>
@@ -358,7 +306,6 @@ export function AppSidebar() {
               513 deputados monitorados
             </span>
           )}
-          <ThemeToggle collapsed={collapsed} />
           <a
             href="https://meuspoliticos.com.br"
             className="mono"
@@ -445,7 +392,7 @@ export function AppSidebar() {
                 alt="Meus Politicos"
                 height={30}
                 width={120}
-                style={{ height: 30, width: 'auto', objectFit: 'contain', filter: theme === 'dark' ? 'brightness(0) invert(1)' : 'none' }}
+                style={{ height: 30, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               />
               <button
                 type="button"
@@ -468,7 +415,6 @@ export function AppSidebar() {
 
             <div style={{ flex: 1 }} />
 
-            <ThemeToggle collapsed={false} />
             <a
               href="https://meuspoliticos.com.br"
               className="mono"
