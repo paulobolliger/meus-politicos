@@ -47,6 +47,15 @@ export function LoginForm() {
 
   const redirectTo = searchParams.get('redirectTo') || '/painel'
 
+  // OAuth callback sempre em painel.* para garantir cookie no subdomínio correto
+  function painelCallbackUrl() {
+    const isPainelHost = window.location.hostname.startsWith('painel.')
+    const base = isPainelHost
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br')
+    return `${base}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+  }
+
   async function entrarComGoogle() {
     setErrorMessage('')
     setLoadingGoogle(true)
@@ -54,7 +63,7 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+        redirectTo: painelCallbackUrl(),
       },
     })
 
@@ -71,7 +80,7 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+        redirectTo: painelCallbackUrl(),
       },
     })
 
@@ -98,8 +107,15 @@ export function LoginForm() {
       return
     }
 
-    router.push(redirectTo)
-    router.refresh()
+    // Após login com email, redireciona para painel.*
+    const isPainelHost = window.location.hostname.startsWith('painel.')
+    if (isPainelHost) {
+      router.push(redirectTo)
+      router.refresh()
+    } else {
+      const painelBase = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
+      window.location.href = `${painelBase}${redirectTo}`
+    }
   }
 
   return (

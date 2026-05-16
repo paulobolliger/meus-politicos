@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
 
+const PAINEL_URL = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
+
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const redirectTo = searchParams.get('redirectTo') || '/painel'
 
@@ -12,5 +14,12 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(`${origin}${redirectTo}`)
+  // Em desenvolvimento (painel.localhost), mantém no mesmo host
+  const host = request.headers.get('host') ?? ''
+  if (host.startsWith('painel.localhost')) {
+    return NextResponse.redirect(new URL(redirectTo, request.url))
+  }
+
+  // Em produção, sempre redireciona para painel.meuspoliticos.com.br
+  return NextResponse.redirect(`${PAINEL_URL}${redirectTo}`)
 }

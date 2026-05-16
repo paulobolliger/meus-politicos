@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-// Rotas que exigem autenticação
-const PROTECTED_ROUTES = ['/meus-politicos', '/admin']
+const PAINEL_URL = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
 
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request)
@@ -10,49 +9,75 @@ export async function proxy(request: NextRequest) {
   const host = request.headers.get('host')?.toLowerCase() ?? ''
   const { pathname } = request.nextUrl
 
+  const isPainelHost =
+    host.startsWith('painel.localhost') ||
+    host.startsWith('painel.meuspoliticos.com.br')
+
   const isAppHost =
     host.startsWith('app.localhost') ||
-    host.startsWith('app.meuspoliticos.com.br') ||
-    host.startsWith('app.meuspoliticos.com.br:')
+    host.startsWith('app.meuspoliticos.com.br')
 
-  // OAuth ocorre no domínio principal; evita iniciar login no subdomínio app.
-  if (isAppHost && pathname === '/login') {
-    const destination = request.nextUrl.clone()
-    destination.hostname = host.startsWith('app.localhost') ? 'localhost' : 'meuspoliticos.com.br'
-    destination.protocol = host.startsWith('app.localhost') ? 'http:' : 'https:'
-    destination.port = host.startsWith('app.localhost') ? '3000' : ''
-    destination.pathname = '/login'
-    return NextResponse.redirect(destination)
-  }
+  // ── painel.* ──────────────────────────────────────────────────────────────
+  // Área exclusivamente autenticada. Qualquer rota não-auth exige login.
 
-  // No host app, a raiz redireciona para /painel (logado) ou /home (não logado).
-  if (isAppHost && pathname === '/') {
-    const destination = request.nextUrl.clone()
-    destination.pathname = user ? '/painel' : '/home'
-    return NextResponse.redirect(destination)
-  }
+  if (isPainelHost) {
+    const isAuthRoute =
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/cadastro') ||
+      pathname.startsWith('/recuperar-senha') ||
+      pathname.startsWith('/auth/')
 
-  // No host app, serve rotas do grupo (app) via rewrite interno.
-  if (isAppHost) {
+    if (!user && !isAuthRoute) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      if (pathname !== '/') loginUrl.searchParams.set('redirectTo', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Raiz do painel → /painel
+    if (pathname === '/') {
+      const destination = request.nextUrl.clone()
+      destination.pathname = '/painel'
+      return NextResponse.redirect(destination)
+    }
+
     return supabaseResponse
   }
 
-  // /busca no app host usa rota interna /app-busca (sidebar, sem conflito com (site)/)
-  if (isAppHost && pathname === '/busca') {
-    const rewritten = request.nextUrl.clone()
-    rewritten.pathname = '/app-busca'
-    return NextResponse.rewrite(rewritten)
+  // ── app.* ─────────────────────────────────────────────────────────────────
+  // App analítico público. Login redireciona para painel.*
+
+  if (isAppHost) {
+    if (pathname === '/login') {
+      const painelLogin = host.startsWith('app.localhost')
+        ? `http://painel.localhost:3000/login`
+        : `${PAINEL_URL}/login`
+      return NextResponse.redirect(painelLogin)
+    }
+
+    if (pathname === '/') {
+      const destination = request.nextUrl.clone()
+      destination.pathname = '/home'
+      return NextResponse.redirect(destination)
+    }
+
+    if (pathname === '/busca') {
+      const rewritten = request.nextUrl.clone()
+      rewritten.pathname = '/app-busca'
+      return NextResponse.rewrite(rewritten)
+    }
+
+    return supabaseResponse
   }
 
-  const isProtected = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  )
+  // ── meuspoliticos.com.br (site público) ───────────────────────────────────
+  // Login redireciona para painel.*
 
-  if (isProtected && !user) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    loginUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(loginUrl)
+  if (pathname === '/login') {
+    const painelLogin = host.startsWith('localhost')
+      ? `http://painel.localhost:3000/login`
+      : `${PAINEL_URL}/login`
+    return NextResponse.redirect(painelLogin)
   }
 
   return supabaseResponse
@@ -60,13 +85,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Executa em todas as rotas exceto:
-     * - _next/static (arquivos estáticos)
-     * - _next/image (otimização de imagens)
-     * - favicon.ico
-     * - arquivos com extensão (ex: .png, .svg)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
