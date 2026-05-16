@@ -96,7 +96,8 @@
   --radius: 0.625rem;
 }
 
-html.theme-dark {
+html.theme-dark,
+html[data-theme="dark"] {
   --bg: #07080d;
   --bg-2: #0c0e15;
   --panel: #10131c;

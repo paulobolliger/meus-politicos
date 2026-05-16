@@ -285,6 +285,7 @@ export function AppSidebar() {
 
       <div
         style={{
+          display: 'flex',
           flexDirection: 'column',
           width: sidebarWidth,
           minWidth: sidebarWidth,
@@ -294,6 +295,8 @@ export function AppSidebar() {
           position: 'sticky',
           top: 32,
           height: 'calc(100vh - 32px)',
+          overflow: 'hidden',
+          transition: 'width 0.18s ease, min-width 0.18s ease, padding 0.18s ease',
         }}
         className="app-sidebar-desktop"
       >

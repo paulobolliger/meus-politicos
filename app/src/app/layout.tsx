@@ -56,6 +56,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${sans.variable} ${mono.variable} antialiased`}>
+      <head>
+        {/* Script síncrono: aplica tema antes de qualquer render para evitar flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('mp-theme');var d=document.documentElement;if(t==='light'){d.setAttribute('data-theme','light')}else{d.classList.add('theme-dark');d.setAttribute('data-theme','dark')}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-screen">
         {children}
       </body>
