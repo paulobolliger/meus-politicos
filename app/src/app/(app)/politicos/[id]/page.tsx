@@ -39,13 +39,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AppPerfilPage({ params }: PageProps) {
   const { id } = await params
+  console.log('APP PERFIL - id recebido:', id)
+
   const supabase = await createClient()
 
-  let { data: politico } = await supabase
+  let { data: politico, error } = await supabase
     .from('politicos')
     .select('*')
     .eq('slug', id)
     .maybeSingle()
+
+  console.log('APP PERFIL - politico:', politico?.id, '| error:', error?.message)
 
   if (!politico) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
