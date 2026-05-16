@@ -16,13 +16,9 @@ export async function GET(request: NextRequest) {
 
   const host = request.headers.get('host') ?? ''
 
-  // Em desenvolvimento: callback chega em localhost:3000, redireciona para painel.localhost:3000
-  if (host === 'localhost:3000' || host === '127.0.0.1:3000') {
-    return NextResponse.redirect(`http://painel.localhost:3000${redirectTo}`)
-  }
-
-  // painel.localhost direto (caso chegue aqui)
-  if (host.startsWith('painel.localhost')) {
+  // Em desenvolvimento: cookie fica em localhost, permanece em localhost:3000
+  // O proxy não força auth em rotas já autenticadas
+  if (host === 'localhost:3000' || host === '127.0.0.1:3000' || host.startsWith('painel.localhost')) {
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 

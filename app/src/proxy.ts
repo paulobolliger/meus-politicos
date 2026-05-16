@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
   if (isAppHost) {
     if (pathname === '/login') {
       const painelLogin = host.startsWith('app.localhost')
-        ? `http://painel.localhost:3000/login`
+        ? `http://localhost:3000/login`
         : `${PAINEL_URL}/login`
       return NextResponse.redirect(painelLogin)
     }
@@ -71,13 +71,14 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── meuspoliticos.com.br (site público) ───────────────────────────────────
-  // Login redireciona para painel.*
 
   if (pathname === '/login') {
-    const painelLogin = host.startsWith('localhost')
-      ? `http://painel.localhost:3000/login`
-      : `${PAINEL_URL}/login`
-    return NextResponse.redirect(painelLogin)
+    // Em dev: serve /login localmente (sem subdomínio, cookie compartilhado)
+    // Em produção: redireciona para painel.meuspoliticos.com.br
+    const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1')
+    if (!isLocalhost) {
+      return NextResponse.redirect(`${PAINEL_URL}/login`)
+    }
   }
 
   return supabaseResponse
