@@ -10,7 +10,7 @@ type AuthShellProps = {
 
 export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthShellProps) {
   return (
-    <div className="lg:grid lg:grid-cols-2" style={{ minHeight: '100vh' }}>
+    <div className="theme-dark lg:grid lg:grid-cols-2" style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {/* Coluna esquerda — desktop only */}
       <div
         className="hidden lg:flex"
