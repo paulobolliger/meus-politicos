@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/client'
 
@@ -36,6 +36,7 @@ const oauthBtnBase: React.CSSProperties = {
 export function LoginForm() {
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,6 +45,8 @@ export function LoginForm() {
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [loadingTwitter, setLoadingTwitter] = useState(false)
 
+  const redirectTo = searchParams.get('redirectTo') || '/painel'
+
   async function entrarComGoogle() {
     setErrorMessage('')
     setLoadingGoogle(true)
@@ -51,7 +54,7 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
       },
     })
 
@@ -68,7 +71,7 @@ export function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
       },
     })
 
@@ -95,7 +98,7 @@ export function LoginForm() {
       return
     }
 
-    router.push('/meus-politicos')
+    router.push(redirectTo)
     router.refresh()
   }
 
