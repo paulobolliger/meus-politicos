@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\app\\\\src\\\\components\\\\app-shell\\\\home\\\\HomeAppLight.tsx\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\app\\\\src\\\\components\\\\app-shell\\\\home\\\\HomeAppDark.tsx\")",
+      "PowerShell(cd \"c:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\app\" && npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"BrazilDots\" })",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}
