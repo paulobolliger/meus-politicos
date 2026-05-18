@@ -3,12 +3,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Activity,
+  BookOpen,
+  FileText,
+  Home,
+  MapPin,
+  ScrollText,
+  Search,
+  Users,
+  Vote,
+} from 'lucide-react'
 
 type NavItem = {
   label: string
   href: string
-  icon: ReactNode
+  icon: React.ReactNode
 }
 
 type NavSection = {
@@ -20,77 +31,25 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'EXPLORACAO',
     items: [
-      {
-        label: 'Inicio',
-        href: '/home',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Buscar',
-        href: '/busca',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Meu estado',
-        href: '/meu-estado',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        ),
-      },
+      { label: 'Inicio', href: '/home', icon: <Home size={18} /> },
+      { label: 'Buscar', href: '/busca', icon: <Search size={18} /> },
+      { label: 'Meu estado', href: '/meu-estado', icon: <MapPin size={18} /> },
+      { label: 'Projetos de Lei', href: '/projetos', icon: <ScrollText size={18} /> },
+      { label: 'Candidatos 2026', href: '/candidatos-2026', icon: <Vote size={18} /> },
     ],
   },
   {
     title: 'MONITORAMENTO',
     items: [
-      {
-        label: 'Meus politicos',
-        href: '/meus-politicos',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-        ),
-      },
+      { label: 'Meus politicos', href: '/meus-politicos', icon: <Users size={18} /> },
     ],
   },
   {
     title: 'REFERENCIA',
     items: [
-      {
-        label: 'Metodologia',
-        href: '/metodologia',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Fontes',
-        href: '/fontes',
-        icon: (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        ),
-      },
+      { label: 'Metodologia', href: '/metodologia', icon: <Activity size={18} /> },
+      { label: 'Fontes', href: '/fontes', icon: <FileText size={18} /> },
+      { label: 'Glossário', href: '/glossario', icon: <BookOpen size={18} /> },
     ],
   },
 ]
