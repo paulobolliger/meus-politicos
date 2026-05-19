@@ -3,6 +3,24 @@ import { Pool } from 'pg'
 
 import { createClient } from '@/lib/supabase/server'
 
+// Singleton — evita criar/destruir pool a cada request
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.SUPABASE_DB_HOST,
+      port: Number(process.env.SUPABASE_DB_PORT ?? '5432'),
+      user: process.env.SUPABASE_DB_USER ?? 'postgres',
+      password: process.env.SUPABASE_DB_PASSWORD,
+      database: process.env.SUPABASE_DB_NAME ?? 'postgres',
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+      idleTimeoutMillis: 30000,
+    })
+  }
+  return _pool
+}
+
 type PoliticoBusca = {
   id: string
   slug: string
@@ -47,8 +65,8 @@ const CARGOS_VALIDOS = [
   'vereador',
 ] as const
 
-const UFS_CHIPS = ['SP', 'MG', 'RJ', 'BA']
-const PARTIDOS_CHIPS = ['PL', 'PT', 'UNIÃO', 'PP', 'PSD']
+const UFS_CHIPS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']
+const PARTIDOS_CHIPS = ['PL','PT','UNIÃO','PP','PSD','MDB','REPUBLICANOS','PDT','PSB','PODE','SOLIDARIEDADE','AVANTE','PRD','PV','PSOL']
 
 type CargoPolitico = (typeof CARGOS_VALIDOS)[number]
 
@@ -83,23 +101,11 @@ async function buscarViaPostgres(
   ordem: string,
   pagina: number
 ): Promise<{ data: PoliticoBusca[]; count: number }> {
-  const host = process.env.SUPABASE_DB_HOST
-  const password = process.env.SUPABASE_DB_PASSWORD
-
-  if (!host || !password) {
+  if (!process.env.SUPABASE_DB_HOST || !process.env.SUPABASE_DB_PASSWORD) {
     return { data: [], count: 0 }
   }
 
-  const pool = new Pool({
-    host,
-    port: Number(process.env.SUPABASE_DB_PORT ?? '5432'),
-    user: process.env.SUPABASE_DB_USER ?? 'postgres',
-    password,
-    database: 'postgres',
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  })
+  const pool = getPool()
 
   const whereParts = ["p.dado_estado = 'oficial'", 'p.removido_em IS NULL']
   const values: Array<string | number> = []
@@ -131,8 +137,7 @@ async function buscarViaPostgres(
   if (ordem === 'gastos') orderClause = 'p.gasto_total_ano DESC NULLS LAST'
   if (ordem === 'votacoes') orderClause = 'p.total_votacoes DESC NULLS LAST'
 
-  try {
-    const countResult = await pool.query<{ total: string }>(
+  const countResult = await pool.query<{ total: string }>(
       `
         SELECT COUNT(*)::text AS total
         FROM politicos p
@@ -173,25 +178,22 @@ async function buscarViaPostgres(
       values
     )
 
-    return {
-      count,
-      data: dataResult.rows.map((row) => ({
-        id: row.id,
-        slug: row.slug,
-        nome: row.nome,
-        nome_eleitoral: row.nome_eleitoral,
-        foto_url: row.foto_url,
-        cargo: row.cargo,
-        uf: row.uf,
-        presenca_pct_atual: row.presenca_pct_atual,
-        gasto_total_ano: row.gasto_total_ano,
-        total_votacoes: row.total_votacoes,
-        mandato_inicio: row.mandato_inicio,
-        partidos: { sigla: row.partido_sigla },
-      })),
-    }
-  } finally {
-    await pool.end()
+  return {
+    count,
+    data: dataResult.rows.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      nome: row.nome,
+      nome_eleitoral: row.nome_eleitoral,
+      foto_url: row.foto_url,
+      cargo: row.cargo,
+      uf: row.uf,
+      presenca_pct_atual: row.presenca_pct_atual,
+      gasto_total_ano: row.gasto_total_ano,
+      total_votacoes: row.total_votacoes,
+      mandato_inicio: row.mandato_inicio,
+      partidos: { sigla: row.partido_sigla },
+    })),
   }
 }
 
@@ -241,16 +243,12 @@ export async function GET(request: NextRequest) {
   let politicos: PoliticoBusca[] = (data ?? []) as PoliticoBusca[]
   let totalResultados = count ?? 0
 
+  // Quando há filtro de partido, sempre usar Postgres (Supabase não filtra em FK corretamente)
   if (partido) {
-    politicos = politicos.filter((item) => (item.partidos?.sigla ?? '').toUpperCase() === partido)
-    if (politicos.length < POR_PAGINA || pagina > 1) {
-      const fallback = await buscarViaPostgres(q, cargo, uf, partido, ordem, pagina)
-      politicos = fallback.data
-      totalResultados = fallback.count
-    }
-  }
-
-  if ((!data || errorCode === '42501') && totalResultados === 0) {
+    const fallback = await buscarViaPostgres(q, cargo, uf, partido, ordem, pagina)
+    politicos = fallback.data
+    totalResultados = fallback.count
+  } else if ((!data || errorCode === '42501') && totalResultados === 0) {
     const fallback = await buscarViaPostgres(q, cargo, uf, partido, ordem, pagina)
     politicos = fallback.data
     totalResultados = fallback.count
@@ -272,6 +270,8 @@ export async function GET(request: NextRequest) {
         { id: '', label: 'Todos', total: null },
         { id: 'deputado_federal', label: 'Dep. Federal', total: null },
         { id: 'senador', label: 'Senador', total: null },
+        { id: 'governador', label: 'Governador', total: null },
+        { id: 'deputado_estadual', label: 'Dep. Estadual', total: null },
       ],
       ufs: UFS_CHIPS,
       partidos: PARTIDOS_CHIPS,

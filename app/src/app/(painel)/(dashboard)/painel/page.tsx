@@ -230,8 +230,8 @@ export default async function PainelPage() {
             depCount={depCount}
             senCount={senCount}
             eventosHoje={eventosHojeVot + eventosHojeGasto}
-            alertasAtivos={3}
-            proximaVotacaoLabel="Hoje 14h"
+            alertasAtivos={0}
+            proximaVotacaoLabel={null}
           />
 
           <div style={{ marginTop: 16 }}>

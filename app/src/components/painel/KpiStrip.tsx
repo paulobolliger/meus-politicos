@@ -7,7 +7,7 @@ type KpiStripProps = {
   senCount: number
   eventosHoje: number
   alertasAtivos: number
-  proximaVotacaoLabel: string
+  proximaVotacaoLabel: string | null
 }
 
 function KpiCard({ label, value, sublabel }: { label: string; value: string; sublabel: string }) {
@@ -67,7 +67,7 @@ export function KpiStrip({
       />
       <KpiCard
         label="Votação importante"
-        value={proximaVotacaoLabel}
+        value={proximaVotacaoLabel ?? '—'}
         sublabel="Próxima votação relevante"
       />
     </div>

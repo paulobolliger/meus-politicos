@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { PerfilApp } from '@/components/politico-v2/PerfilApp'
 
 type PageProps = {
@@ -10,7 +10,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
   let { data } = await supabase
     .from('politicos')
@@ -40,11 +40,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function AppPerfilPage({ params }: PageProps) {
   const { id } = await params
 
-  const supabase = createAdminClient()
+  const supabase = await createClient()
 
-  let { data: politico, error } = await supabase
+  const POLITICO_FIELDS = 'id, slug, nome, nome_civil, nome_eleitoral, foto_url, cargo, uf, uf_nascimento, sexo, email, gabinete_nome, gabinete_telefone, gabinete_email, data_nascimento, naturalidade, escolaridade, ocupacao, partido_id, mandato_inicio, mandato_fim, presenca_pct_atual, gasto_total_ano, total_votacoes, codigo_siafi, dado_estado, collected_at, removido_em'
+
+  let { data: politico } = await supabase
     .from('politicos')
-    .select('*')
+    .select(POLITICO_FIELDS)
     .eq('slug', id)
     .maybeSingle()
 
@@ -53,7 +55,7 @@ export default async function AppPerfilPage({ params }: PageProps) {
     if (uuidRegex.test(id)) {
       const { data } = await supabase
         .from('politicos')
-        .select('*')
+        .select(POLITICO_FIELDS)
         .eq('id', id)
         .maybeSingle()
       politico = data
@@ -73,7 +75,7 @@ export default async function AppPerfilPage({ params }: PageProps) {
       .from('gastos')
       .select('valor, categoria, mes, ano')
       .eq('politico_id', politico.id)
-      .eq('ano', 2025)
+      .eq('ano', new Date().getFullYear())
       .limit(100),
     supabase
       .from('presenca')
