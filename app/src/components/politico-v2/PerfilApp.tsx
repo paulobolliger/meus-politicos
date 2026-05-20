@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Panel, PanelHeader, Sparkline, StatusDot, VoteChip } from '@/components/civic'
 import { ResumoInterpretativoCard } from '@/components/politico-v2/ResumoInterpretativoCard'
 import { ModoCidadao } from '@/components/politico-v2/ModoCidadao'
+import { ShareButton } from '@/components/politico-v2/ShareButton'
 import {
   CARGO_LABEL,
   CEAP_TETO_UF,
@@ -467,12 +468,24 @@ export function PerfilApp({ politico, votacoes, gastos, presenca }: Props) {
 
               {/* Botões de ação */}
               <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <button style={{ padding: '8px 18px', background: 'var(--brand)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button style={{ padding: '8px 18px', background: 'var(--brand)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 4 }}>
                   + Acompanhar
                 </button>
-                <button style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  Compartilhar
-                </button>
+                <a
+                  href={`/comparar?slugs=${politico.slug}`}
+                  style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 4 }}
+                >
+                  ⚖️ Comparar
+                </a>
+                <ShareButton
+                  nomeEleitoral={nomeExibicao}
+                  slug={politico.slug}
+                  cargo={politico.cargo}
+                  uf={politico.uf ?? null}
+                  gastoCeap={politico.gasto_total_ano ?? null}
+                  presencaPct={politico.presenca_pct_atual ?? null}
+                  partidoSigla={politico.partidos?.sigla ?? null}
+                />
                 <a
                   href={`/api/politico/${politico.id}/export.json`}
                   style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}
