@@ -583,6 +583,60 @@ export function HomeCidadaoClient() {
         </div>
       </section>
 
+      {/* ── Explore mais ── */}
+      <section style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-soft)', borderBottom: '1px solid var(--line-soft)', padding: '64px 0' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
+          <div className="label" style={{ marginBottom: 16 }}>EXPLORE MAIS</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            {[
+              {
+                href: '/cidades',
+                icon: '🏘️',
+                titulo: 'Emendas por cidade',
+                desc: 'Quanto chegou à sua cidade? Ranking per capita de emendas parlamentares.',
+                cor: 'var(--brand)',
+              },
+              {
+                href: '/projetos',
+                icon: '📄',
+                titulo: 'Projetos de Lei',
+                desc: 'Acompanhe PLs, PECs e MPVs em tramitação no Congresso.',
+                cor: '#7c3aed',
+              },
+              {
+                href: '/glossario',
+                icon: '📖',
+                titulo: 'Glossário político',
+                desc: 'Entenda CEAP, emenda, quórum e outros termos em linguagem simples.',
+                cor: '#065f46',
+              },
+              {
+                href: '/candidatos-2026',
+                icon: '⚡',
+                titulo: 'Eleições 2026',
+                desc: 'Veja quem já registrou candidatura para as eleições de outubro.',
+                cor: '#b45309',
+              },
+            ].map((c) => (
+              <Link key={c.href} href={c.href} style={{ textDecoration: 'none', display: 'block' }}>
+                <article style={{
+                  background: 'var(--panel)',
+                  borderRadius: 10,
+                  padding: '20px 18px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.03)',
+                  height: '100%',
+                  borderTop: `3px solid ${c.cor}`,
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>{c.icon}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>{c.titulo}</div>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{c.desc}</p>
+                </article>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section style={{ background: 'var(--bg)', padding: '80px 0' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 30, alignItems: 'center' }}>

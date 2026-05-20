@@ -72,8 +72,9 @@ export function SiteHeader() {
             {[
               { label: 'Pesquisar', href: '/busca' },
               { label: 'Meu estado', href: '/meu-estado' },
+              { label: 'Cidades', href: '/cidades' },
+              { label: 'Glossário', href: '/glossario' },
               { label: 'Como funciona', href: '/como-funciona' },
-              { label: 'Manifesto', href: '/manifesto' },
             ].map((l) => (
               <Link
                 key={l.href}
