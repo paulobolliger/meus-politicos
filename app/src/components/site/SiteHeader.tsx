@@ -71,7 +71,7 @@ export function SiteHeader() {
           <nav style={{ display: 'flex', gap: 28, marginLeft: 32 }}>
             {[
               { label: 'Pesquisar', href: '/busca' },
-              { label: 'Meu estado', href: '/meu-estado' },
+              { label: 'Estados', href: '/estado' },
               { label: 'Cidades', href: '/cidades' },
               { label: 'Glossário', href: '/glossario' },
               { label: 'Como funciona', href: '/como-funciona' },
