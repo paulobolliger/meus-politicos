@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useMemo, useState } from 'react'
+import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
 
 type SearchTab = 'cep' | 'nome'
 
@@ -428,14 +429,18 @@ export function HomeCidadaoClient() {
             {[
               { n: '570+', l: 'políticos com dados' },
               { n: '50 mil', l: 'votações registradas' },
-              { n: 'R$ 55bi', l: 'em emendas mapeadas' },
+              { n: 'R$ 55bi', l: 'em emendas mapeadas', tooltip: 'emenda-parlamentar' },
               { n: '27', l: 'estados cobertos' },
             ].map((s, i) => (
               <div key={i} style={{ flex: '1 1 140px', padding: '0 24px', borderRight: i < 3 ? '1px solid var(--line-soft)' : 'none', marginBottom: 12 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(30px, 4.5vw, 46px)', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--ink)', lineHeight: 1 }}>
                   {s.n}
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 5 }}>{s.l}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 5 }}>
+                  {'tooltip' in s && s.tooltip
+                    ? <GlossarioTooltip termo={TERMOS_GLOSSARIO['emenda parlamentar']?.slug ?? s.tooltip} slug={s.tooltip} definicaoSimples={TERMOS_GLOSSARIO['emenda parlamentar']?.definicaoSimples}>{s.l}</GlossarioTooltip>
+                    : s.l}
+                </div>
               </div>
             ))}
           </div>
@@ -510,7 +515,8 @@ export function HomeCidadaoClient() {
               <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
               <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>R$ 28k/mês de R$ 50k</p>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                Cota parlamentar organizada por categoria com comparação percentual com o teto permitido.
+                <GlossarioTooltip termo="CEAP" slug={TERMOS_GLOSSARIO['CEAP'].slug} definicaoSimples={TERMOS_GLOSSARIO['CEAP'].definicaoSimples}>Cota parlamentar</GlossarioTooltip>{' '}
+                organizada por categoria com comparação percentual com o teto permitido.
               </p>
               <div style={{ borderTop: '1px dashed var(--line-strong)', marginTop: 16, paddingTop: 16 }}>
                 <UsageBar pct={56} />
