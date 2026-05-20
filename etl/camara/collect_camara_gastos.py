@@ -53,6 +53,10 @@ def get_db():
         password=os.getenv('SUPABASE_DB_PASSWORD'),
         dbname=os.getenv('SUPABASE_DB_NAME', 'postgres'),
         sslmode='prefer',
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
     )
 
 
@@ -222,17 +226,37 @@ def coletar_gastos(ano: int, max_paginas: int = 50):
                          i, len(deputados), id_camara, n, total_gastos)
         except Exception as exc:
             log.error('Erro ao processar deputado %d: %s', id_camara, exc)
-            db.rollback()
             erros += 1
+            # Tentar rollback; se a conexão caiu, reconectar
+            try:
+                db.rollback()
+            except Exception:
+                log.warning('Conexão perdida — reconectando...')
+                try:
+                    db.close()
+                except Exception:
+                    pass
+                time.sleep(3)
+                db = get_db()
+                cur = db.cursor()
+                log.info('Reconectado. Continuando a partir do deputado %d/%d.', i + 1, len(deputados))
 
         time.sleep(0.1)  # respeitar rate limit
 
     duracao_ms = int((time.monotonic() - t0) * 1000)
     status = 'ok' if erros == 0 else ('falhou' if ok == 0 else 'parcial')
     mensagem = f'{total_gastos} gastos, {ok} deputados OK, {erros} erros, ano {ano}'
-    registrar_log(cur, status, total_gastos, duracao_ms, mensagem)
-    db.commit()
-    db.close()
+    try:
+        registrar_log(cur, status, total_gastos, duracao_ms, mensagem)
+        db.commit()
+    except Exception as exc:
+        log.warning('Falha ao registrar log final: %s', exc)
+    try:
+        db.close()
+    except Exception:
+        pass
+    log.info('Concluído: %d gastos inseridos/atualizados, %d erros, ano %d em %dms',
+             total_gastos, erros, ano, duracao_ms)
     log.info('Concluído: %s em %.1fs', mensagem, duracao_ms / 1000)
 
 
