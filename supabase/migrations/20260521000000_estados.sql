@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS estados_governos (
   nome_governador  text not null,
   nome_vice        text,
   partido_sigla    text,
-  politico_id      uuid references politicos(id) on delete set null,
+  politico_id      uuid,  -- soft FK para politicos.id (sem constraint para compatibilidade)
   mandato_inicio   date not null,
   mandato_fim      date,
   is_atual         boolean default false,

@@ -10,11 +10,11 @@
 -- -------------------------------------------------------
 -- 1. Tabela emendas
 -- -------------------------------------------------------
-CREATE TABLE emendas (
+CREATE TABLE IF NOT EXISTS emendas (
   id                  uuid primary key default gen_random_uuid(),
 
-  politico_id         uuid references politicos(id) on delete set null,
-  -- null quando não foi possível fazer match via codigo_siafi
+  politico_id         uuid,
+  -- soft FK para politicos.id — sem constraint para compatibilidade
 
   nome_parlamentar    text,
   -- nome vindo da API (fallback quando politico_id é null)
@@ -58,18 +58,24 @@ CREATE TABLE emendas (
   UNIQUE (source_id, source_record_id)
 );
 
-CREATE INDEX idx_emendas_politico   ON emendas(politico_id);
-CREATE INDEX idx_emendas_municipio  ON emendas(municipio_ibge);
-CREATE INDEX idx_emendas_ano        ON emendas(ano);
-CREATE INDEX idx_emendas_tipo       ON emendas(tipo_emenda);
+CREATE INDEX IF NOT EXISTS idx_emendas_politico   ON emendas(politico_id);
+CREATE INDEX IF NOT EXISTS idx_emendas_municipio  ON emendas(municipio_ibge);
+CREATE INDEX IF NOT EXISTS idx_emendas_ano        ON emendas(ano);
+CREATE INDEX IF NOT EXISTS idx_emendas_tipo       ON emendas(tipo_emenda);
 
-CREATE TRIGGER set_atualizado_em_emendas
-  BEFORE UPDATE ON emendas
-  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+DO $$ BEGIN
+  CREATE TRIGGER set_atualizado_em_emendas
+    BEFORE UPDATE ON emendas
+    FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE emendas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "emendas_select_public"
-  ON emendas FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "emendas_select_public"
+    ON emendas FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 GRANT SELECT ON emendas TO anon, authenticated;
 
@@ -77,7 +83,7 @@ GRANT SELECT ON emendas TO anon, authenticated;
 -- -------------------------------------------------------
 -- 2. Tabela fornecedores
 -- -------------------------------------------------------
-CREATE TABLE fornecedores (
+CREATE TABLE IF NOT EXISTS fornecedores (
   id                  uuid primary key default gen_random_uuid(),
 
   cnpj                text unique not null,
@@ -95,15 +101,21 @@ CREATE TABLE fornecedores (
   atualizado_em       timestamptz default now()
 );
 
-CREATE INDEX idx_fornecedores_cnpj ON fornecedores(cnpj);
+CREATE INDEX IF NOT EXISTS idx_fornecedores_cnpj ON fornecedores(cnpj);
 
-CREATE TRIGGER set_atualizado_em_fornecedores
-  BEFORE UPDATE ON fornecedores
-  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+DO $$ BEGIN
+  CREATE TRIGGER set_atualizado_em_fornecedores
+    BEFORE UPDATE ON fornecedores
+    FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE fornecedores ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "fornecedores_select_public"
-  ON fornecedores FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "fornecedores_select_public"
+    ON fornecedores FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 GRANT SELECT ON fornecedores TO anon, authenticated;
 
@@ -113,7 +125,6 @@ GRANT SELECT ON fornecedores TO anon, authenticated;
 -- -------------------------------------------------------
 ALTER TABLE municipios
   ADD COLUMN IF NOT EXISTS faixa_populacional text;
--- Valores: 'ate_20k' | '20k_50k' | '50k_100k' | '100k_500k' | 'acima_500k'
 
 COMMENT ON COLUMN municipios.faixa_populacional IS
   'Faixa demográfica baseada em populacao: ate_20k | 20k_50k | 50k_100k | 100k_500k | acima_500k';

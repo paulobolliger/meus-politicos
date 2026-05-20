@@ -3,7 +3,7 @@
 -- Usado no (site) como página dedicada e no (app) via tooltip inline
 -- ============================================================
 
-CREATE TABLE glossario (
+CREATE TABLE IF NOT EXISTS glossario (
   id                  uuid primary key default gen_random_uuid(),
 
   slug                text unique not null,
@@ -31,15 +31,21 @@ CREATE TABLE glossario (
   atualizado_em       timestamptz default now()
 );
 
-CREATE INDEX idx_glossario_categoria ON glossario(categoria);
-CREATE INDEX idx_glossario_slug      ON glossario(slug);
+CREATE INDEX IF NOT EXISTS idx_glossario_categoria ON glossario(categoria);
+CREATE INDEX IF NOT EXISTS idx_glossario_slug      ON glossario(slug);
 
-CREATE TRIGGER set_atualizado_em_glossario
-  BEFORE UPDATE ON glossario
-  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+DO $$ BEGIN
+  CREATE TRIGGER set_atualizado_em_glossario
+    BEFORE UPDATE ON glossario
+    FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE glossario ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "glossario_select_public"
-  ON glossario FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "glossario_select_public"
+    ON glossario FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 GRANT SELECT ON glossario TO anon, authenticated;

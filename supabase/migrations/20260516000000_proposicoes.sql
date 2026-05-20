@@ -4,7 +4,7 @@
 --         dadosabertos.senado.leg.br (fase futura)
 -- ============================================================
 
-CREATE TABLE proposicoes (
+CREATE TABLE IF NOT EXISTS proposicoes (
   id                  uuid primary key default gen_random_uuid(),
 
   -- Identificação nas câmaras
@@ -52,19 +52,19 @@ CREATE TABLE proposicoes (
   UNIQUE (tipo, numero, ano)
 );
 
-CREATE INDEX idx_proposicoes_tipo       ON proposicoes(tipo);
-CREATE INDEX idx_proposicoes_ano        ON proposicoes(ano desc);
-CREATE INDEX idx_proposicoes_situacao   ON proposicoes(situacao);
-CREATE INDEX idx_proposicoes_data       ON proposicoes(data_apresentacao desc);
-CREATE INDEX idx_proposicoes_ia         ON proposicoes(ia_processado) WHERE ia_processado = false;
+CREATE INDEX IF NOT EXISTS idx_proposicoes_tipo       ON proposicoes(tipo);
+CREATE INDEX IF NOT EXISTS idx_proposicoes_ano        ON proposicoes(ano desc);
+CREATE INDEX IF NOT EXISTS idx_proposicoes_situacao   ON proposicoes(situacao);
+CREATE INDEX IF NOT EXISTS idx_proposicoes_data       ON proposicoes(data_apresentacao desc);
+CREATE INDEX IF NOT EXISTS idx_proposicoes_ia         ON proposicoes(ia_processado) WHERE ia_processado = false;
 
 
-CREATE TABLE proposicao_autores (
+CREATE TABLE IF NOT EXISTS proposicao_autores (
   id              uuid primary key default gen_random_uuid(),
 
   proposicao_id   uuid not null references proposicoes(id) on delete cascade,
-  politico_id     uuid references politicos(id) on delete set null,
-  -- null quando o autor não tem perfil no sistema (ex: bancada, comissão)
+  politico_id     uuid,
+  -- soft FK para politicos.id (sem constraint para compatibilidade)
 
   nome            text not null,
   cargo           text,
@@ -74,24 +74,33 @@ CREATE TABLE proposicao_autores (
   criado_em       timestamptz default now()
 );
 
-CREATE INDEX idx_prop_autores_proposicao ON proposicao_autores(proposicao_id);
-CREATE INDEX idx_prop_autores_politico   ON proposicao_autores(politico_id);
+CREATE INDEX IF NOT EXISTS idx_prop_autores_proposicao ON proposicao_autores(proposicao_id);
+CREATE INDEX IF NOT EXISTS idx_prop_autores_politico   ON proposicao_autores(politico_id);
 
 
 -- Trigger para atualizar atualizado_em
-CREATE TRIGGER set_atualizado_em_proposicoes
-  BEFORE UPDATE ON proposicoes
-  FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+DO $$ BEGIN
+  CREATE TRIGGER set_atualizado_em_proposicoes
+    BEFORE UPDATE ON proposicoes
+    FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 
 -- RLS — leitura pública para ambas as tabelas
 ALTER TABLE proposicoes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "proposicoes_select_public"
-  ON proposicoes FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "proposicoes_select_public"
+    ON proposicoes FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE proposicao_autores ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "proposicao_autores_select_public"
-  ON proposicao_autores FOR SELECT USING (true);
+DO $$ BEGIN
+  CREATE POLICY "proposicao_autores_select_public"
+    ON proposicao_autores FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 
 -- Grant para anon e authenticated (Supabase)
