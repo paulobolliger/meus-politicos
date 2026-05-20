@@ -10,26 +10,51 @@ type KpiStripProps = {
   proximaVotacaoLabel: string | null
 }
 
-function KpiCard({ label, value, sublabel }: { label: string; value: string; sublabel: string }) {
+function KpiCard({
+  label,
+  value,
+  sublabel,
+  empty = false,
+}: {
+  label: string
+  value: string
+  sublabel: string
+  empty?: boolean
+}) {
+  const isEmpty = empty || value === '0' || value === '—'
   return (
-    <Panel style={{ padding: 14 }}>
+    <Panel style={{ padding: 14, opacity: isEmpty ? 0.55 : 1 }}>
       <div
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
           letterSpacing: '0.08em',
-          color: 'var(--ink-2)',
+          color: isEmpty ? 'var(--mute)' : 'var(--ink-2)',
           marginBottom: 8,
           textTransform: 'uppercase',
         }}
       >
         {label}
       </div>
-      <div style={{ fontSize: 30, lineHeight: 1, fontWeight: 700, color: 'var(--ink)' }}>{value}</div>
-      <div style={{ marginTop: 8, fontSize: 12, color: 'var(--ink-2)' }}>{sublabel}</div>
-      <div style={{ marginTop: 10 }}>
-        <Sparkline data={[3, 4, 5, 4, 6, 7, 8]} w={94} h={24} color="var(--accent)" />
+      <div
+        style={{
+          fontSize: 30,
+          lineHeight: 1,
+          fontWeight: 700,
+          color: isEmpty ? 'var(--mute)' : 'var(--ink)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {value}
       </div>
+      <div style={{ marginTop: 8, fontSize: 12, color: isEmpty ? 'var(--mute)' : 'var(--ink-2)' }}>
+        {sublabel}
+      </div>
+      {!isEmpty && (
+        <div style={{ marginTop: 10 }}>
+          <Sparkline data={[3, 4, 5, 4, 6, 7, 8]} w={94} h={24} color="var(--accent)" />
+        </div>
+      )}
     </Panel>
   )
 }
@@ -62,13 +87,15 @@ export function KpiStrip({
       />
       <KpiCard
         label="Alertas ativos"
-        value={String(alertasAtivos)}
-        sublabel="Gastos atípicos · presença"
+        value={alertasAtivos === 0 ? '0' : String(alertasAtivos)}
+        sublabel={alertasAtivos === 0 ? 'Tudo tranquilo' : 'Gastos atípicos · presença'}
+        empty={alertasAtivos === 0}
       />
       <KpiCard
-        label="Votação importante"
+        label="Próxima votação"
         value={proximaVotacaoLabel ?? '—'}
-        sublabel="Próxima votação relevante"
+        sublabel={proximaVotacaoLabel ? 'Votação relevante' : 'Sem previsão'}
+        empty={!proximaVotacaoLabel}
       />
     </div>
   )

@@ -362,8 +362,8 @@ export function BuscaClient() {
       </section>
 
       <section style={{ maxWidth: 1320, margin: '0 auto', padding: '16px 24px 24px' }}>
-        <div style={{ border: '1px solid var(--line)', background: 'var(--panel)', borderRadius: 0, overflow: 'hidden' }}>
-          <div className="busca-table-header" style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line)', padding: '10px 12px' }}>
+        <div style={{ background: 'var(--panel)', borderRadius: 6, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)' }}>
+          <div className="busca-table-header" style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line-soft)', padding: '10px 12px' }}>
             <div
               className="mono"
               style={{
@@ -419,7 +419,7 @@ export function BuscaClient() {
                         gap: 10,
                         alignItems: 'center',
                         padding: '11px 12px',
-                        borderBottom: '1px solid var(--line)',
+                        borderBottom: '1px solid var(--line-soft)',
                         cursor: 'pointer',
                       }}
                       className="busca-row"
@@ -526,13 +526,14 @@ export function BuscaClient() {
                       key={`m-${item.id}`}
                       onClick={() => router.push(`/politicos/${item.slug}`)}
                       style={{
-                        border: '1px solid var(--line)',
                         background: 'var(--panel)',
+                        borderRadius: 8,
                         padding: 12,
                         display: 'grid',
                         gap: 8,
                         marginBottom: 10,
                         cursor: 'pointer',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 1px 6px rgba(0,0,0,0.04)',
                       }}
                     >
                       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -630,7 +631,7 @@ export function BuscaClient() {
       </section>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .busca-row:hover { background: var(--bg-2); }
+        .busca-row:hover { background: var(--bg-2); transition: background 0.12s ease; }
         .busca-table-mobile { display: none; }
         @media (max-width: 920px) {
           .busca-table-header, .busca-table-desktop { display: none; }
