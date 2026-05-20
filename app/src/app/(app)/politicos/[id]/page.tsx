@@ -8,20 +8,6 @@ type PageProps = {
   params: Promise<{ id: string }>
 }
 
-const POLITICO_SELECT = [
-  'id', 'slug', 'nome', 'nome_civil', 'nome_eleitoral',
-  'cargo', 'uf', 'uf_nascimento', 'sexo',
-  'foto_url', 'email', 'gabinete_nome', 'gabinete_telefone', 'gabinete_email',
-  'data_nascimento', 'naturalidade', 'escolaridade', 'ocupacao',
-  'mandato_inicio', 'mandato_fim',
-  'presenca_pct_atual', 'gasto_total_ano', 'total_votacoes',
-  'dado_estado', 'collected_at',
-  'partidos(sigla, nome, numero)',
-  'redes_sociais(plataforma, url)',
-].join(', ')
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
   const supabase = await createClient()
@@ -32,42 +18,48 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .eq('slug', id)
     .maybeSingle()
 
-  if (!data && UUID_RE.test(id)) {
-    const { data: byId } = await supabase
-      .from('politicos')
-      .select('nome, nome_eleitoral')
-      .eq('id', id)
-      .maybeSingle()
-    data = byId
+  if (!data) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(id)) {
+      const { data: byId } = await supabase
+        .from('politicos')
+        .select('nome, nome_eleitoral')
+        .eq('id', id)
+        .maybeSingle()
+      data = byId
+    }
   }
 
   if (!data) return { title: 'Político não encontrado' }
 
-  const nome = data.nome_eleitoral ?? data.nome
   return {
-    title: `${nome} · Meus Políticos`,
-    openGraph: { title: `${nome} · Meus Políticos` },
+    title: `${data.nome_eleitoral ?? data.nome} · Meus Políticos`,
   }
 }
 
 export default async function AppPerfilPage({ params }: PageProps) {
   const { id } = await params
+
   const supabase = await createClient()
-  const anoAtual = new Date().getFullYear()
+
+  const POLITICO_FIELDS = 'id, slug, nome, nome_civil, nome_eleitoral, foto_url, cargo, uf, uf_nascimento, sexo, email, gabinete_nome, gabinete_telefone, gabinete_email, data_nascimento, naturalidade, escolaridade, ocupacao, partido_id, mandato_inicio, mandato_fim, presenca_pct_atual, gasto_total_ano, total_votacoes, codigo_siafi, dado_estado, collected_at, removido_em'
 
   let { data: politico } = await supabase
     .from('politicos')
-    .select(POLITICO_SELECT)
+    .select(POLITICO_FIELDS)
     .eq('slug', id)
     .maybeSingle()
 
-  if (!politico && UUID_RE.test(id)) {
-    const { data } = await supabase
-      .from('politicos')
-      .select(POLITICO_SELECT)
-      .eq('id', id)
-      .maybeSingle()
-    politico = data
+  if (!politico) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(id)) {
+      const { data } = await supabase
+        .from('politicos')
+        .select(POLITICO_FIELDS)
+        .eq('id', id)
+        .maybeSingle()
+      politico = data
+    }
   }
 
   if (!politico) notFound()
@@ -83,7 +75,7 @@ export default async function AppPerfilPage({ params }: PageProps) {
       .from('gastos')
       .select('valor, categoria, mes, ano')
       .eq('politico_id', politico.id)
-      .eq('ano', anoAtual)
+      .eq('ano', new Date().getFullYear())
       .limit(100),
     supabase
       .from('presenca')

@@ -35,7 +35,10 @@ export function SiteFooter() {
               l: [
                 { label: 'Buscar politicos', href: '/busca' },
                 { label: 'Meu estado', href: '/meu-estado' },
-                { label: 'Meus politicos', href: '/meus-politicos' },
+                { label: 'Emendas por cidade', href: '/cidades' },
+                { label: 'Projetos de Lei', href: '/projetos' },
+                { label: 'Glossário político', href: '/glossario' },
+                { label: 'Eleições 2026', href: '/candidatos-2026' },
               ],
             },
             {

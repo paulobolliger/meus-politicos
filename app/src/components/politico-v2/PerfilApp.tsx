@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Panel, PanelHeader, Sparkline, StatusDot, VoteChip } from '@/components/civic'
 import { ResumoInterpretativoCard } from '@/components/politico-v2/ResumoInterpretativoCard'
 import { ModoCidadao } from '@/components/politico-v2/ModoCidadao'
+import { ShareButton } from '@/components/politico-v2/ShareButton'
 import {
   CARGO_LABEL,
   CEAP_TETO_UF,
@@ -87,6 +88,65 @@ type Props = {
 
 const TABS = ['Visão geral', 'Votações', 'Gastos', 'Presença', 'Histórico', 'Fontes'] as const
 type Tab = typeof TABS[number]
+
+// ── donut chart ───────────────────────────────────────────────────────────────
+
+const DONUT_COLORS = [
+  'var(--brand)', 'var(--accent)', 'var(--pos)', 'var(--warn)', 'var(--info)', 'var(--ink-3)',
+]
+
+function GastosDonut({ categorias }: { categorias: [string, number][] }) {
+  const total = categorias.reduce((s, [, v]) => s + v, 0)
+  if (total === 0 || categorias.length === 0) return null
+
+  const cx = 70, cy = 70, r = 52, stroke = 20
+  const gap = 0.02
+  let cumAngle = -Math.PI / 2
+
+  const slices = categorias.slice(0, 6).map(([cat, val], i) => {
+    const frac = val / total
+    const angle = frac * (2 * Math.PI) - gap
+    const x1 = cx + r * Math.cos(cumAngle + gap / 2)
+    const y1 = cy + r * Math.sin(cumAngle + gap / 2)
+    const x2 = cx + r * Math.cos(cumAngle + angle)
+    const y2 = cy + r * Math.sin(cumAngle + angle)
+    const large = angle > Math.PI ? 1 : 0
+    cumAngle += frac * (2 * Math.PI)
+    return { cat, val, frac, x1, y1, x2, y2, large, color: DONUT_COLORS[i] }
+  })
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+      <svg width="140" height="140" viewBox="0 0 140 140" style={{ flexShrink: 0 }}>
+        {slices.map((s, i) => (
+          <path
+            key={i}
+            d={`M ${cx} ${cy} L ${s.x1} ${s.y1} A ${r} ${r} 0 ${s.large} 1 ${s.x2} ${s.y2} Z`}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={stroke}
+            style={{ transform: `translate(${cx}px, ${cy}px) scale(1) translate(-${cx}px, -${cy}px)` }}
+          />
+        ))}
+        {/* inner ring mask */}
+        <circle cx={cx} cy={cy} r={r - stroke / 2 - 1} fill="var(--panel)" />
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="9" fill="var(--ink-3)" fontFamily="var(--font-mono)">TOTAL</text>
+        <text x={cx} y={cy + 10} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ink)" fontFamily="var(--font-mono)">
+          {total >= 1000 ? `${(total / 1000).toFixed(0)}k` : String(Math.round(total))}
+        </text>
+      </svg>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {slices.map((s, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 10.5, color: 'var(--ink-2)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.cat}</span>
+            <span style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{Math.round(s.frac * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -408,12 +468,24 @@ export function PerfilApp({ politico, votacoes, gastos, presenca }: Props) {
 
               {/* Botões de ação */}
               <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <button style={{ padding: '8px 18px', background: 'var(--brand)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button style={{ padding: '8px 18px', background: 'var(--brand)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 4 }}>
                   + Acompanhar
                 </button>
-                <button style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  Compartilhar
-                </button>
+                <a
+                  href={`/comparar?slugs=${politico.slug}`}
+                  style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 4 }}
+                >
+                  ⚖️ Comparar
+                </a>
+                <ShareButton
+                  nomeEleitoral={nomeExibicao}
+                  slug={politico.slug}
+                  cargo={politico.cargo}
+                  uf={politico.uf ?? null}
+                  gastoCeap={politico.gasto_total_ano ?? null}
+                  presencaPct={politico.presenca_pct_atual ?? null}
+                  partidoSigla={politico.partidos?.sigla ?? null}
+                />
                 <a
                   href={`/api/politico/${politico.id}/export.json`}
                   style={{ padding: '8px 14px', background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}
@@ -610,10 +682,11 @@ export function PerfilApp({ politico, votacoes, gastos, presenca }: Props) {
                   </div>
                 )}
 
-                {/* BarList por categoria */}
+                {/* Donut + BarList por categoria */}
                 {gastosCategoriasOrdenadas.length > 0 && (
                   <div>
-                    <div className="mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', marginBottom: 8 }}>POR CATEGORIA</div>
+                    <div className="mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', marginBottom: 10 }}>POR CATEGORIA</div>
+                    <GastosDonut categorias={gastosCategoriasOrdenadas} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {gastosCategoriasOrdenadas.map(([cat, val]) => (
                         <div key={cat} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>

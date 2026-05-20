@@ -10,6 +10,7 @@ import {
   FileText,
   Home,
   MapPin,
+  Scale,
   ScrollText,
   Search,
   Users,
@@ -42,6 +43,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'MONITORAMENTO',
     items: [
       { label: 'Meus politicos', href: '/meus-politicos', icon: <Users size={18} /> },
+      { label: 'Comparar', href: '/comparar', icon: <Scale size={18} /> },
     ],
   },
   {

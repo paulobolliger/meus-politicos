@@ -9,7 +9,7 @@
   --color-foreground: var(--ink);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--line-strong);
   --color-sidebar-border: var(--line);
   --color-sidebar-accent-foreground: var(--ink-2);
@@ -83,8 +83,12 @@
   --info-soft: #e2ebff;
 
   /* Font vars */
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  /* Borders */
+  --line-soft: #eeefe9;
 
   /* Compat */
   --background: var(--bg);
@@ -157,6 +161,18 @@ html.theme-dark body {
   text-transform: uppercase;
   color: var(--ink-3);
   font-weight: 500;
+}
+
+/* Display / editorial headings */
+.display, h1 {
+  font-family: var(--font-display);
+  font-feature-settings: normal;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
 }
 
 ::selection {

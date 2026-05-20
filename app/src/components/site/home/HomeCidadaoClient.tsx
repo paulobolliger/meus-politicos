@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useMemo, useState } from 'react'
+import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
 
 type SearchTab = 'cep' | 'nome'
 
@@ -174,7 +175,7 @@ function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) =
               <text
                 x={s.x}
                 y={s.y - r - 1.2}
-                fontFamily="IBM Plex Mono, monospace"
+                fontFamily="var(--font-mono)"
                 fontSize="2.2"
                 textAnchor="middle"
                 fill={isActive ? 'var(--ink)' : 'var(--ink-3)'}
@@ -419,6 +420,66 @@ export function HomeCidadaoClient() {
         </div>
       </section>
 
+      {/* ── Stats + Cargo strip ── */}
+      <section style={{ background: 'var(--bg)', padding: '36px 0 0' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0, paddingBottom: 28, marginBottom: 28, borderBottom: '1px solid var(--line-soft)' }}>
+            {[
+              { n: '570+', l: 'políticos com dados' },
+              { n: '50 mil', l: 'votações registradas' },
+              { n: 'R$ 55bi', l: 'em emendas mapeadas', tooltip: 'emenda-parlamentar' },
+              { n: '27', l: 'estados cobertos' },
+            ].map((s, i) => (
+              <div key={i} style={{ flex: '1 1 140px', padding: '0 24px', borderRight: i < 3 ? '1px solid var(--line-soft)' : 'none', marginBottom: 12 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(30px, 4.5vw, 46px)', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--ink)', lineHeight: 1 }}>
+                  {s.n}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 5 }}>
+                  {'tooltip' in s && s.tooltip
+                    ? <GlossarioTooltip termo={TERMOS_GLOSSARIO['emenda parlamentar']?.slug ?? s.tooltip} slug={s.tooltip} definicaoSimples={TERMOS_GLOSSARIO['emenda parlamentar']?.definicaoSimples}>{s.l}</GlossarioTooltip>
+                    : s.l}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Cargo pills */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', paddingBottom: 36 }}>
+            <span style={{ fontSize: 12, color: 'var(--ink-3)', marginRight: 4, flexShrink: 0 }}>Explorar por cargo:</span>
+            {[
+              { k: 'presidente', l: 'Presidente', dot: '#1d3a8a' },
+              { k: 'governador', l: 'Governadores', dot: '#5b21b6' },
+              { k: 'senador', l: 'Senadores', dot: '#065f46' },
+              { k: 'deputado_federal', l: 'Dep. Federais', dot: '#1e40af' },
+              { k: 'deputado_estadual', l: 'Dep. Estaduais', dot: '#92400e' },
+            ].map(({ k, l, dot }) => (
+              <Link
+                key={k}
+                href={`/busca?cargo=${k}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 34,
+                  padding: '0 14px',
+                  borderRadius: 999,
+                  background: 'var(--panel)',
+                  border: '1px solid var(--line)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: 'var(--ink-2)',
+                  textDecoration: 'none',
+                }}
+              >
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, marginRight: 8, flexShrink: 0 }} />
+                {l}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section style={{ background: 'var(--panel)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '80px 0' }}>
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ maxWidth: 900 }}>
@@ -454,7 +515,8 @@ export function HomeCidadaoClient() {
               <h3 style={{ margin: '10px 0 8px', fontSize: 22, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
               <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>R$ 28k/mês de R$ 50k</p>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                Cota parlamentar organizada por categoria com comparação percentual com o teto permitido.
+                <GlossarioTooltip termo="CEAP" slug={TERMOS_GLOSSARIO['CEAP'].slug} definicaoSimples={TERMOS_GLOSSARIO['CEAP'].definicaoSimples}>Cota parlamentar</GlossarioTooltip>{' '}
+                organizada por categoria com comparação percentual com o teto permitido.
               </p>
               <div style={{ borderTop: '1px dashed var(--line-strong)', marginTop: 16, paddingTop: 16 }}>
                 <UsageBar pct={56} />
@@ -474,6 +536,109 @@ export function HomeCidadaoClient() {
                 <VoteMini />
               </div>
             </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Últimas votações ── */}
+      <section style={{ background: 'var(--bg)', padding: '80px 0 0' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <div className="label" style={{ marginBottom: 8 }}>AO VIVO NO PLENÁRIO</div>
+              <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>Últimas votações</h2>
+            </div>
+            <Link href="/busca" style={{ fontSize: 13, color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Ver todas →
+            </Link>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, paddingBottom: 80 }}>
+            {([
+              { projeto: 'PL 1234/2025', ementa: 'Reforma tributária — segundo turno', data: 'Hoje, 14h32', sim: 312, nao: 118, votos: ['S','S','N','S','A','S','N','S','S','N'] },
+              { projeto: 'PEC 8/2024', ementa: 'Gastos públicos — Emenda constitucional', data: 'Ontem, 16h10', sim: 278, nao: 155, votos: ['S','N','S','S','S','N','A','S','N','S'] },
+              { projeto: 'PL 892/2025', ementa: 'Marco regulatório de inteligência artificial', data: '3 dias atrás', sim: 391, nao: 45, votos: ['S','S','S','S','S','S','A','S','S','S'] },
+              { projeto: 'PDL 77/2025', ementa: 'Decreto sobre taxação de plataformas digitais', data: '5 dias atrás', sim: 207, nao: 214, votos: ['N','S','N','N','A','S','N','N','S','N'] },
+            ] as const).map((v, i) => (
+              <article key={i} style={{ background: 'var(--panel)', borderRadius: 10, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.03)', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                  <span className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--brand-2)', fontWeight: 600 }}>{v.projeto}</span>
+                  <span style={{ fontSize: 10, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{v.data}</span>
+                </div>
+                <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: 'var(--ink)' }}>{v.ementa}</p>
+
+                {/* vote bar */}
+                <div style={{ display: 'flex', gap: 3, marginBottom: 12, height: 14 }}>
+                  {v.votos.map((voto, j) => (
+                    <div key={j} style={{
+                      flex: 1,
+                      borderRadius: 3,
+                      background: voto === 'S' ? 'var(--pos)' : voto === 'N' ? 'var(--neg)' : 'var(--warn)',
+                      opacity: 0.7,
+                    }} />
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: 14, fontSize: 12 }}>
+                  <span style={{ color: 'var(--pos)', fontWeight: 700 }}>✓ {v.sim} Sim</span>
+                  <span style={{ color: 'var(--neg)', fontWeight: 700 }}>✕ {v.nao} Não</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Explore mais ── */}
+      <section style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-soft)', borderBottom: '1px solid var(--line-soft)', padding: '64px 0' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
+          <div className="label" style={{ marginBottom: 16 }}>EXPLORE MAIS</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            {[
+              {
+                href: '/cidades',
+                icon: '🏘️',
+                titulo: 'Emendas por cidade',
+                desc: 'Quanto chegou à sua cidade? Ranking per capita de emendas parlamentares.',
+                cor: 'var(--brand)',
+              },
+              {
+                href: '/projetos',
+                icon: '📄',
+                titulo: 'Projetos de Lei',
+                desc: 'Acompanhe PLs, PECs e MPVs em tramitação no Congresso.',
+                cor: '#7c3aed',
+              },
+              {
+                href: '/glossario',
+                icon: '📖',
+                titulo: 'Glossário político',
+                desc: 'Entenda CEAP, emenda, quórum e outros termos em linguagem simples.',
+                cor: '#065f46',
+              },
+              {
+                href: '/candidatos-2026',
+                icon: '⚡',
+                titulo: 'Eleições 2026',
+                desc: 'Veja quem já registrou candidatura para as eleições de outubro.',
+                cor: '#b45309',
+              },
+            ].map((c) => (
+              <Link key={c.href} href={c.href} style={{ textDecoration: 'none', display: 'block' }}>
+                <article style={{
+                  background: 'var(--panel)',
+                  borderRadius: 10,
+                  padding: '20px 18px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.03)',
+                  height: '100%',
+                  borderTop: `3px solid ${c.cor}`,
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>{c.icon}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>{c.titulo}</div>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{c.desc}</p>
+                </article>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -739,7 +904,7 @@ export function HomeCidadaoClient() {
 
               <div
                 style={{
-                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontFamily: 'var(--font-mono)',
                   fontSize: 12,
                   lineHeight: 1.65,
                   color: 'rgba(255,255,255,0.85)',
