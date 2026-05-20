@@ -85,7 +85,19 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- Seed initial feature flags
+-- Se a coluna 'nome' existe e é NOT NULL, torná-la nullable antes de inserir
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'feature_flags' AND column_name = 'nome'
+      AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE feature_flags ALTER COLUMN nome DROP NOT NULL;
+  END IF;
+END $$;
+
+-- Seed initial feature flags (ON CONFLICT em slug para idempotência)
 INSERT INTO feature_flags (slug, descricao, ativo, rollout_pct) VALUES
   ('busca_postgres_direto',       'Forçar busca via Postgres direto em vez do Supabase client', true,  100),
   ('emendas_pix_visivel',         'Exibir seção de Emendas Pix no perfil do político',           false,  0),
