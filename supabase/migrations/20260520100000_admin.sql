@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   criado_em timestamptz default now()
 );
 
+-- feature_flags may already exist with older schema (nome instead of slug)
+-- Add missing columns if needed, then ensure slug unique constraint
 CREATE TABLE IF NOT EXISTS feature_flags (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null,
@@ -18,6 +20,22 @@ CREATE TABLE IF NOT EXISTS feature_flags (
   rollout_pct integer default 0,
   atualizado_em timestamptz default now()
 );
+-- If table already existed, patch to new schema
+ALTER TABLE feature_flags
+  ADD COLUMN IF NOT EXISTS slug text,
+  ADD COLUMN IF NOT EXISTS rollout_pct integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS atualizado_em timestamptz DEFAULT now();
+-- Populate slug from nome if it exists and slug is empty
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='feature_flags' AND column_name='nome') THEN
+    UPDATE feature_flags SET slug = lower(regexp_replace(nome, '\s+', '_', 'g')) WHERE slug IS NULL;
+    ALTER TABLE feature_flags ALTER COLUMN slug SET NOT NULL;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'feature_flags_slug_key') THEN
+      ALTER TABLE feature_flags ADD CONSTRAINT feature_flags_slug_key UNIQUE (slug);
+    END IF;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS analytics_eventos (
   id uuid primary key default gen_random_uuid(),
