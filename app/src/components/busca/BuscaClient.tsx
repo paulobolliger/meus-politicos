@@ -3,44 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-type PoliticoBusca = {
-  id: string
-  slug: string
-  nome: string
-  nome_eleitoral: string | null
-  foto_url: string | null
-  cargo: string
-  uf: string | null
-  presenca_pct_atual: number | null
-  gasto_total_ano: number | null
-  total_votacoes: number | null
-  mandato_inicio: string | null
-  partidos: { sigla: string | null } | null
-}
-
-type BuscaResponse = {
-  items: PoliticoBusca[]
-  total: number
-  totalPaginas: number
-  pagina: number
-  porPagina: number
-  elapsedMs: number
-  totalIndexados: number
-  chips: {
-    cargos: Array<{ id: string; label: string; total: number | null }>
-    ufs: string[]
-    partidos: string[]
-  }
-}
-
-const CARGO_LABEL: Record<string, string> = {
-  deputado_federal: 'Dep. Federal',
-  senador: 'Senador',
-  governador: 'Governador',
-  prefeito: 'Prefeito',
-  deputado_estadual: 'Dep. Estadual',
-  vereador: 'Vereador',
-}
+import type { BuscaResponse } from '@/types/busca'
+import { CARGO_LABEL, initials } from '@/components/politico-v2/shared'
 
 function makeAvatarColor(seed: string) {
   let hash = 0
@@ -50,15 +14,6 @@ function makeAvatarColor(seed: string) {
 
   const palette = ['#1d3a8a', '#2952cc', '#0a7d58', '#c2410c', '#7c3aed', '#1f2937', '#be185d']
   return palette[Math.abs(hash) % palette.length]
-}
-
-function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
 }
 
 function presenceColor(value: number | null) {

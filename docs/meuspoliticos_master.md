@@ -1,7 +1,7 @@
 # meuspoliticos.com — Master Doc
 > "Transparência para decidir melhor."
-> Status: **pré-lançamento** · Meta: **live em 15 dias**
-> Documento vivo — atualizado em maio de 2026
+> Status: **em desenvolvimento ativo** · Infra: **Supabase self-hosted (VPS Vultr)**
+> Documento vivo — atualizado em maio de 2026 (v2.0)
 
 ---
 
@@ -59,12 +59,12 @@ O Meus Políticos resolve isso.
 Coletamos dados diretamente das fontes oficiais do governo brasileiro e os apresentamos de forma simples, organizada e neutra — sem filtro editorial, sem agenda política.
 
 **Nossas fontes:**
-- **Câmara dos Deputados** — votações, gastos de gabinete, presenças, projetos de lei
-- **Senado Federal** — votações, discursos, comissões
-- **TSE** — histórico de candidaturas, bens declarados, financiamento de campanha
-- **Portal da Transparência** — emendas parlamentares, viagens, contratos
-- **IBGE** — dados geográficos para cruzar representantes com municípios
-- **Diário Oficial da União** — nomeações, decretos, atos oficiais
+- **Câmara dos Deputados** — votações, gastos CEAP, projetos de lei, autores
+- **Senado Federal** — votações, gastos CEAPS, perfis dos senadores
+- **TSE** — eleitos 2022 (governadores, dep. estaduais), candidatos 2026
+- **Portal da Transparência** — emendas individuais, Emendas Pix, verba de gabinete
+- **IBGE** — municípios, população por cidade (per capita de emendas)
+- **Diário Oficial da União** — nomeações, decretos, atos oficiais (fase 3)
 
 ---
 
@@ -152,16 +152,49 @@ Contato: contato@meuspoliticos.com.br
 
 | Campo | Valor |
 |---|---|
-| Organização | Meus Politicos |
-| Projeto | meus-politicos |
-| Project ref | `ldgfmrvaluwidpghafke` |
-| URL | `https://ldgfmrvaluwidpghafke.supabase.co` |
-| DB host | `db.ldgfmrvaluwidpghafke.supabase.co` |
-| Região | South America (São Paulo) — sa-east-1 |
+| Hosting | **Self-hosted — VPS Vultr (45.32.169.173)** |
+| Stack | Supabase via Coolify + Docker |
+| DB name | `meuspoliticos_db` |
+| DB host | `45.32.169.173` (acesso via SSH tunnel: `ssh -L 5432:10.0.2.2:5432 root@45.32.169.173 -N`) |
+| DB port | `5432` |
+| DB user | `postgres` |
+| Supabase URL | `http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io` |
+| Schema versão | v2.12 (migrations aplicadas em maio/2026) |
 | Database password | **Ver .env.local** — não armazenar aqui |
-| Schema | `supabase/001_schema.sql` v2.11 |
 
 **⚠️ Credenciais salvas em `.env.local` (não commitado) e no gerenciador de senhas.**
+
+### Dados coletados (maio/2026)
+
+| Dado | Qtd | Fonte | Status |
+|---|---|---|---|
+| Deputados federais | 513 | Câmara | ✅ |
+| Senadores | 81 | Senado | ✅ |
+| Governadores | 27 | TSE 2022 | ✅ |
+| Deputados estaduais | 1.059 | TSE 2022 | ✅ |
+| Proposições (PLs, PECs…) | ~22.384 | Câmara | ✅ 2023-2026 |
+| Votações senado | 11.654 | Senado | ✅ últimos 365 dias |
+| Gastos CEAPS senado | ~65k | Senado | ✅ 2023-2026 |
+| Candidatos 2026 | — | TSE | ⏳ Aguardando abertura |
+| Emendas parlamentares | — | Portal Transp. | 🔲 Sprint 6 |
+| Emendas Pix | — | Portal Transp. | 🔲 Sprint 6 |
+| Gastos CEAP deputados | — | Câmara | 🔲 Sprint 6 |
+
+### Análise competitiva — De Olho em Você
+
+| Feature | Eles | Nós |
+|---|---|---|
+| Emendas parlamentares | ✅ | 🔲 Sprint 6 |
+| Emendas Pix | ✅ | 🔲 Sprint 6 |
+| Gastos CEAP | ✅ | ✅ Senado / 🔲 Câmara |
+| Votações | ✅ | ✅ |
+| Comparativo lado a lado | ✅ | 🔲 Sprint 8 |
+| Distribuição por cidade | ✅ | 🔲 Sprint 7 |
+| Deputados estaduais | ❌ | ✅ |
+| Governadores | ❌ | ✅ |
+| Candidatos 2026 | ❌ | ✅ (ago/2026) |
+| Projetos de Lei | ❌ | ✅ |
+| Glossário cidadão | ❌ | ✅ |
 
 ### E-mail institucional — Titan (Hostgator)
 
@@ -224,17 +257,24 @@ Rate limit: 400 req/min diurno · 700 req/min madrugada
 ### `.env.local` completo
 
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://ldgfmrvaluwidpghafke.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_mcBDrVWxuicQoKoTGso5bA_flmy7n7M
-SUPABASE_SERVICE_ROLE_KEY=              ← pegar em Supabase → Settings → API
-SUPABASE_DB_HOST=db.ldgfmrvaluwidpghafke.supabase.co
+# Supabase self-hosted (VPS Vultr)
+NEXT_PUBLIC_SUPABASE_URL=http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io
+NEXT_PUBLIC_SUPABASE_ANON_KEY=          ← ver .env.local real
+SUPABASE_SERVICE_ROLE_KEY=              ← ver .env.local real
+SUPABASE_URL=http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io
+
+# ETL Python (acesso direto ao banco via SSH tunnel)
+# Tunnel: ssh -L 5432:10.0.2.2:5432 root@45.32.169.173 -N -o ServerAliveInterval=30
+SUPABASE_DB_HOST=localhost              ← usar com tunnel ativo
 SUPABASE_DB_PORT=5432
 SUPABASE_DB_USER=postgres
 SUPABASE_DB_PASSWORD=                   ← ver gerenciador de senhas
+SUPABASE_DB_NAME=meuspoliticos_db
 
 # App
-NEXT_PUBLIC_APP_URL=https://meuspoliticos.com.br
+NEXT_PUBLIC_SITE_URL=https://meuspoliticos.com.br
+NEXT_PUBLIC_APP_URL=https://app.meuspoliticos.com.br
+NEXT_PUBLIC_PAINEL_URL=https://painel.meuspoliticos.com.br
 
 # E-mail transacional
 RESEND_API_KEY=re_Se4uTEFo_PANsmSN2pUjVX9Q8xxK4sZJ7

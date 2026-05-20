@@ -1,6 +1,7 @@
 # Data Source Master — meuspoliticos.com
-> Documento vivo — versão 1.0 — maio 2026
+> Documento vivo — versão 2.0 — maio 2026
 > Referência central para todas as decisões de coleta, ingestão e qualidade de dados
+> Atualizado após análise competitiva + migração para Supabase self-hosted (VPS Vultr)
 
 ---
 
@@ -113,14 +114,25 @@ politicos.id (UUID interno)
 │           portaldatransparencia.gov.br/api-de-dados          │
 └──────────┬──────────────────────────────────────────────────┘
            │
-           ├─ /emendas-parlamentares
-           │   └─→ emendas (valor, município beneficiado, objeto)
+           ├─ /emendas?ano={ano}
+           │   └─→ emendas (tipo='individual', valor_empenhado/liquidado/pago,
+           │                municipio_ibge, politico_id via codigo_siafi)
+           │
+           ├─ /transferencias-especiais?ano={ano}  ← "Emendas Pix"
+           │   └─→ emendas (tipo='pix', beneficiário direto sem licitação)
+           │
+           ├─ /emendas-bancada?ano={ano}
+           │   └─→ emendas (tipo='bancada', por bancada estadual/temática)
            │
            ├─ /transferencias-voluntarias
            │   └─→ emendas (cruzamento com execução)
            │
            └─ /viagens (fase 2)
                └─→ feed_eventos (viagem internacional do Presidente)
+
+⚠️  Chave obrigatória: header `chave-api-dados: {PORTAL_TRANSPARENCIA_API_KEY}`
+⚠️  Rate limit: 400 req/min (diurno) · 700 req/min (madrugada)
+⚠️  Cruzamento: `codigoEmenda` contém `codigo_siafi` do parlamentar (4 dígitos posição 5-8)
 
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -190,25 +202,28 @@ API / CSV
 
 ### Scripts ETL — roadmap completo
 
-| Script | Fonte | Fase | Frequência |
+| Script | Fonte | Status | Frequência |
 |---|---|---|---|
-| `collect_deputados.py` | Câmara | ✅ Feito | Semanal |
-| `collect_votacoes.py` | Câmara | MVP | Diário 6h |
-| `collect_gastos.py` | Câmara | MVP | Diário 6h |
-| `collect_presenca.py` | Câmara | MVP | Diário 6h |
-| `collect_discursos.py` | Câmara | MVP | Diário 6h30 |
-| `collect_municipios.py` | IBGE | MVP | Mensal |
-| `collect_candidatos.py` | TSE CSV | MVP | Por lote (ago/2026) |
-| `collect_emendas.py` | Portal Transparência | Fase 2 | Diário 7h |
-| `collect_senadores.py` | Senado | Fase 2 | Semanal |
-| `collect_votacoes_senado.py` | Senado | Fase 2 | Diário |
-| `collect_dou.py` | INLABS | Fase 2 | Diário 10h30 |
-| `collect_siop.py` | SIOP | Fase 2 | Semestral |
-| `collect_noticias.py` | Bing/RSS | Fase 2 | 4x/dia |
-| `collect_governadores.py` | TSE + SEPLAN estaduais | Fase 2 | Semanal |
-| `collect_dep_estaduais.py` | 27 assembleias | Fase 3 | Diário |
-| `collect_prefeitos.py` | TSE CSV | Fase 3 | Semanal |
-| `collect_vereadores.py` | TSE + câmaras municipais | Fase 4 | Semanal |
+| `etl/camara/collect_deputados.py` | Câmara | ✅ Rodando | Semanal |
+| `etl/camara/collect_votacoes.py` | Câmara | ✅ Existe | Diário 6h |
+| `etl/camara/collect_proposicoes.py` | Câmara | ✅ Rodando (2023-2026) | Semanal |
+| `etl/senado/collect_senadores.py` | Senado | ✅ Rodando (81 senadores) | Semanal |
+| `etl/senado/collect_senado_votacoes.py` | Senado | ✅ Rodando (11.654 votos) | Diário |
+| `etl/senado/collect_senado_gastos.py` | Senado CEAPS | ✅ Rodando (2023-2026) | Mensal |
+| `etl/tse/collect_eleitos_2022.py` | TSE CSV | ✅ Rodando (1.086 eleitos) | Por lote |
+| `etl/tse/collect_candidatos_2026.py` | TSE CSV | ⏳ Aguardando TSE (ago/2026) | Por lote |
+| `etl/transparencia/collect_emendas.py` | Portal Transparência | 🔲 A criar (Sprint 6) | Diário 7h |
+| `etl/transparencia/collect_emendas_pix.py` | Portal Transparência | 🔲 A criar (Sprint 6) | Diário 7h |
+| `etl/camara/collect_camara_gastos.py` | Câmara CEAP | 🔲 A criar (Sprint 6) | Mensal |
+| `etl/ibge/collect_municipios.py` | IBGE | 🔲 A criar (Sprint 7) | Mensal |
+| `etl/ibge/collect_populacao.py` | IBGE Censo | 🔲 A criar (Sprint 7) | Anual |
+| `collect_discursos.py` | Câmara/Senado | ⏳ Fase 3 | Diário 6h30 |
+| `collect_presenca.py` | Câmara | ⏳ Fase 3 | Diário 6h |
+| `collect_dou.py` | INLABS | ⏳ Fase 3 | Diário 10h30 |
+| `collect_siop.py` | SIOP | ⏳ Fase 4 | Semestral |
+| `collect_noticias.py` | Bing/RSS | ⏳ Fase 3 | 4x/dia |
+| `collect_prefeitos.py` | TSE CSV | ⏳ Fase 4 | Semanal |
+| `collect_vereadores.py` | TSE + câmaras municipais | ⏳ Fase 5 | Semanal |
 
 ---
 

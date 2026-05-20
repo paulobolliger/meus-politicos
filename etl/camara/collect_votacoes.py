@@ -31,8 +31,8 @@ def get_db():
         port=int(os.getenv('SUPABASE_DB_PORT', '5432')),
         user=os.getenv('SUPABASE_DB_USER', 'postgres'),
         password=os.getenv('SUPABASE_DB_PASSWORD'),
-        dbname='postgres',
-        sslmode='require'
+        dbname=os.getenv('SUPABASE_DB_NAME', 'postgres'),
+        sslmode='prefer'
     )
 
 
