@@ -31,10 +31,9 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-SIDRA_URL = (
-    'https://servicodados.ibge.gov.br/api/v3/agregados/6579'
-    '/periodos/2022/variaveis/9324?localidades=N6[all]'
-)
+# API SIDRA v1 — formato diferente, mais estável que v3
+# t/6579 = Censo 2022, n6/all = todos os municípios, v/9324 = pop residente, p/2022 = período
+BASE_SIDRA = 'https://apisidra.ibge.gov.br/values/t/6579/n6/all/v/9324/p/2022'
 
 SESSION = requests.Session()
 SESSION.headers.update({
@@ -68,59 +67,69 @@ def faixa(populacao: int | None) -> str | None:
     return 'acima_500k'
 
 
+def buscar_populacao() -> dict[str, int]:
+    """
+    Busca população de todos os municípios via IBGE SIDRA v1.
+    Retorna dict {codigo_ibge_7dig: populacao}.
+    Resposta: lista de dicts, primeira linha = cabeçalho.
+    """
+    for tentativa in range(3):
+        try:
+            r = SESSION.get(BASE_SIDRA, timeout=120)
+            r.raise_for_status()
+            dados = r.json()
+            # Debug: mostrar primeiras 2 linhas para entender o formato
+            if dados:
+                log.info('DEBUG primeiras linhas: %s', dados[:2])
+            pop = {}
+            for row in dados[1:]:  # pula o cabeçalho
+                # Tentar todas as chaves possíveis para código e valor
+                codigo = str(
+                    row.get('D1C') or row.get('D1N') or
+                    row.get('Município (Código)') or row.get('municipio_id') or ''
+                ).zfill(7)
+                valor_str = str(row.get('V') or row.get('Valor') or '').strip()
+                if len(codigo) >= 6 and valor_str and valor_str not in ('-', '...', ''):
+                    try:
+                        pop[codigo] = int(valor_str)
+                    except (ValueError, TypeError):
+                        pass
+            return pop
+        except Exception as exc:
+            log.warning('Tentativa %d falhou: %s', tentativa + 1, exc)
+            if tentativa < 2:
+                time.sleep(3)
+    return {}
+
+
 def coletar():
     t0 = time.monotonic()
 
-    log.info('Buscando população dos municípios no IBGE SIDRA...')
-    try:
-        r = SESSION.get(SIDRA_URL, timeout=120)
-        r.raise_for_status()
-        dados = r.json()
-    except Exception as exc:
-        log.error('Falha ao buscar IBGE: %s', exc)
-        return
-
-    # Estrutura da resposta:
-    # [{ "variavel": "...", "resultados": [{ "classificacoes": [...], "series": [{ "localidade": {...}, "serie": {"2022": "VALOR"} }] }] }]
-    pop_por_ibge: dict[str, int] = {}
-
-    for variavel in dados:
-        for resultado in variavel.get('resultados', []):
-            for serie in resultado.get('series', []):
-                localidade = serie.get('localidade', {})
-                codigo_ibge7 = str(localidade.get('id', '')).zfill(7)
-                valor_str = serie.get('serie', {}).get('2022', '')
-                if not valor_str or valor_str in ('-', '...', ''):
-                    continue
-                try:
-                    pop = int(valor_str)
-                    pop_por_ibge[codigo_ibge7] = pop
-                except (ValueError, TypeError):
-                    pass
+    log.info('Buscando população de todos os municípios (IBGE SIDRA v1)...')
+    pop_por_ibge = buscar_populacao()
 
     if not pop_por_ibge:
-        log.error('Nenhum dado de população encontrado na resposta do IBGE.')
+        log.error('Nenhum dado de população obtido.')
         return
 
-    log.info('População obtida para %d municípios. Atualizando banco...', len(pop_por_ibge))
+    log.info('Total: %d municípios com população. Atualizando banco...', len(pop_por_ibge))
 
     db = get_db()
     cur = db.cursor()
-
     ok = 0
     nao_encontrado = 0
 
     for codigo_ibge7, pop in pop_por_ibge.items():
-        # municipios.codigo_ibge pode estar como int ou string; tentamos os dois formatos
         cur.execute(
             '''
             UPDATE municipios
-            SET populacao         = %s,
+            SET populacao          = %s,
                 faixa_populacional = %s,
-                atualizado_em     = now()
-            WHERE codigo_ibge = %s OR codigo_ibge::text = %s OR lpad(codigo_ibge::text, 7, \'0\') = %s
+                atualizado_em      = now()
+            WHERE codigo_ibge::text = %s
+               OR lpad(codigo_ibge::text, 7, '0') = %s
             ''',
-            (pop, faixa(pop), codigo_ibge7, codigo_ibge7, codigo_ibge7),
+            (pop, faixa(pop), codigo_ibge7, codigo_ibge7),
         )
         if cur.rowcount > 0:
             ok += 1
@@ -130,12 +139,8 @@ def coletar():
     db.commit()
 
     duracao_s = time.monotonic() - t0
-    log.info(
-        'Concluído: %d municípios atualizados, %d não encontrados no banco, %.1fs',
-        ok, nao_encontrado, duracao_s
-    )
+    log.info('Concluído: %d atualizados, %d não encontrados, %.1fs', ok, nao_encontrado, duracao_s)
 
-    # Relatório rápido de faixas
     cur.execute(
         '''
         SELECT faixa_populacional, COUNT(*) as qtd
