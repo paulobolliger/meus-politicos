@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 import type { BuscaResponse } from '@/types/busca'
 import { CARGO_LABEL, initials } from '@/components/politico-v2/shared'
+import { track } from '@/lib/analytics'
 
 function makeAvatarColor(seed: string) {
   let hash = 0
@@ -75,6 +76,17 @@ export function BuscaClient() {
         const json = (await response.json()) as BuscaResponse
         if (!active) return
         setData(json)
+
+        // Track search events (fire-and-forget)
+        if (qParam || cargo || uf || partido) {
+          track('busca', {
+            q: qParam || undefined,
+            cargo: cargo || undefined,
+            uf: uf || undefined,
+            partido: partido || undefined,
+            total: json.total,
+          })
+        }
       } catch {
         if (!active) return
         setError('Não foi possível carregar os resultados no momento.')
