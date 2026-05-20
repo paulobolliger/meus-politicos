@@ -83,9 +83,9 @@
   --info-soft: #e2ebff;
 
   /* Font vars */
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Borders */
   --line-soft: #eeefe9;
@@ -163,16 +163,11 @@ html.theme-dark body {
   font-weight: 500;
 }
 
-/* Display / editorial headings */
-.display, h1 {
-  font-family: var(--font-display);
-  font-feature-settings: normal;
+/* Headings — Inter com tracking apertado */
+.display, h1, h2, h3 {
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv05', 'cv08';
   letter-spacing: -0.02em;
-}
-
-h2 {
-  font-family: var(--font-display);
-  letter-spacing: -0.015em;
 }
 
 ::selection {

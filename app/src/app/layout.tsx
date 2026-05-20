@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
-import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono } from "next/font/google"
 
 import "./globals.css"
 
-const sans = Plus_Jakarta_Sans({
+const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-sans",
   display: "swap",
 })
@@ -14,13 +14,6 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-mono",
-  display: "swap",
-})
-
-const display = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
-  variable: "--font-display",
   display: "swap",
 })
 
@@ -64,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${sans.variable} ${mono.variable} ${display.variable} antialiased`}>
+    <html lang="pt-BR" className={`${sans.variable} ${mono.variable} antialiased`}>
 <body className="min-h-screen">
         {children}
       </body>
