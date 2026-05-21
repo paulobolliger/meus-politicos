@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:4AYXAbSRWs3IqsTiVdPStVs9UiWXjizI@localhost:5433/meuspoliticos_db"
+      ]
+    }
+  }
+}

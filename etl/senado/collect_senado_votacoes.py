@@ -21,7 +21,7 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv(
-    os.path.join(os.path.dirname(__file__), '..', '..', '.env.local')
+    os.path.join(os.path.dirname(__file__), '..', '..', 'app', '.env.local')
 )
 
 logging.basicConfig(
@@ -63,12 +63,12 @@ VOTO_MAP = {
 
 def get_db():
     return psycopg.connect(
-        host=os.getenv('SUPABASE_DB_HOST'),
-        port=os.getenv('SUPABASE_DB_PORT', '5432'),
-        user=os.getenv('SUPABASE_DB_USER', 'postgres'),
-        password=os.getenv('SUPABASE_DB_PASSWORD'),
-        dbname=os.getenv('SUPABASE_DB_NAME', 'postgres'),
-        sslmode='prefer',
+        host=os.getenv('POSTGRES_HOST') or os.getenv('SUPABASE_DB_HOST'),
+        port=int(os.getenv('POSTGRES_PORT') or os.getenv('SUPABASE_DB_PORT', '5432')),
+        user=os.getenv('POSTGRES_USER') or os.getenv('SUPABASE_DB_USER', 'postgres'),
+        password=os.getenv('POSTGRES_PASSWORD') or os.getenv('SUPABASE_DB_PASSWORD'),
+        dbname=os.getenv('POSTGRES_DB') or os.getenv('SUPABASE_DB_NAME', 'postgres'),
+        sslmode='disable',
     )
 
 

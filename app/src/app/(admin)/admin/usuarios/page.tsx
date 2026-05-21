@@ -37,29 +37,49 @@ export default async function UsuariosPage({
   if (!user) redirect('/')
 
   const params = await searchParams
-  const emailQuery = params.email ?? ''
+  const emailQuery = (params.email ?? '').trim().toLowerCase()
   const page = Math.max(1, parseInt(params.page ?? '1', 10))
-  const offset = (page - 1) * PAGE_SIZE
 
-  let query = db
-    .from('perfis')
-    .select('id, email, criado_em, role', { count: 'exact' })
-    .order('criado_em', { ascending: false })
-    .range(offset, offset + PAGE_SIZE - 1)
+  // Buscar usuários via auth admin API (tem email)
+  const { data: authData } = await adminClient.auth.admin.listUsers({
+    page,
+    perPage: PAGE_SIZE,
+  })
 
-  if (emailQuery) {
-    query = query.ilike('email', `%${emailQuery}%`)
-  }
+  const authUsers = authData?.users ?? []
+  const totalUsers = (authData && 'total' in authData ? authData.total : null) ?? authUsers.length
 
-  const { data: users, count } = await query as { data: UsuarioRow[] | null; count: number | null }
+  // Filtrar por email se houver busca
+  const filtered = emailQuery
+    ? authUsers.filter((u) => u.email?.toLowerCase().includes(emailQuery))
+    : authUsers
 
-  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
+  // Buscar roles de perfis para esses usuários
+  const ids = filtered.map((u) => u.id)
+  const { data: perfisData } = ids.length > 0
+    ? await db
+        .from('perfis')
+        .select('id, role')
+        .in('id', ids) as { data: { id: string; role: string | null }[] | null }
+    : { data: [] }
+
+  const roleMap = new Map<string, string | null>()
+  for (const p of perfisData ?? []) roleMap.set(p.id, p.role)
+
+  const users: UsuarioRow[] = filtered.map((u) => ({
+    id: u.id,
+    email: u.email ?? null,
+    criado_em: u.created_at ?? null,
+    role: roleMap.get(u.id) ?? null,
+  }))
+
+  const totalPages = Math.ceil(totalUsers / PAGE_SIZE)
 
   return (
     <div style={{ padding: '32px 36px', maxWidth: 960 }}>
       <AdminPageHeader
         title="Usuários"
-        subtitle={`${(count ?? 0).toLocaleString('pt-BR')} usuários cadastrados`}
+        subtitle={`${totalUsers.toLocaleString('pt-BR')} usuários cadastrados`}
       />
 
       {/* Search form */}
@@ -149,7 +169,7 @@ export default async function UsuariosPage({
             </tr>
           </thead>
           <tbody>
-            {(users ?? []).length === 0 && (
+            {users.length === 0 && (
               <tr>
                 <td
                   colSpan={3}
@@ -164,12 +184,12 @@ export default async function UsuariosPage({
                 </td>
               </tr>
             )}
-            {(users ?? []).map((u) => (
+            {users.map((u) => (
               <tr
                 key={u.id}
                 style={{ borderTop: '1px solid var(--line)' }}
               >
-                <td style={{ padding: '10px 14px', color: 'var(--ink)' }}>{u.email}</td>
+                <td style={{ padding: '10px 14px', color: 'var(--ink)' }}>{u.email ?? '—'}</td>
                 <td
                   style={{
                     padding: '10px 14px',

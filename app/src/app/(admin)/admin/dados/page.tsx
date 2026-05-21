@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { AdminPageHeader } from '@/components/admin/AdminCard'
 import { PoliticoEditorSection } from '@/components/admin/PoliticoEditorSection'
+import { MatchEmendaButton } from '@/components/admin/MatchEmendaButton'
 
 export const metadata = { title: 'Qualidade de Dados — Admin' }
 
@@ -225,22 +226,7 @@ export default async function DadosQualidadePage({
                     {fmtBRL(data.total)}
                   </td>
                   <td style={{ padding: '9px 14px' }}>
-                    <button
-                      disabled
-                      title="Em breve"
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--ink-3)',
-                        background: 'transparent',
-                        border: '1px solid var(--line)',
-                        borderRadius: 5,
-                        padding: '3px 10px',
-                        cursor: 'not-allowed',
-                        opacity: 0.6,
-                      }}
-                    >
-                      Match manual
-                    </button>
+                    <MatchEmendaButton nomeParlamentar={nome} />
                   </td>
                 </tr>
               ))}
