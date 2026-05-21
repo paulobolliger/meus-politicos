@@ -8,12 +8,12 @@ let _pool: Pool | null = null
 function getPool(): Pool {
   if (!_pool) {
     _pool = new Pool({
-      host: process.env.SUPABASE_DB_HOST,
-      port: Number(process.env.SUPABASE_DB_PORT ?? '5432'),
-      user: process.env.SUPABASE_DB_USER ?? 'postgres',
-      password: process.env.SUPABASE_DB_PASSWORD,
-      database: process.env.SUPABASE_DB_NAME ?? 'postgres',
-      ssl: { rejectUnauthorized: false },
+      host: process.env.POSTGRES_HOST ?? process.env.SUPABASE_DB_HOST,
+      port: Number(process.env.POSTGRES_PORT ?? process.env.SUPABASE_DB_PORT ?? '5432'),
+      user: process.env.POSTGRES_USER ?? process.env.SUPABASE_DB_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD ?? process.env.SUPABASE_DB_PASSWORD,
+      database: process.env.POSTGRES_DB ?? process.env.SUPABASE_DB_NAME ?? 'postgres',
+      ssl: false,
       max: 3,
       idleTimeoutMillis: 30000,
     })

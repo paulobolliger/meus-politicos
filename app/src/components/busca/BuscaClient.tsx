@@ -4,34 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import type { BuscaResponse } from '@/types/busca'
-import { CARGO_LABEL, initials } from '@/components/politico-v2/shared'
+import { CardPolitico } from '@/components/busca/CardPolitico'
 import { track } from '@/lib/analytics'
-
-function makeAvatarColor(seed: string) {
-  let hash = 0
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash)
-  }
-
-  const palette = ['#1d3a8a', '#2952cc', '#0a7d58', '#c2410c', '#7c3aed', '#1f2937', '#be185d']
-  return palette[Math.abs(hash) % palette.length]
-}
-
-function presenceColor(value: number | null) {
-  if (value == null) return 'var(--ink-3)'
-  if (value >= 90) return 'var(--pos)'
-  if (value >= 80) return 'var(--ink)'
-  return 'var(--warn)'
-}
-
-function formatMoneyPerMonth(gastoAnual: number | null) {
-  if (gastoAnual == null) return '–'
-  return `R$ ${(gastoAnual / 12 / 1000).toFixed(1)}k`
-}
-
-function filterLabel(value: string, fallback = 'todos') {
-  return value || fallback
-}
 
 const UF_VISIBLE_COUNT = 9
 const PARTIDO_VISIBLE_COUNT = 6
@@ -128,7 +102,6 @@ export function BuscaClient() {
   const total = data?.total ?? 0
   const totalPaginas = data?.totalPaginas ?? 1
   const totalIndexados = data?.totalIndexados ?? 0
-  const elapsedMs = data?.elapsedMs ?? 0
   const porPagina = data?.porPagina ?? 20
 
   const firstItem = total === 0 ? 0 : (pagina - 1) * porPagina + 1
@@ -155,500 +128,236 @@ export function BuscaClient() {
   const cargosChips = data?.chips.cargos ?? []
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
-    border: '1px solid var(--line-strong)',
-    background: active ? 'var(--ink)' : 'var(--panel)',
-    color: active ? 'var(--bg)' : 'var(--ink-2)',
-    padding: '6px 12px',
-    fontSize: 12,
-    fontWeight: 600,
+    border: `1px solid ${active ? 'transparent' : '#e2e8f0'}`,
+    background: active ? '#1e3a8a' : '#f8fafc',
+    color: active ? '#ffffff' : '#475569',
+    padding: '5px 14px',
+    fontSize: 13,
+    fontWeight: 500,
     cursor: 'pointer',
-    fontFamily: 'var(--font-mono)',
-    letterSpacing: '0.04em',
+    borderRadius: 20,
+    transition: 'all 0.12s ease',
+    whiteSpace: 'nowrap' as const,
   })
 
   const expandBtnStyle: React.CSSProperties = {
     border: 'none',
     background: 'transparent',
-    color: 'var(--brand-2)',
-    fontSize: 12,
-    fontWeight: 600,
+    color: '#2952cc',
+    fontSize: 13,
+    fontWeight: 500,
     cursor: 'pointer',
-    fontFamily: 'var(--font-mono)',
-    padding: '6px 4px',
+    padding: '5px 4px',
+    borderRadius: 20,
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
-      <section style={{ background: 'var(--panel)', borderBottom: '1px solid var(--line)' }}>
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '18px 24px 16px' }}>
-          <div className="mono" style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--ink-3)', marginBottom: 10 }}>
-            BUSCA · {totalIndexados} REPRESENTANTES INDEXADOS
-          </div>
+    <div style={{ background: '#f8fafc', minHeight: '100%' }}>
+      {/* Search header */}
+      <section style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 24px 20px' }}>
+          <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16, fontWeight: 500 }}>
+            {totalIndexados > 0 ? `${totalIndexados} representantes indexados` : 'Buscando representantes...'}
+          </p>
 
-          <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10 }}>
-              <div
+          <form onSubmit={onSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                border: '1.5px solid #e2e8f0',
+                background: '#f8fafc',
+                padding: '0 16px',
+                borderRadius: 12,
+                minHeight: 52,
+                transition: 'border-color 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                value={queryInput}
+                onChange={(e) => setQueryInput(e.target.value)}
+                placeholder="Nome, partido ou estado..."
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  border: '1px solid var(--ink)',
-                  background: 'var(--panel)',
-                  padding: '0 12px',
-                  minHeight: 52,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  width: '100%',
+                  height: 48,
+                  color: '#1e293b',
+                  fontSize: 15,
                 }}
-              >
-                <span className="mono" style={{ color: 'var(--ink-3)', fontWeight: 700, fontSize: 14 }}>›</span>
-                <input
-                  value={queryInput}
-                  onChange={(e) => setQueryInput(e.target.value)}
-                  placeholder="Nome, partido (PT-SP), CEP ou estado..."
-                  style={{
-                    border: 'none',
-                    outline: 'none',
-                    background: 'transparent',
-                    width: '100%',
-                    height: 48,
-                    color: 'var(--ink)',
-                    fontSize: 15,
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                />
-              </div>
-              <button
-                type="submit"
-                style={{
-                  border: '1px solid var(--ink)',
-                  background: 'var(--ink)',
-                  color: 'var(--bg)',
-                  padding: '0 16px',
-                  minHeight: 52,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  fontFamily: 'var(--font-mono)',
-                }}
-              >
-                Buscar →
-              </button>
+              />
             </div>
-
-            <div style={{ display: 'grid', gap: 8 }}>
-              {/* CARGO */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>CARGO:</span>
-                <button
-                  key="cargo-todos"
-                  type="button"
-                  onClick={() => navigateWith({ cargo: null })}
-                  style={chipStyle(cargo === '')}
-                >
-                  Todos {totalIndexados > 0 ? totalIndexados : ''}
-                </button>
-                {cargosChips.length > 0
-                  ? cargosChips.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => navigateWith({ cargo: c.id })}
-                      style={chipStyle(cargo === c.id)}
-                    >
-                      {CARGO_LABEL[c.id] ?? c.label}
-                      {c.total != null ? ` ${c.total}` : ''}
-                    </button>
-                  ))
-                  : [
-                    ['deputado_federal', 'Dep. Federal'],
-                    ['senador', 'Senador'],
-                  ].map(([id, label]) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => navigateWith({ cargo: id })}
-                      style={chipStyle(cargo === id)}
-                    >
-                      {label}
-                    </button>
-                  ))
-                }
-              </div>
-
-              {/* UF */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>UF:</span>
-                <button
-                  type="button"
-                  onClick={() => navigateWith({ uf: null })}
-                  style={chipStyle(uf === '')}
-                >
-                  Todos
-                </button>
-                {visibleUfs.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => navigateWith({ uf: item })}
-                    style={chipStyle(uf === item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-                {!ufExpanded && hiddenUfCount > 0 && (
-                  <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(true)}>
-                    + {hiddenUfCount} UF
-                  </button>
-                )}
-                {ufExpanded && (
-                  <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(false)}>
-                    − menos
-                  </button>
-                )}
-              </div>
-
-              {/* PARTIDO */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="mono" style={{ fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--ink-3)' }}>PARTIDO:</span>
-                <button
-                  type="button"
-                  onClick={() => navigateWith({ partido: null })}
-                  style={chipStyle(partido === '')}
-                >
-                  Todos
-                </button>
-                {visiblePartidos.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => navigateWith({ partido: item })}
-                    style={chipStyle(partido === item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-                {!partidoExpanded && hiddenPartidoCount > 0 && (
-                  <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(true)}>
-                    + {hiddenPartidoCount} partidos
-                  </button>
-                )}
-                {partidoExpanded && (
-                  <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(false)}>
-                    − menos
-                  </button>
-                )}
-              </div>
-            </div>
+            <button
+              type="submit"
+              style={{
+                border: 'none',
+                background: '#1e3a8a',
+                color: '#ffffff',
+                padding: '0 24px',
+                minHeight: 52,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                borderRadius: 12,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Buscar
+            </button>
           </form>
+
+          {/* Filters */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* CARGO */}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginRight: 2, minWidth: 46 }}>Cargo</span>
+              <button type="button" onClick={() => navigateWith({ cargo: null })} style={chipStyle(cargo === '')}>
+                Todos {totalIndexados > 0 ? `(${totalIndexados})` : ''}
+              </button>
+              {cargosChips.length > 0
+                ? cargosChips.map((c) => (
+                  <button key={c.id} type="button" onClick={() => navigateWith({ cargo: c.id })} style={chipStyle(cargo === c.id)}>
+                    {c.label}{c.total != null ? ` (${c.total})` : ''}
+                  </button>
+                ))
+                : [['deputado_federal', 'Dep. Federal'], ['senador', 'Senador']].map(([id, label]) => (
+                  <button key={id} type="button" onClick={() => navigateWith({ cargo: id })} style={chipStyle(cargo === id)}>
+                    {label}
+                  </button>
+                ))
+              }
+            </div>
+
+            {/* UF */}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginRight: 2, minWidth: 46 }}>UF</span>
+              <button type="button" onClick={() => navigateWith({ uf: null })} style={chipStyle(uf === '')}>Todos</button>
+              {visibleUfs.map((item) => (
+                <button key={item} type="button" onClick={() => navigateWith({ uf: item })} style={chipStyle(uf === item)}>{item}</button>
+              ))}
+              {!ufExpanded && hiddenUfCount > 0 && (
+                <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(true)}>+ {hiddenUfCount} estados</button>
+              )}
+              {ufExpanded && (
+                <button type="button" style={expandBtnStyle} onClick={() => setUfExpanded(false)}>− menos</button>
+              )}
+            </div>
+
+            {/* PARTIDO */}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginRight: 2, minWidth: 46 }}>Partido</span>
+              <button type="button" onClick={() => navigateWith({ partido: null })} style={chipStyle(partido === '')}>Todos</button>
+              {visiblePartidos.map((item) => (
+                <button key={item} type="button" onClick={() => navigateWith({ partido: item })} style={chipStyle(partido === item)}>{item}</button>
+              ))}
+              {!partidoExpanded && hiddenPartidoCount > 0 && (
+                <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(true)}>+ {hiddenPartidoCount} partidos</button>
+              )}
+              {partidoExpanded && (
+                <button type="button" style={expandBtnStyle} onClick={() => setPartidoExpanded(false)}>− menos</button>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line)' }}>
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-          <div className="mono" style={{ fontSize: 11, letterSpacing: '0.06em', color: 'var(--ink-3)' }}>
-            {total} RESULTADOS · FILTROS: cargo:{filterLabel(cargo)} · uf:{filterLabel(uf)} · partido:{filterLabel(partido)} · EXECUTADO EM {elapsedMs}ms
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {/* Results */}
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 24px 40px' }}>
+        {/* Results meta + sort */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+          <p style={{ fontSize: 14, color: '#64748b' }}>
+            {loading ? 'Buscando...' : `${total} resultado${total !== 1 ? 's' : ''}`}
+          </p>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {orderButtons.map(([id, label]) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => navigateWith({ ordem: id })}
                 style={{
-                  border: '1px solid var(--line-strong)',
-                  background: ordem === id ? 'var(--ink)' : 'transparent',
-                  color: ordem === id ? 'var(--bg)' : 'var(--ink-2)',
-                  padding: '6px 10px',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
+                  border: `1px solid ${ordem === id ? 'transparent' : '#e2e8f0'}`,
+                  background: ordem === id ? '#1e3a8a' : '#ffffff',
+                  color: ordem === id ? '#ffffff' : '#475569',
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontWeight: 500,
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-mono)',
+                  borderRadius: 20,
                 }}
               >
-                {label}
+                {label.charAt(0) + label.slice(1).toLowerCase()}
               </button>
             ))}
           </div>
         </div>
-      </section>
 
-      <section style={{ maxWidth: 1320, margin: '0 auto', padding: '16px 24px 24px' }}>
-        <div style={{ background: 'var(--panel)', borderRadius: 6, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04)' }}>
-          <div className="busca-table-header" style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--line-soft)', padding: '10px 12px' }}>
-            <div
-              className="mono"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
-                gap: 10,
-                fontSize: 10,
-                letterSpacing: '0.12em',
-                color: 'var(--ink-3)',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                alignItems: 'center',
-              }}
-            >
-              <span>avatar</span>
-              <span>político</span>
-              <span>cargo</span>
-              <span>presença</span>
-              <span>gasto/mês</span>
-              <span>votações</span>
-              <span>ações</span>
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} style={{ background: '#ffffff', borderRadius: 12, height: 160, border: '1px solid #e2e8f0', opacity: 0.5 }} className="busca-skeleton" />
+            ))}
+          </div>
+        ) : error ? (
+          <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 12, padding: '20px 24px', color: '#be123c', fontSize: 14 }}>
+            {error}
+          </div>
+        ) : items.length === 0 ? (
+          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, padding: '40px 24px', textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Nenhum resultado encontrado</p>
+            <p style={{ fontSize: 13 }}>Tente mudar os filtros ou buscar por outro nome.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(288px, 1fr))', gap: 16 }}>
+            {items.map((item) => (
+              <CardPolitico key={item.id} politico={item} />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && total > 0 && (
+          <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 13, color: '#94a3b8' }}>
+              Mostrando {firstItem}–{lastItem} de {total}
+            </p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+                .slice(Math.max(0, pagina - 3), Math.max(0, pagina - 3) + 5)
+                .map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => navigateWith({ pagina: String(p) })}
+                    style={{
+                      border: `1px solid ${p === pagina ? 'transparent' : '#e2e8f0'}`,
+                      background: p === pagina ? '#1e3a8a' : '#ffffff',
+                      color: p === pagina ? '#ffffff' : '#475569',
+                      minWidth: 36,
+                      height: 36,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      borderRadius: 8,
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
             </div>
           </div>
-
-          {loading ? (
-            <div className="mono" style={{ padding: 20, fontSize: 12, color: 'var(--ink-3)' }}>
-              Carregando resultados...
-            </div>
-          ) : error ? (
-            <div className="mono" style={{ padding: 20, fontSize: 12, color: 'var(--neg)' }}>
-              {error}
-            </div>
-          ) : items.length === 0 ? (
-            <div className="mono" style={{ padding: 20, fontSize: 12, color: 'var(--ink-3)' }}>
-              Nenhum resultado encontrado para os filtros atuais.
-            </div>
-          ) : (
-            <>
-              <div className="busca-table-desktop">
-                {items.map((item) => {
-                  const nomeExibicao = item.nome_eleitoral || item.nome
-                  const avatarBg = makeAvatarColor(nomeExibicao)
-                  const presenca = item.presenca_pct_atual
-                  const presencaPct = presenca == null ? 0 : Math.max(0, Math.min(100, Math.round(presenca)))
-
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => router.push(`/politicos/${item.slug}`)}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '60px 1.4fr 0.6fr 0.8fr 0.8fr 0.6fr 80px',
-                        gap: 10,
-                        alignItems: 'center',
-                        padding: '11px 12px',
-                        borderBottom: '1px solid var(--line-soft)',
-                        cursor: 'pointer',
-                      }}
-                      className="busca-row"
-                    >
-                      <div
-                        className="mono"
-                        style={{
-                          width: 44,
-                          height: 44,
-                          background: avatarBg,
-                          color: '#fff',
-                          fontSize: 15,
-                          fontWeight: 700,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {initials(nomeExibicao)}
-                      </div>
-
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {nomeExibicao}
-                        </div>
-                        <div className="mono" style={{ marginTop: 3, fontSize: 11.5, display: 'flex', gap: 6 }}>
-                          <span style={{ color: 'var(--brand-2)' }}>{item.partidos?.sigla ?? '—'}</span>
-                          <span style={{ color: 'var(--ink-3)' }}>· {item.uf ?? '—'}</span>
-                        </div>
-                      </div>
-
-                      <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-2)' }}>
-                        {CARGO_LABEL[item.cargo] ?? item.cargo.replaceAll('_', ' ')}
-                      </div>
-
-                      <div>
-                        <div className="mono" style={{ fontSize: 12, color: presenceColor(presenca), fontWeight: 700 }}>
-                          {presenca == null ? '–' : `${presencaPct}%`}
-                        </div>
-                        <div style={{ marginTop: 6, height: 3, background: 'var(--bg-2)', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${presencaPct}%`, background: presenceColor(presenca) }} />
-                        </div>
-                      </div>
-
-                      <div className="mono tnum" style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>
-                        {formatMoneyPerMonth(item.gasto_total_ano)}
-                      </div>
-
-                      <div className="mono tnum" style={{ fontSize: 12.5, color: 'var(--ink-2)' }}>
-                        {item.total_votacoes == null ? '–' : item.total_votacoes}
-                      </div>
-
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                          }}
-                          style={{
-                            border: '1px solid var(--line-strong)',
-                            background: 'transparent',
-                            color: 'var(--ink)',
-                            width: 26,
-                            height: 26,
-                            fontSize: 14,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/politicos/${item.slug}`)
-                          }}
-                          style={{
-                            border: '1px solid var(--line-strong)',
-                            background: 'transparent',
-                            color: 'var(--ink)',
-                            height: 26,
-                            padding: '0 8px',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Abrir →
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="busca-table-mobile" style={{ padding: 10 }}>
-                {items.map((item) => {
-                  const nomeExibicao = item.nome_eleitoral || item.nome
-                  const avatarBg = makeAvatarColor(nomeExibicao)
-
-                  return (
-                    <article
-                      key={`m-${item.id}`}
-                      onClick={() => router.push(`/politicos/${item.slug}`)}
-                      style={{
-                        background: 'var(--panel)',
-                        borderRadius: 8,
-                        padding: 12,
-                        display: 'grid',
-                        gap: 8,
-                        marginBottom: 10,
-                        cursor: 'pointer',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 1px 6px rgba(0,0,0,0.04)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <div
-                          className="mono"
-                          style={{
-                            width: 44,
-                            height: 44,
-                            background: avatarBg,
-                            color: '#fff',
-                            fontSize: 15,
-                            fontWeight: 700,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {initials(nomeExibicao)}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 700 }}>{nomeExibicao}</div>
-                          <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>
-                            {(item.partidos?.sigla ?? '—') + ' · ' + (item.uf ?? '—')}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                        <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>PRESENÇA</div>
-                        <div className="mono tnum" style={{ fontSize: 11.5, textAlign: 'right' }}>
-                          {item.presenca_pct_atual == null ? '–' : `${Math.round(item.presenca_pct_atual)}%`}
-                        </div>
-                        <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>GASTO/MÊS</div>
-                        <div className="mono tnum" style={{ fontSize: 11.5, textAlign: 'right' }}>{formatMoneyPerMonth(item.gasto_total_ano)}</div>
-                        <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>VOTAÇÕES</div>
-                        <div className="mono tnum" style={{ fontSize: 11.5, textAlign: 'right' }}>{item.total_votacoes ?? '–'}</div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          router.push(`/politicos/${item.slug}`)
-                        }}
-                        style={{
-                          border: '1px solid var(--line-strong)',
-                          background: 'transparent',
-                          color: 'var(--ink)',
-                          minHeight: 34,
-                          padding: '0 10px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Abrir →
-                      </button>
-                    </article>
-                  )
-                })}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div className="mono" style={{ fontSize: 11, letterSpacing: '0.08em', color: 'var(--ink-3)' }}>
-            MOSTRANDO {firstItem}–{lastItem} DE {total}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {Array.from({ length: totalPaginas }, (_, i) => i + 1)
-              .slice(Math.max(0, pagina - 3), Math.max(0, pagina - 3) + 5)
-              .map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => navigateWith({ pagina: String(p) })}
-                  style={{
-                    border: '1px solid var(--line-strong)',
-                    background: p === pagina ? 'var(--ink)' : 'transparent',
-                    color: p === pagina ? 'var(--bg)' : 'var(--ink-2)',
-                    minWidth: 34,
-                    height: 30,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  {p}
-                </button>
-              ))}
-          </div>
-        </div>
+        )}
       </section>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .busca-row:hover { background: var(--bg-2); transition: background 0.12s ease; }
-        .busca-table-mobile { display: none; }
-        @media (max-width: 920px) {
-          .busca-table-header, .busca-table-desktop { display: none; }
-          .busca-table-mobile { display: block; }
-        }
+        @keyframes busca-pulse { 0%,100%{opacity:.5} 50%{opacity:.3} }
+        .busca-skeleton { animation: busca-pulse 1.5s ease-in-out infinite; }
       ` }} />
     </div>
   )

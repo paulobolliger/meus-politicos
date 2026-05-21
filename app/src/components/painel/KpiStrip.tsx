@@ -68,7 +68,9 @@ export function KpiStrip({
   proximaVotacaoLabel,
 }: KpiStripProps) {
   return (
+    <>
     <div
+      className="kpi-strip"
       style={{
         display: 'grid',
         gap: 10,
@@ -98,5 +100,11 @@ export function KpiStrip({
         empty={!proximaVotacaoLabel}
       />
     </div>
+    <style>{`
+      @media (max-width: 640px) {
+        .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      }
+    `}</style>
+    </>
   )
 }

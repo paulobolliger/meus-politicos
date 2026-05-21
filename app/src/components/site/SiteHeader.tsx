@@ -65,7 +65,7 @@ export function SiteHeader() {
               alt="Meus Politicos"
               height={36}
               width={180}
-              style={{ height: 36, width: 'auto', objectFit: 'contain' }}
+              style={{ objectFit: 'contain' }}
             />
           </Link>
           <nav style={{ display: 'flex', gap: 28, marginLeft: 32 }}>

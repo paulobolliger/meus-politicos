@@ -50,6 +50,7 @@ export function FeedItem({ evento }: { evento: FeedEvento }) {
 
   return (
     <div
+      className="feed-item-grid"
       style={{
         border: '1px solid var(--border)',
         background: 'var(--surface)',

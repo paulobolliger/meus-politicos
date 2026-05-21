@@ -28,6 +28,10 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith('/auth/')
 
     if (!user && !isAuthRoute) {
+      // API routes devem retornar 401 (não redirecionar para HTML do login)
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      }
       const loginUrl = request.nextUrl.clone()
       loginUrl.pathname = '/login'
       if (pathname !== '/') loginUrl.searchParams.set('redirectTo', pathname)
@@ -49,10 +53,13 @@ export async function proxy(request: NextRequest) {
 
   if (isAppHost) {
     if (pathname === '/login') {
-      const painelLogin = host.startsWith('app.localhost')
-        ? `http://localhost:3000/login`
-        : `${PAINEL_URL}/login`
-      return NextResponse.redirect(painelLogin)
+      const base = host.startsWith('app.localhost')
+        ? `http://painel.localhost:3000`
+        : PAINEL_URL
+      // Preserva ?redirectTo e outros params ao redirecionar para o painel
+      const dest = new URL('/login', base)
+      request.nextUrl.searchParams.forEach((v, k) => dest.searchParams.set(k, v))
+      return NextResponse.redirect(dest.toString())
     }
 
     if (pathname === '/') {

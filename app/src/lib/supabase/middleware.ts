@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { type Database } from './types'
 
+// Compartilha cookies entre subdomínios:
+//   produção: *.meuspoliticos.com.br
+//   dev:      localhost / painel.localhost / app.localhost
+const COOKIE_DOMAIN =
+  process.env.NODE_ENV === 'production' ? '.meuspoliticos.com.br' : 'localhost'
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -19,7 +25,7 @@ export async function updateSession(request: NextRequest) {
           )
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, { ...options, domain: COOKIE_DOMAIN })
           )
         },
       },

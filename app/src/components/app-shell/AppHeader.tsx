@@ -24,7 +24,7 @@ export function AppHeader() {
               alt="Meus Politicos"
               height={28}
               width={140}
-              style={{ height: 28, width: 'auto' }}
+              style={{ objectFit: 'contain' }}
             />
           </Link>
           <nav style={{ display: 'flex', gap: 4, marginLeft: 24 }}>

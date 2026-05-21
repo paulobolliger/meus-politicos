@@ -35,11 +35,13 @@ export function SystemBar() {
         style={{
           maxWidth: 1320,
           margin: '0 auto',
-          padding: '0 32px',
+          padding: '0 16px',
           display: 'flex',
           alignItems: 'center',
-          height: 32,
-          gap: 24,
+          minHeight: 32,
+          gap: 16,
+          overflowX: 'auto',
+          whiteSpace: 'nowrap',
         }}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>

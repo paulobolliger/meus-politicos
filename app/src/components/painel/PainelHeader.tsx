@@ -27,12 +27,16 @@ export function PainelHeader({ email, nomeUsuario, atualizacoesCount }: PainelHe
           letterSpacing: '0.08em',
           marginBottom: 10,
           textTransform: 'uppercase',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
         }}
       >
         PAINEL CÍVICO PESSOAL · {email}
       </div>
 
       <div
+        className="painel-header-row"
         style={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -41,11 +45,11 @@ export function PainelHeader({ email, nomeUsuario, atualizacoesCount }: PainelHe
           marginBottom: 12,
         }}
       >
-        <h1 style={{ margin: 0, color: 'var(--ink)', fontSize: 30, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+        <h1 className="painel-header-title" style={{ margin: 0, color: 'var(--ink)', fontSize: 30, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
           {saudacao}, {nomeUsuario}. {atualizacoesCount} atualizações hoje.
         </h1>
 
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div className="painel-header-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <Link
             href="/conta"
             style={{
@@ -79,6 +83,21 @@ export function PainelHeader({ email, nomeUsuario, atualizacoesCount }: PainelHe
           <BotaoSair />
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .painel-header-row {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .painel-header-title {
+            font-size: 22px !important;
+          }
+          .painel-header-actions {
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
     </div>
   )
 }

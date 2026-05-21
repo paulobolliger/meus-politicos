@@ -10,18 +10,15 @@ type AuthShellProps = {
 
 export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthShellProps) {
   return (
-    <div className="theme-dark lg:grid lg:grid-cols-2" style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="theme-dark auth-shell" style={{ minHeight: '100vh', background: 'var(--bg)', display: 'grid' }}>
       {/* Coluna esquerda — desktop only */}
-      <div
-        className="hidden lg:flex"
-        style={{
-          background: 'var(--ink)',
-          padding: '60px 48px',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '100vh',
-        }}
-      >
+      <div className="auth-col-left" style={{
+        background: '#0f1a35',
+        padding: '60px 48px',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        minHeight: '100vh',
+      }}>
         <Link href="/">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -35,15 +32,7 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
           <div className="label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
             {leftLabel}
           </div>
-          <h1
-            style={{
-              fontSize: 40,
-              fontWeight: 700,
-              color: 'white',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.15,
-            }}
-          >
+          <h1 style={{ fontSize: 40, fontWeight: 700, color: 'white', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
             {leftHeadline}
           </h1>
           <p style={{ marginTop: 16, fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
@@ -57,19 +46,17 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
       </div>
 
       {/* Coluna direita — formulário */}
-      <div
-        style={{
-          background: 'var(--bg)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px',
-          minHeight: '100vh',
-        }}
-      >
+      <div style={{
+        background: 'var(--bg)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 24px',
+        minHeight: '100vh',
+      }}>
         <div style={{ width: '100%', maxWidth: 400 }}>
-          {/* Logo mobile */}
-          <div className="lg:hidden" style={{ marginBottom: 32 }}>
+          {/* Logo mobile — só aparece quando a coluna esquerda está oculta */}
+          <div className="auth-logo-mobile" style={{ marginBottom: 32 }}>
             <Link href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -82,7 +69,19 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
           {children}
         </div>
       </div>
+
+      <style>{`
+        /* Mobile: coluna única, logo colorido visível */
+        .auth-col-left   { display: none; }
+        .auth-logo-mobile { display: block; }
+
+        /* Desktop (≥ 1024px): duas colunas, logo branco visível */
+        @media (min-width: 1024px) {
+          .auth-shell       { grid-template-columns: 1fr 1fr; }
+          .auth-col-left    { display: flex; }
+          .auth-logo-mobile { display: none; }
+        }
+      `}</style>
     </div>
   )
 }
-

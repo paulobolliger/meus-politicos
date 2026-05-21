@@ -166,9 +166,9 @@ export function AppMobileTopbar() {
           <Image
             src="/logos_meus-politicos_colorido_semfundo.png"
             alt="Meus Politicos"
-            height={247}
-            width={1009}
-            style={{ height: '100%', width: 'auto', filter: 'brightness(0) invert(1)' }}
+            height={30}
+            width={126}
+            style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
           />
         </Link>
         <a
@@ -210,7 +210,7 @@ export function AppMobileTopbar() {
                 alt="Meus Politicos"
                 height={30}
                 width={120}
-                style={{ height: 30, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+                style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               />
               <button
                 type="button"
@@ -334,7 +334,7 @@ export function AppSidebar() {
               alt="Meus Politicos"
               height={32}
               width={130}
-              style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
             />
           )}
         </Link>

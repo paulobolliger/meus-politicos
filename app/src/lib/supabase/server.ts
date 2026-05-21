@@ -3,8 +3,10 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { type Database } from './types'
 
+// Em produção: cookie compartilhado em todos os subdomínios *.meuspoliticos.com.br
+// Em dev: `localhost` cobre localhost, painel.localhost e app.localhost
 const COOKIE_DOMAIN =
-  process.env.NODE_ENV === 'production' ? '.meuspoliticos.com.br' : undefined
+  process.env.NODE_ENV === 'production' ? '.meuspoliticos.com.br' : 'localhost'
 
 export async function createClient() {
   const cookieStore = await cookies()

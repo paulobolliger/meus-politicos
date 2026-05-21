@@ -19,7 +19,7 @@ export function SiteFooter() {
               alt="Meus Politicos"
               height={28}
               width={140}
-              style={{ height: 28, width: 'auto' }}
+              style={{ objectFit: 'contain' }}
             />
             <p style={{ fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.6, marginTop: 14, maxWidth: 280 }}>
               Plataforma independente de transparencia civica. Dados publicos organizados - sem opiniao, sem ranking,

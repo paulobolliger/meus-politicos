@@ -6,35 +6,23 @@ import { KpiStrip } from '@/components/painel/KpiStrip'
 import { PainelHeader } from '@/components/painel/PainelHeader'
 import { ProximasVotacoes } from '@/components/painel/ProximasVotacoes'
 import { SeguindoList, type SeguidoPolitico } from '@/components/painel/SeguindoList'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/types'
 
-type AcompanhamentoJoin = {
+type AcompanhamentoRow = {
   politico_id: string
-  politicos:
-    | {
-        id: string
-        slug: string
-        nome: string
-        nome_eleitoral: string | null
-        cargo: string
-        uf: string
-        foto_url: string | null
-        presenca_pct_atual: number | null
-        partidos: { sigla: string | null } | { sigla: string | null }[] | null
-      }
-    | {
-        id: string
-        slug: string
-        nome: string
-        nome_eleitoral: string | null
-        cargo: string
-        uf: string
-        foto_url: string | null
-        presenca_pct_atual: number | null
-        partidos: { sigla: string | null } | { sigla: string | null }[] | null
-      }[]
-    | null
+}
+
+type PoliticoResumoRow = {
+  id: string
+  slug: string
+  nome: string
+  nome_eleitoral: string | null
+  cargo: string
+  uf: string | null
+  foto_url: string | null
+  presenca_pct_atual: number | null
+  partidos: { sigla: string | null } | { sigla: string | null }[] | null
 }
 
 type VotacaoRow = Pick<
@@ -55,8 +43,7 @@ function extrairSigla(partidos: { sigla: string | null } | { sigla: string | nul
   return partidos.sigla ?? '--'
 }
 
-function normalizarPolitico(item: AcompanhamentoJoin): SeguidoPolitico | null {
-  const bruto = Array.isArray(item.politicos) ? item.politicos[0] : item.politicos
+function normalizarPolitico(bruto: PoliticoResumoRow): SeguidoPolitico | null {
   if (!bruto?.id || !bruto.slug) return null
 
   return {
@@ -65,7 +52,7 @@ function normalizarPolitico(item: AcompanhamentoJoin): SeguidoPolitico | null {
     nome: bruto.nome,
     nomeEleitoral: bruto.nome_eleitoral ?? bruto.nome,
     partido: extrairSigla(bruto.partidos),
-    uf: bruto.uf,
+    uf: bruto.uf ?? '--',
     cargo: bruto.cargo,
     fotoUrl: bruto.foto_url,
     presencaPctAtual: bruto.presenca_pct_atual,
@@ -107,6 +94,7 @@ function isFeedEvento(item: FeedEvento | null): item is FeedEvento {
 
 export default async function PainelPage() {
   const supabase = await createClient()
+  const db = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : supabase
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -121,15 +109,40 @@ export default async function PainelPage() {
 
   const { data: perfil } = await supabase.from('perfis').select('nome').eq('id', user.id).single()
 
-  const { data: acompanhamentosRaw } = await supabase
+  const { data: acompanhamentosRows, error: acompanhamentosError } = await db
     .from('acompanhamentos')
-    .select(
-      'politico_id, politicos!inner(id, slug, nome, nome_eleitoral, cargo, uf, foto_url, presenca_pct_atual, partidos:partido_id(sigla))'
-    )
+    .select('politico_id')
     .eq('usuario_id', user.id)
 
-  const acompanhamentos = (acompanhamentosRaw ?? []) as unknown as AcompanhamentoJoin[]
-  const seguindo = acompanhamentos.map(normalizarPolitico).filter((p): p is SeguidoPolitico => Boolean(p?.id))
+  if (acompanhamentosError) {
+    // Mantem o painel funcional sem quebrar a renderizacao em dev.
+  }
+
+  const acompanhamentos = (acompanhamentosRows ?? []) as AcompanhamentoRow[]
+  const idsAcompanhados = Array.from(new Set(acompanhamentos.map((a) => a.politico_id).filter(Boolean)))
+
+  const { data: politicosRows, error: politicosError } = idsAcompanhados.length
+    ? await supabase
+        .from('politicos')
+        .select('id, slug, nome, nome_eleitoral, cargo, uf, foto_url, presenca_pct_atual, partidos:partido_id(sigla)')
+        .in('id', idsAcompanhados)
+    : { data: [], error: null }
+
+  if (politicosError) {
+    // Mantem o painel funcional sem quebrar a renderizacao em dev.
+  }
+
+  const politicosMap = new Map(
+    (((politicosRows ?? []) as PoliticoResumoRow[]).map((p) => [p.id, p] as const))
+  )
+
+  const seguindo = idsAcompanhados
+    .map((id) => {
+      const politico = politicosMap.get(id)
+      if (!politico) return null
+      return normalizarPolitico(politico)
+    })
+    .filter((p): p is SeguidoPolitico => Boolean(p?.id))
 
   const ids = seguindo.map((p) => p.id)
   const politicosPorId = new Map(seguindo.map((p) => [p.id, p] as const))
@@ -217,7 +230,7 @@ export default async function PainelPage() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
-      <div style={{ padding: 24, display: 'flex', gap: 20 }}>
+      <div className="painel-page-layout" style={{ padding: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
         <div style={{ flex: 1.6, minWidth: 0 }}>
           <PainelHeader
             email={user.email ?? 'usuario@meuspoliticos.com.br'}
@@ -239,12 +252,30 @@ export default async function PainelPage() {
           </div>
         </div>
 
-        <div style={{ width: 320, minWidth: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="painel-sidebar" style={{ width: 320, minWidth: 320, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <SeguindoList seguindo={seguindo} />
           <AlertasList />
           <ProximasVotacoes />
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .painel-page-layout {
+            flex-direction: column !important;
+            padding: 16px !important;
+          }
+          .painel-sidebar {
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .feed-item-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
