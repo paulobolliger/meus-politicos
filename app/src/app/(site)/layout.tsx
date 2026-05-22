@@ -5,7 +5,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <SiteHeader />
-      <main style={{ background: '#f4f5f0', color: '#0a0e1a', minHeight: '100vh' }}>{children}</main>
+      {/* paddingTop = topbar (32px) + nav (68px) = 100px */}
+      <main style={{ background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh', paddingTop: 100 }}>{children}</main>
       <SiteFooter />
     </>
   )

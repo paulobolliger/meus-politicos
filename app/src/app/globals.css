@@ -71,6 +71,8 @@
   /* Acento */
   --accent: #c2410c;
   --accent-soft: #fde9d4;
+  --accent-gold: #d97706;
+  --accent-gold-soft: #fef3c7;
 
   /* Status */
   --pos: #046c4e;
@@ -83,9 +85,9 @@
   --info-soft: #e2ebff;
 
   /* Font vars */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Public Sans', system-ui, -apple-system, sans-serif;
 
   /* Borders */
   --line-soft: #eeefe9;

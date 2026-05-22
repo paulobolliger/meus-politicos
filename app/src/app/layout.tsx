@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Public_Sans, JetBrains_Mono } from "next/font/google"
 
 import "./globals.css"
 
-const sans = Inter({
+const sans = Public_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-sans",
@@ -20,25 +20,25 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://meuspoliticos.com.br"),
   title: {
-    default: "Meus Politicos",
-    template: "%s | Meus Politicos",
+    default: "Meus Políticos",
+    template: "%s | Meus Políticos",
   },
   description:
-    "Portal brasileiro de transparencia politica com dados publicos, fontes oficiais e contexto para decidir melhor.",
+    "Portal brasileiro de transparência política com dados públicos, fontes oficiais e contexto para decidir melhor.",
   openGraph: {
-    title: "Meus Politicos",
+    title: "Meus Políticos",
     description:
-      "Portal brasileiro de transparencia politica com dados publicos, fontes oficiais e contexto para decidir melhor.",
+      "Portal brasileiro de transparência política com dados públicos, fontes oficiais e contexto para decidir melhor.",
     url: "https://meuspoliticos.com.br",
-    siteName: "Meus Politicos",
+    siteName: "Meus Políticos",
     locale: "pt_BR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Meus Politicos",
+    title: "Meus Políticos",
     description:
-      "Dados publicos. Fontes oficiais. Sem opiniao.",
+      "Dados públicos. Fontes oficiais. Sem opinião.",
   },
   icons: {
     icon: [
