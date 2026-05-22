@@ -90,6 +90,9 @@
   /* Borders */
   --line-soft: #eeefe9;
 
+  /* Surface alias — usado em componentes do painel */
+  --surface: var(--panel);
+
   /* Compat */
   --background: var(--bg);
   --foreground: var(--ink);

@@ -34,7 +34,7 @@ export function SiteHeader() {
               }}
             />
             <span style={{ opacity: 0.85 }}>
-              Voce esta no <strong>site publico</strong>. Para analise profunda,{' '}
+              Você está no <strong>site público</strong>. Para análise profunda,{' '}
               <a href="https://app.meuspoliticos.com.br" style={{ color: '#7dd3fc', marginLeft: 4 }}>
                 acesse app.meuspoliticos.com.br -&gt;
               </a>
@@ -62,7 +62,7 @@ export function SiteHeader() {
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center' }}>
             <Image
               src="/logos_meus-politicos_colorido_semfundo.png"
-              alt="Meus Politicos"
+              alt="Meus Políticos"
               height={36}
               width={180}
               style={{ objectFit: 'contain' }}
@@ -103,7 +103,7 @@ export function SiteHeader() {
               fontSize: 14,
               fontWeight: 600,
               textDecoration: 'none',
-              borderRadius: 2,
+              borderRadius: 8,
             }}
           >
             Acessar conta →

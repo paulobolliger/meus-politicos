@@ -398,7 +398,7 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
 
             <div style={{ marginTop: 16, fontSize: 13, color: 'var(--ink-3)' }}>
               Ou pesquise direto:{' '}
-              {['Lula', 'Tarcisio', 'Tabata Amaral', 'Eduardo Leite'].map((n, idx) => (
+              {['Lula', 'Tarcísio de Freitas', 'Tabata Amaral', 'Eduardo Leite'].map((n, idx) => (
                 <button
                   key={n}
                   type="button"

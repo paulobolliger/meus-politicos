@@ -263,7 +263,7 @@ export function AppMobileTopbar() {
                 fontSize: 12,
                 fontWeight: 600,
                 textDecoration: 'none',
-                fontFamily: 'IBM Plex Mono, monospace',
+                fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.06em',
               }}
             >
@@ -408,7 +408,7 @@ export function AppSidebar() {
               fontSize: 12,
               fontWeight: 600,
               textDecoration: 'none',
-              fontFamily: 'IBM Plex Mono, monospace',
+              fontFamily: 'var(--font-mono)',
               letterSpacing: '0.06em',
             }}
           >

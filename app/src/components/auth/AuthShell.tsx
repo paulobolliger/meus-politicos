@@ -41,7 +41,7 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
         </div>
 
         <div className="mono" style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em' }}>
-          MEUS POLÍTICOS · NORO GURU · MIT
+          © 2026 Meus Políticos
         </div>
       </div>
 

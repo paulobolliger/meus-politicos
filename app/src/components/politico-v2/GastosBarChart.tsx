@@ -16,17 +16,32 @@ export function GastosBarChart({ data }: GastosBarChartProps) {
     return <EmptyState icon={Receipt} title="Gastos sendo coletados" />
   }
 
+  const maxValor = Math.max(...data.map((d) => d.valor))
+
+  const formatValor = (v: number) =>
+    v >= 1000 ? `R$ ${(v / 1000).toFixed(0)} mil` : `R$ ${v.toLocaleString('pt-BR')}`
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-slate-900">Gastos mensais</p>
-      <div className="mt-4 space-y-2">
+    <div style={{ borderRadius: 10, border: '1px solid var(--line)', background: 'var(--panel)', padding: 16 }}>
+      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', margin: 0 }}>Gastos mensais</p>
+      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {data.map((item) => (
-          <div key={item.mes} className="grid grid-cols-[64px_1fr_auto] items-center gap-2">
-            <span className="text-xs text-slate-500">{item.mes}</span>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-              <div className="h-full rounded-full bg-[#2952cc]" style={{ width: `${Math.min(100, item.valor)}%` }} />
+          <div key={item.mes} style={{ display: 'grid', gridTemplateColumns: '64px 1fr auto', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{item.mes}</span>
+            <div style={{ height: 6, overflow: 'hidden', borderRadius: 999, background: 'var(--bg-2)' }}>
+              <div
+                style={{
+                  height: '100%',
+                  borderRadius: 999,
+                  background: 'var(--brand-2)',
+                  width: `${maxValor > 0 ? (item.valor / maxValor) * 100 : 0}%`,
+                  transition: 'width 0.3s ease',
+                }}
+              />
             </div>
-            <span className="text-xs font-medium text-slate-700">{item.valor}</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
+              {formatValor(item.valor)}
+            </span>
           </div>
         ))}
       </div>

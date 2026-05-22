@@ -8,7 +8,8 @@ type PainelHeaderProps = {
 }
 
 function saudacaoPorHorario() {
-  const hora = new Date().getHours()
+  // Forçar timezone BRT (UTC-3) independente do servidor
+  const hora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' })).getHours()
   if (hora < 12) return 'Bom dia'
   if (hora < 18) return 'Boa tarde'
   return 'Boa noite'
