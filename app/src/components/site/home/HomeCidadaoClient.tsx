@@ -92,6 +92,14 @@ function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) =
   return (
     <div style={{ position: 'relative', height: 460, width: '100%' }}>
       <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
+        {/* Mapa base do Brasil */}
+        <image
+          href="/brazil-map.svg"
+          x="0" y="0" width="100" height="100"
+          preserveAspectRatio="xMidYMid meet"
+          style={{ opacity: 0.18 }}
+        />
+        {/* Pontos interativos */}
         {STATES.map((s) => {
           const r = 1.2 + (s.n / maxN) * 2.6
           const isActive = s.uf === active
@@ -148,190 +156,347 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
     <>
       <main style={{ background: 'var(--bg)' }}>
 
-        {/* ── HERO ── */}
-        <section style={{ padding: '72px 24px 80px', textAlign: 'center' }}>
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '5px 14px', borderRadius: 999,
-              background: 'rgba(41,82,204,0.07)', border: '1px solid rgba(41,82,204,0.15)',
-              marginBottom: 28,
-            }}>
-              <span className="mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-2)', letterSpacing: '0.08em' }}>
-                DADOS ABERTOS BRASIL
-              </span>
-            </div>
+        {/* ── HERO + STATS (2/3 + 1/3) ── */}
+        <section style={{ padding: '72px 24px 80px' }}>
+          <div style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: 48,
+            alignItems: 'center',
+          }}>
 
-            <h1 style={{ margin: 0, fontSize: 'clamp(40px, 7vw, 64px)', lineHeight: 1.05, letterSpacing: '-0.03em', color: 'var(--ink)', fontWeight: 700 }}>
-              Transparência para{' '}
-              <span style={{ color: 'var(--brand-2)' }}>decidir melhor</span>
-            </h1>
+            {/* ── Coluna esquerda — texto + busca ── */}
+            <div>
+              <h1 style={{ margin: 0, fontSize: 'clamp(36px, 5vw, 58px)', lineHeight: 1.05, letterSpacing: '-0.03em', color: 'var(--ink)', fontWeight: 700 }}>
+                Transparência para{' '}
+                <span style={{ color: 'var(--brand-2)' }}>decidir melhor</span>
+              </h1>
 
-            <p style={{ marginTop: 20, fontSize: 'clamp(16px, 2vw, 18px)', lineHeight: 1.6, color: 'var(--ink-3)', maxWidth: 520, margin: '20px auto 0' }}>
-              Acesse dados oficiais do governo brasileiro de forma clara e direta. Sem complicação.
-            </p>
+              <p style={{ marginTop: 20, fontSize: 'clamp(15px, 1.6vw, 17px)', lineHeight: 1.65, color: 'var(--ink-3)', maxWidth: 500 }}>
+                Acesse dados oficiais do governo brasileiro de forma clara e direta. Sem complicação.
+              </p>
 
-            <form onSubmit={onSubmitSearch} style={{ margin: '36px auto 0', maxWidth: 560 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 0,
-                background: 'var(--panel)', border: '1px solid var(--line-strong)',
-                borderRadius: 12, padding: '10px 10px 10px 20px',
-                boxShadow: '0 4px 20px -2px rgba(0,0,0,0.06)',
-              }}>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Digite seu CEP ou nome de um político"
-                  style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}
-                />
-                <button type="submit" style={{
-                  height: 44, padding: '0 22px', borderRadius: 8,
-                  background: 'var(--ink)', border: 'none', cursor: 'pointer',
-                  color: 'white', fontSize: 14, fontWeight: 700, flexShrink: 0,
+              <form onSubmit={onSubmitSearch} style={{ marginTop: 36 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 0,
+                  background: 'var(--panel)', border: '1px solid var(--line-strong)',
+                  borderRadius: 12, padding: '10px 10px 10px 20px',
+                  boxShadow: '0 4px 20px -2px rgba(0,0,0,0.06)',
+                  maxWidth: 540,
                 }}>
-                  Buscar
-                </button>
-              </div>
-            </form>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Digite seu CEP ou nome de um político"
+                    style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}
+                  />
+                  <button type="submit" style={{
+                    height: 44, padding: '0 22px', borderRadius: 8,
+                    background: 'var(--ink)', border: 'none', cursor: 'pointer',
+                    color: 'white', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                  }}>
+                    Buscar
+                  </button>
+                </div>
+              </form>
 
-            <div style={{ marginTop: 16, fontSize: 13, color: 'var(--ink-3)' }}>
-              Ou pesquise direto:{' '}
-              {['Lula', 'Tarcísio de Freitas', 'Tabata Amaral', 'Eduardo Leite'].map((n, idx) => (
-                <button key={n} type="button" onClick={() => router.push(`/busca?q=${encodeURIComponent(n)}`)}
-                  style={{ border: 'none', background: 'transparent', color: 'var(--brand-2)', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 13 }}>
-                  {idx > 0 ? ' · ' : ''}{n}
-                </button>
-              ))}
+              <div style={{ marginTop: 16, fontSize: 13, color: 'var(--ink-3)' }}>
+                Ou pesquise direto:{' '}
+                {['Lula', 'Tarcísio de Freitas', 'Tabata Amaral', 'Eduardo Leite'].map((n, idx) => (
+                  <button key={n} type="button" onClick={() => router.push(`/busca?q=${encodeURIComponent(n)}`)}
+                    style={{ border: 'none', background: 'transparent', color: 'var(--brand-2)', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 13 }}>
+                    {idx > 0 ? ' · ' : ''}{n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Coluna direita — 3 cards empilhados ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              {/* Card 1 — Emendas */}
+              <div style={{ ...cardStyle, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
+                  <span className="label">Investimentos 2024</span>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--accent-gold)', lineHeight: 1 }}>
+                  R$ 54,2 Bilhões
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
+                  Em{' '}
+                  <GlossarioTooltip termo="emenda parlamentar" slug={TERMOS_GLOSSARIO['emenda parlamentar']?.slug ?? 'emenda-parlamentar'} definicaoSimples={TERMOS_GLOSSARIO['emenda parlamentar']?.definicaoSimples}>
+                    emendas parlamentares
+                  </GlossarioTooltip>
+                  {' '}empenhadas.
+                </p>
+              </div>
+
+              {/* Card 2 — Projetos */}
+              <div style={{ ...cardStyle, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                  </div>
+                  <span className="label">Atividade Legislativa</span>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--pos)', lineHeight: 1 }}>
+                  1.432 Projetos
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
+                  Votados nas duas casas este semestre.
+                </p>
+              </div>
+
+              {/* Card 3 — Representantes (escuro) */}
+              <div style={{ ...cardStyle, padding: '18px 20px', background: 'var(--brand)', border: '1px solid var(--brand)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <span className="label" style={{ color: 'rgba(255,255,255,0.65)' }}>Ecossistema Público</span>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'white', lineHeight: 1 }}>
+                  594 Representantes
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                  Monitorados em tempo real pela plataforma.
+                </p>
+              </div>
+
             </div>
           </div>
         </section>
 
-        {/* ── STATS 3 CARDS ── */}
-        <section style={{ padding: '0 24px 80px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-
-            {/* Card 1 — Emendas */}
-            <div style={{ ...cardStyle }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                  </svg>
-                </div>
-                <span className="label">Investimentos 2024</span>
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--accent-gold)', lineHeight: 1 }}>
-                R$ 54,2 Bilhões
-              </div>
-              <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-3)' }}>
-                Em{' '}
-                <GlossarioTooltip termo="emenda parlamentar" slug={TERMOS_GLOSSARIO['emenda parlamentar']?.slug ?? 'emenda-parlamentar'} definicaoSimples={TERMOS_GLOSSARIO['emenda parlamentar']?.definicaoSimples}>
-                  emendas parlamentares
-                </GlossarioTooltip>
-                {' '}empenhadas.
-              </p>
-            </div>
-
-            {/* Card 2 — Projetos */}
-            <div style={{ ...cardStyle }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                  </svg>
-                </div>
-                <span className="label">Atividade Legislativa</span>
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--pos)', lineHeight: 1 }}>
-                1.432 Projetos
-              </div>
-              <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--ink-3)' }}>
-                Votados nas duas casas este semestre.
-              </p>
-            </div>
-
-            {/* Card 3 — Representantes (escuro) */}
-            <div style={{ ...cardStyle, background: 'var(--brand)', border: '1px solid var(--brand)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                </div>
-                <span className="label" style={{ color: 'rgba(255,255,255,0.65)' }}>Ecossistema Público</span>
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', color: 'white', lineHeight: 1 }}>
-                594 Representantes
-              </div>
-              <p style={{ margin: '8px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-                Monitorados em tempo real pela plataforma.
-              </p>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ── SEM JARGÃO (mantida, visual atualizado) ── */}
+        {/* ── SEM JARGÃO + DADOS REAIS (1/3 + 2/3) ── */}
         <section style={{ background: 'var(--panel)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ maxWidth: 700, marginBottom: 40 }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 48, alignItems: 'start' }}>
+
+            {/* ── Coluna esquerda — Sem jargão ── */}
+            <div>
               <div className="label" style={{ marginBottom: 12 }}>EM 3 PERGUNTAS, VOCÊ ENTENDE QUALQUER POLÍTICO</div>
-              <h2 style={{ margin: 0, fontSize: 'clamp(30px, 4vw, 46px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
-                Sem jargão. Sem ranking moral.
+              <h2 style={{ margin: '0 0 32px', fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
+                Sem ranking moral.
                 <br />
                 <span style={{ color: 'var(--ink-3)' }}>Só o que importa.</span>
               </h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <article style={{ ...cardStyle, padding: '16px 18px' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>01</div>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>Aparece pra trabalhar?</h3>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Frequência em sessões deliberativas comparada com pares da mesma UF.
+                  </p>
+                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
+                    <PresencaRingMini value={94} />
+                  </div>
+                </article>
+
+                <article style={{ ...cardStyle, padding: '16px 18px' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>02</div>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    <GlossarioTooltip termo="CEAP" slug={TERMOS_GLOSSARIO['CEAP'].slug} definicaoSimples={TERMOS_GLOSSARIO['CEAP'].definicaoSimples}>
+                      Cota parlamentar
+                    </GlossarioTooltip>{' '}
+                    organizada por categoria com comparação ao teto permitido.
+                  </p>
+                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
+                    <UsageBar pct={56} />
+                  </div>
+                </article>
+
+                <article style={{ ...cardStyle, padding: '16px 18px' }}>
+                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>03</div>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>Como vota?</h3>
+                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Histórico de votações nominais para entender alinhamento e abstenções.
+                  </p>
+                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
+                    <VoteMini />
+                  </div>
+                </article>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-              <article style={{ ...cardStyle }}>
-                <div className="mono" style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 12 }}>01</div>
-                <h3 style={{ margin: '0 0 8px', fontSize: 20, lineHeight: 1.2, color: 'var(--ink)' }}>Aparece pra trabalhar?</h3>
-                <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--pos)' }}>Helena: 94% presença</p>
-                <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-                  Frequência em sessões deliberativas comparada com pares da mesma UF.
-                </p>
-                <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 16 }}>
-                  <PresencaRingMini value={94} />
-                </div>
-              </article>
+            {/* ── Coluna direita — 4 cards com dados reais agregados ── */}
+            <div>
+              <div className="label" style={{ marginBottom: 12 }}>DADOS REAIS DA PLATAFORMA</div>
+              <h2 style={{ margin: '0 0 32px', fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
+                Transparência em números.
+                <br />
+                <span style={{ color: 'var(--ink-3)' }}>Do banco de dados ao cidadão.</span>
+              </h2>
 
-              <article style={{ ...cardStyle }}>
-                <div className="mono" style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 12 }}>02</div>
-                <h3 style={{ margin: '0 0 8px', fontSize: 20, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
-                <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--info)' }}>R$ 28k/mês de R$ 50k</p>
-                <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-                  <GlossarioTooltip termo="CEAP" slug={TERMOS_GLOSSARIO['CEAP'].slug} definicaoSimples={TERMOS_GLOSSARIO['CEAP'].definicaoSimples}>
-                    Cota parlamentar
-                  </GlossarioTooltip>{' '}
-                  organizada por categoria com comparação percentual com o teto permitido.
-                </p>
-                <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 16 }}>
-                  <UsageBar pct={56} />
-                </div>
-              </article>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
 
-              <article style={{ ...cardStyle }}>
-                <div className="mono" style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 12 }}>03</div>
-                <h3 style={{ margin: '0 0 8px', fontSize: 20, lineHeight: 1.2, color: 'var(--ink)' }}>Como vota?</h3>
-                <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--warn)' }}>95% com o partido</p>
-                <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-                  Histórico de votações nominais para entender alinhamento, divergência e abstenções.
-                </p>
-                <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 16 }}>
-                  <VoteMini />
-                </div>
-              </article>
+                {/* Card 1 — Cotas CEAP */}
+                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                      </svg>
+                    </div>
+                    <span className="label">Cotas CEAP · 2024</span>
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--accent-gold)', lineHeight: 1, marginBottom: 4 }}>
+                    R$ 250,8 milhões
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Total de cotas parlamentares gastas em 2024, distribuídas em 25 categorias de despesa.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                    {[
+                      { label: '548 parlamentares com gasto registrado', pct: 92 },
+                      { label: '184.285 registros no período', pct: 100 },
+                    ].map((r) => (
+                      <div key={r.label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)', marginBottom: 3 }}>
+                          <span>{r.label}</span>
+                        </div>
+                        <div style={{ height: 4, background: 'var(--bg-2)', borderRadius: 2, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${r.pct}%`, background: 'var(--accent-gold)', opacity: 0.6 }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/busca" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
+                    Explorar gastos →
+                  </Link>
+                </article>
+
+                {/* Card 2 — Emendas parlamentares */}
+                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                      </svg>
+                    </div>
+                    <span className="label">Emendas parlamentares · 2024</span>
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--brand)', lineHeight: 1, marginBottom: 4 }}>
+                    R$ 28,6 bilhões pagos
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    De R$ 44,9 bilhões empenhados, chegaram aos municípios R$ 28,6 bi via emendas individuais.
+                  </p>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)', marginBottom: 4 }}>
+                      <span>Pago vs. Empenhado</span>
+                      <span className="mono" style={{ color: 'var(--brand)' }}>64%</span>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: '64%', background: 'var(--brand)' }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: 'var(--ink-3)' }}>
+                      <span>393 municípios beneficiados</span>
+                      <span>543 parlamentares</span>
+                    </div>
+                  </div>
+                  <Link href="/cidades" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
+                    Ver por cidade →
+                  </Link>
+                </article>
+
+                {/* Card 3 — Representantes */}
+                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                    </div>
+                    <span className="label">Representantes monitorados</span>
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--pos)', lineHeight: 1, marginBottom: 4 }}>
+                    594 parlamentares
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Câmara e Senado federais monitorados em tempo real — presença, gastos e votações.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                    {[
+                      { label: 'Deputados Federais', valor: '513', pct: 87 },
+                      { label: 'Senadores', valor: '81', pct: 100 },
+                    ].map((r) => (
+                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                        <span style={{ color: 'var(--ink-3)' }}>{r.label}</span>
+                        <span className="mono" style={{ fontWeight: 700, color: 'var(--pos)', fontSize: 13 }}>{r.valor}</span>
+                      </div>
+                    ))}
+                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, fontSize: 12, color: 'var(--ink-3)' }}>
+                      Presença média em plenário: <strong style={{ color: 'var(--ink)' }}>63,2%</strong>
+                    </div>
+                  </div>
+                  <Link href="/busca" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
+                    Buscar representante →
+                  </Link>
+                </article>
+
+                {/* Card 4 — Projetos de Lei */}
+                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                      </svg>
+                    </div>
+                    <span className="label">Atividade legislativa</span>
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: '#7c3aed', lineHeight: 1, marginBottom: 4 }}>
+                    22.384 proposições
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Monitoradas desde 2004 — PLs, PECs, MPVs e PDLs em todas as fases de tramitação.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                    {[
+                      { tipo: 'Projetos de Lei (PL)', n: '18.602', pct: 83 },
+                      { tipo: 'Medidas Provisórias (MPV)', n: '205', pct: 1 },
+                      { tipo: 'PECs (Emendas Const.)', n: '67', pct: 0.3 },
+                    ].map((r) => (
+                      <div key={r.tipo} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)' }}>
+                        <span>{r.tipo}</span>
+                        <span className="mono" style={{ fontWeight: 700, color: 'var(--ink-2)' }}>{r.n}</span>
+                      </div>
+                    ))}
+                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, fontSize: 12, color: 'var(--ink-3)' }}>
+                      Só em 2026: <strong style={{ color: 'var(--ink)' }}>2.719 novas proposições</strong>
+                    </div>
+                  </div>
+                  <Link href="/projetos" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
+                    Ver projetos →
+                  </Link>
+                </article>
+
+              </div>
             </div>
+
           </div>
         </section>
 
-        {/* ── VOTAÇÕES RECENTES ── */}
+        {/* ── VOTAÇÕES + EXPLORE MAIS (2/3 + 1/3) ── */}
         <section style={{ padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 48, alignItems: 'start' }}>
+
+            {/* ── Coluna esquerda — Votações ── */}
+            <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 'clamp(26px, 4vw, 38px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
+                <h2 style={{ margin: 0, fontSize: 'clamp(22px, 3vw, 32px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
                   Votações Recentes de Impacto
                 </h2>
                 <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)' }}>
@@ -343,7 +508,7 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
               </Link>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
               {recentVotacoes.length > 0
                 ? recentVotacoes.slice(0, 4).map((v, i) => {
                     const total = v.total_sim + v.total_nao + v.total_abstencao || 1
@@ -431,41 +596,42 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
                   })
               }
             </div>
-          </div>
-        </section>
+            </div>{/* fim coluna esquerda */}
 
-        {/* ── EXPLORE MAIS (mantida, visual atualizado) ── */}
-        <section style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '72px 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div className="label" style={{ marginBottom: 20 }}>EXPLORE MAIS</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-              {[
-                { href: '/cidades', icon: '🏘️', titulo: 'Emendas por cidade', desc: 'Quanto chegou à sua cidade? Ranking per capita de emendas parlamentares.', cor: 'var(--brand)' },
-                { href: '/projetos', icon: '📄', titulo: 'Projetos de Lei', desc: 'Acompanhe PLs, PECs e MPVs em tramitação no Congresso.', cor: '#7c3aed' },
-                { href: '/glossario', icon: '📖', titulo: 'Glossário político', desc: 'Entenda CEAP, emenda, quórum e outros termos em linguagem simples.', cor: 'var(--pos)' },
-                { href: '/candidatos-2026', icon: '⚡', titulo: 'Eleições 2026', desc: 'Veja quem já registrou candidatura para as eleições de outubro.', cor: 'var(--accent-gold)' },
-              ].map((c) => (
-                <Link key={c.href} href={c.href} style={{ textDecoration: 'none', display: 'block' }}>
-                  <article
-                    style={{
-                      ...cardStyle,
-                      height: '100%',
-                      borderTop: `3px solid ${c.cor}`,
-                      borderRadius: '0 0 12px 12px',
-                      borderTopLeftRadius: 0,
-                      borderTopRightRadius: 0,
-                      transition: 'transform 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => { setHovered(c.href); (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)' }}
-                    onMouseLeave={(e) => { setHovered(null); (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
-                  >
-                    <div style={{ fontSize: 26, marginBottom: 10 }}>{c.icon}</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>{c.titulo}</div>
-                    <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{c.desc}</p>
-                  </article>
-                </Link>
-              ))}
-            </div>
+            {/* ── Coluna direita — Explore Mais ── */}
+            <div>
+              <h2 style={{ margin: '0 0 8px', fontSize: 'clamp(22px, 3vw, 32px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
+                Explore Mais
+              </h2>
+              <p style={{ margin: '0 0 32px', fontSize: 14, color: 'var(--ink-3)' }}>
+                Acesse dados por tema e aprofunde sua análise.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { href: '/cidades', icon: '🏘️', titulo: 'Emendas por cidade', desc: 'Quanto chegou à sua cidade? Ranking per capita de emendas parlamentares.', iconBg: 'rgba(29,58,138,0.08)' },
+                  { href: '/projetos', icon: '📄', titulo: 'Projetos de Lei', desc: 'Acompanhe PLs, PECs e MPVs em tramitação no Congresso.', iconBg: 'rgba(124,58,237,0.08)' },
+                  { href: '/glossario', icon: '📖', titulo: 'Glossário político', desc: 'Entenda CEAP, emenda, quórum e outros termos em linguagem simples.', iconBg: 'rgba(4,108,78,0.08)' },
+                  { href: '/candidatos-2026', icon: '⚡', titulo: 'Eleições 2026', desc: 'Veja quem já registrou candidatura para as eleições de outubro.', iconBg: 'rgba(217,119,6,0.08)' },
+                ].map((c) => (
+                  <Link key={c.href} href={c.href} style={{ textDecoration: 'none', display: 'block' }}>
+                    <article
+                      style={{ ...cardStyle, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14 }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05), 0 1px 8px rgba(0,0,0,0.03)' }}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
+                        {c.icon}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', marginBottom: 3 }}>{c.titulo}</div>
+                        <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>{c.desc}</p>
+                      </div>
+                    </article>
+                  </Link>
+                ))}
+              </div>
+            </div>{/* fim coluna direita */}
+
           </div>
         </section>
 
