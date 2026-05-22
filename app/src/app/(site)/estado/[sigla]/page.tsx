@@ -1,5 +1,5 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { getEstado, estadoGradient, ESTADOS } from '@/lib/estados-config'
+import { getEstado, ESTADOS } from '@/lib/estados-config'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -7,7 +7,6 @@ import {
   StateAnchorNav,
   HemicycleChart,
   PartyBar,
-  AnimCounter,
   EconSetoresBar,
   PactoFederativoFlow,
   TimelinePolitica,
@@ -182,8 +181,8 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
     <div style={{
       background: 'var(--panel)',
       border: '1px solid var(--line-soft)',
-      borderRadius: 16,
-      padding: '28px 32px',
+      borderRadius: 10,
+      padding: '24px 28px',
       ...style,
     }}>
       {children}
@@ -368,10 +367,8 @@ export default async function EstadoPage(
       cor: PARTIDO_COR[sigla] ?? '#94a3b8',
     }))
 
-  // ─── Gradient and colors ──────────────────────────────────────────────────
-  const gradient = estadoGradient(siglaUp)
+  // ─── Colors ───────────────────────────────────────────────────────────────
   const cor = cfg.cor
-  const corSub = cfg.corSub
 
   // ─── PIB Hero KPIs ────────────────────────────────────────────────────────
   const popDisplay = economia?.populacao ?? null
@@ -384,99 +381,68 @@ export default async function EstadoPage(
           HERO
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section style={{
-        background: gradient,
-        minHeight: 340,
-        padding: '64px 24px 48px',
-        position: 'relative',
-        overflow: 'hidden',
+        background: 'linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%)',
+        borderBottom: '1px solid var(--line-soft)',
+        padding: '40px 24px 32px',
       }}>
-        {/* Background pattern */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '28px 28px',
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           {/* Breadcrumb */}
-          <div style={{ marginBottom: 20, fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
+          <div style={{ marginBottom: 20, fontSize: 13, color: 'var(--mute)' }}>
             <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Início</Link>
             {' / '}
             <Link href="/estado" style={{ color: 'inherit', textDecoration: 'none' }}>Estados</Link>
             {' / '}
-            <span style={{ color: 'rgba(255,255,255,0.9)' }}>{cfg.nome}</span>
+            <span style={{ color: 'var(--ink-3)' }}>{cfg.nome}</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 32, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {/* Sigla badge */}
             <div style={{
-              width: 80, height: 80, borderRadius: 20,
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.25)',
+              width: 64, height: 64, borderRadius: 10,
+              background: `${cor}18`,
+              border: `2px solid ${cor}44`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 28, fontWeight: 800, color: '#fff',
-              fontFamily: 'var(--font-mono)',
-              flexShrink: 0,
+              fontSize: 22, fontWeight: 800, color: cor,
+              fontFamily: 'var(--font-mono)', flexShrink: 0,
             }}>
               {siglaUp}
             </div>
 
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', marginBottom: 6, textTransform: 'uppercase' }}>
+              <div className="label" style={{ marginBottom: 8, color: 'var(--mute)' }}>
                 {cfg.regiao} · {cfg.gentilico}
               </div>
               <h1 style={{
-                fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800,
-                color: '#fff', margin: '0 0 8px',
-                fontFamily: 'var(--font-display)', lineHeight: 1.1,
+                fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800,
+                color: 'var(--ink)', margin: '0 0 8px',
+                lineHeight: 1.1, letterSpacing: '-0.02em',
               }}>
                 {cfg.nome}
               </h1>
-              <p style={{ margin: '0 0 28px', fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
-                Capital: <strong style={{ color: '#fff' }}>{cfg.capital}</strong>
+              <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                Capital: <strong style={{ color: 'var(--ink-2)' }}>{cfg.capital}</strong>
                 {cfg.area_km2 && ` · ${cfg.area_km2.toLocaleString('pt-BR')} km²`}
                 {' · '}{cfg.municipios.toLocaleString('pt-BR')} municípios
               </p>
 
               {/* Hero KPIs */}
-              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  {
-                    label: 'POPULAÇÃO',
-                    value: popDisplay != null
-                      ? <AnimCounter value={popDisplay / 1_000_000} suffix="mi" decimals={1} />
-                      : fmtPop(null),
-                  },
-                  {
-                    label: 'PIB',
-                    value: pibDisplay != null
-                      ? fmtMi(pibDisplay)
-                      : '—',
-                  },
-                  {
-                    label: 'IDH',
-                    value: idhDisplay != null
-                      ? <AnimCounter value={idhDisplay} decimals={3} />
-                      : '—',
-                  },
-                  {
-                    label: 'RANKING PIB',
-                    value: economia?.ranking_pib_nacional ? `#${economia.ranking_pib_nacional}` : '—',
-                  },
+                  { label: 'POPULAÇÃO', value: popDisplay != null ? fmtPop(popDisplay) : '—' },
+                  { label: 'PIB', value: fmtMi(pibDisplay) },
+                  { label: 'IDH', value: idhDisplay != null ? idhDisplay.toFixed(3) : '—' },
+                  { label: 'RANKING PIB', value: economia?.ranking_pib_nacional ? `#${economia.ranking_pib_nacional}` : '—' },
                 ].map((kpi) => (
                   <div key={kpi.label} style={{
-                    background: 'rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: 12, padding: '14px 20px',
-                    minWidth: 120,
+                    background: 'var(--panel)',
+                    border: '1px solid var(--line-soft)',
+                    borderRadius: 8, padding: '10px 16px',
+                    minWidth: 100,
                   }}>
-                    <div style={{ fontSize: 10, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-mono)', marginBottom: 6 }}>
+                    <div style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--mute)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>
                       {kpi.label}
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-mono)' }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
                       {kpi.value}
                     </div>
                   </div>
@@ -880,7 +846,7 @@ export default async function EstadoPage(
               <div key={t.tipo} style={{
                 background: 'var(--panel)',
                 border: '1px solid var(--line-soft)',
-                borderRadius: 14, padding: '20px 24px',
+                borderRadius: 10, padding: '20px 24px',
                 display: 'flex', flexDirection: 'column', gap: 8,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

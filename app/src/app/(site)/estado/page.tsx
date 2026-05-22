@@ -29,25 +29,23 @@ export default function EstadosIndexPage() {
     <>
       {/* Hero */}
       <section style={{
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
-        padding: '64px 24px 56px',
+        background: 'linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%)',
+        borderBottom: '1px solid var(--line-soft)',
+        padding: '48px 24px 32px',
       }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontSize: 12, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.5)',
-            fontFamily: 'var(--font-mono)', marginBottom: 16, textTransform: 'uppercase',
-          }}>
-            🇧🇷 27 estados · 5 regiões
-          </div>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div className="label" style={{ marginBottom: 12 }}>27 ESTADOS · 5 REGIÕES</div>
           <h1 style={{
-            fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800,
-            color: '#fff', margin: '0 0 16px',
-            fontFamily: 'var(--font-display)', lineHeight: 1.1,
+            margin: 0,
+            fontSize: 'clamp(30px, 5vw, 52px)',
+            fontWeight: 800,
+            lineHeight: 1.1,
+            letterSpacing: '-0.03em',
+            color: 'var(--ink)',
           }}>
             Inteligência Política Estadual
           </h1>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, margin: '0 auto', maxWidth: 600 }}>
+          <p style={{ marginTop: 12, fontSize: 15, color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: 560 }}>
             Governança, economia, emendas, bancadas federais e estaduais de cada
             unidade da federação — tudo em um painel.
           </p>
@@ -55,7 +53,7 @@ export default function EstadosIndexPage() {
       </section>
 
       {/* Regiões */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 72px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px 72px' }}>
         {estadosPorRegiao.map(({ regiao, estados }) => {
           const cfg = REGIAO_CONFIG[regiao]
           return (
@@ -86,7 +84,7 @@ export default function EstadosIndexPage() {
                     <div style={{
                       background: 'var(--panel)',
                       border: `1px solid var(--line-soft)`,
-                      borderRadius: 14,
+                      borderRadius: 10,
                       padding: '20px 18px',
                       cursor: 'pointer',
                       position: 'relative',
@@ -96,7 +94,7 @@ export default function EstadosIndexPage() {
                       <div style={{
                         position: 'absolute', top: 0, left: 0, right: 0,
                         height: 3, background: `linear-gradient(90deg, ${estado.cor}, ${estado.corSub})`,
-                        borderRadius: '14px 14px 0 0',
+                        borderRadius: '10px 10px 0 0',
                       }} />
 
                       {/* Sigla */}
@@ -140,7 +138,7 @@ export default function EstadosIndexPage() {
           padding: '20px 28px',
           background: 'var(--panel)',
           border: '1px solid var(--line-soft)',
-          borderRadius: 14,
+          borderRadius: 10,
           display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
         }}>
           <div style={{ fontSize: 22 }}>📊</div>

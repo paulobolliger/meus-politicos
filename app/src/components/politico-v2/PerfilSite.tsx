@@ -42,9 +42,13 @@ export type PerfilSiteData = {
   emendas: {
     id: string
     valor: number | null
+    valor_pago: number | null
     municipio_destino: string | null
     uf_destino: string | null
     area: string | null
+    municipio_nome: string | null
+    uf_municipio: string | null
+    funcao: string | null
     ano: number | null
   }[]
   aba: string
@@ -144,7 +148,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
     ? presencaRows.reduce((s, r) => s + (r.percentual ?? 0), 0) / presencaRows.length
     : null
 
-  const totalEmendas = emendas.reduce((s, e) => s + (e.valor ?? 0), 0)
+  const totalEmendas = emendas.reduce((s, e) => s + (e.valor_pago ?? e.valor ?? 0), 0)
 
   const activeTab = TABS.find(t => t.id === aba)?.id ?? 'votacoes'
 
@@ -388,17 +392,17 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                   </div>
                   <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
                     <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Municípios beneficiados</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>{new Set(emendas.map(e => e.municipio_destino).filter(Boolean)).size}</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>{new Set(emendas.map(e => e.municipio_destino ?? e.municipio_nome).filter(Boolean)).size}</div>
                   </div>
                 </div>
                 <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {emendas.map((e, i) => (
                     <div key={e.id} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', borderBottom: i < emendas.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{e.municipio_destino ?? '—'}{e.uf_destino ? ` / ${e.uf_destino}` : ''}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{e.area ?? '—'} · {e.ano}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{e.municipio_destino ?? e.municipio_nome ?? '—'}{(e.uf_destino ?? e.uf_municipio) ? ` / ${e.uf_destino ?? e.uf_municipio}` : ''}</div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{e.area ?? e.funcao ?? '—'} · {e.ano}</div>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmt(e.valor ?? 0)}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmt(e.valor_pago ?? e.valor ?? 0)}</div>
                     </div>
                   ))}
                 </div>

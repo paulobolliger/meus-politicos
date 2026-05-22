@@ -105,9 +105,9 @@ export default async function PerfilPage({ params, searchParams }: PageProps) {
           .limit(12),
         supabase
           .from('emendas')
-          .select('id, valor, municipio_destino, uf_destino, area, ano')
+          .select('id, valor, valor_pago, municipio_destino, uf_destino, area, municipio_nome, uf_municipio, funcao, ano')
           .eq('politico_id', politico.id)
-          .order('valor', { ascending: false })
+          .order('valor_pago', { ascending: false })
           .limit(20),
         user
           ? db

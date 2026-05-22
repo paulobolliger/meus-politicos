@@ -572,49 +572,100 @@ export type Database = {
       }
       emendas: {
         Row: {
+          acao: string | null
           ano: number
           area: string | null
           atualizado_em: string | null
+          collected_at: string | null
           criado_em: string | null
           dado_estado: Database["public"]["Enums"]["dado_estado"] | null
           descricao: string | null
+          funcao: string | null
           id: string
-          link_fonte: string
+          link_fonte: string | null
           municipio_destino: string | null
+          municipio_ibge: string | null
           municipio_id: string | null
-          politico_id: string
+          municipio_nome: string | null
+          nome_parlamentar: string | null
+          numero_emenda: string | null
+          partido: string | null
+          politico_id: string | null
+          source_id: string | null
+          source_record_id: string | null
+          subfuncao: string | null
+          tipo_emenda: string | null
+          uf: string | null
           uf_destino: string | null
-          valor: number
+          uf_municipio: string | null
+          valor: number | null
+          valor_empenhado: number | null
+          valor_liquidado: number | null
+          valor_pago: number | null
         }
         Insert: {
+          acao?: string | null
           ano: number
           area?: string | null
           atualizado_em?: string | null
+          collected_at?: string | null
           criado_em?: string | null
           dado_estado?: Database["public"]["Enums"]["dado_estado"] | null
           descricao?: string | null
+          funcao?: string | null
           id?: string
-          link_fonte: string
+          link_fonte?: string | null
           municipio_destino?: string | null
+          municipio_ibge?: string | null
           municipio_id?: string | null
-          politico_id: string
+          municipio_nome?: string | null
+          nome_parlamentar?: string | null
+          numero_emenda?: string | null
+          partido?: string | null
+          politico_id?: string | null
+          source_id?: string | null
+          source_record_id?: string | null
+          subfuncao?: string | null
+          tipo_emenda?: string | null
+          uf?: string | null
           uf_destino?: string | null
-          valor: number
+          uf_municipio?: string | null
+          valor?: number | null
+          valor_empenhado?: number | null
+          valor_liquidado?: number | null
+          valor_pago?: number | null
         }
         Update: {
+          acao?: string | null
           ano?: number
           area?: string | null
           atualizado_em?: string | null
+          collected_at?: string | null
           criado_em?: string | null
           dado_estado?: Database["public"]["Enums"]["dado_estado"] | null
           descricao?: string | null
+          funcao?: string | null
           id?: string
-          link_fonte?: string
+          link_fonte?: string | null
           municipio_destino?: string | null
+          municipio_ibge?: string | null
           municipio_id?: string | null
-          politico_id?: string
+          municipio_nome?: string | null
+          nome_parlamentar?: string | null
+          numero_emenda?: string | null
+          partido?: string | null
+          politico_id?: string | null
+          source_id?: string | null
+          source_record_id?: string | null
+          subfuncao?: string | null
+          tipo_emenda?: string | null
+          uf?: string | null
           uf_destino?: string | null
-          valor?: number
+          uf_municipio?: string | null
+          valor?: number | null
+          valor_empenhado?: number | null
+          valor_liquidado?: number | null
+          valor_pago?: number | null
         }
         Relationships: [
           {

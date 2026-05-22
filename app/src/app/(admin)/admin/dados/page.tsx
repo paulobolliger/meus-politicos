@@ -11,9 +11,9 @@ function fmtNum(n: number | null): string {
   return n.toLocaleString('pt-BR')
 }
 
-function fmtBRL(cents: number | null): string {
-  if (!cents) return '—'
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100)
+function fmtBRL(valor: number | null): string {
+  if (!valor) return '—'
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
 }
 
 export default async function DadosQualidadePage({
@@ -43,18 +43,26 @@ export default async function DadosQualidadePage({
     .select('*', { count: 'exact', head: true })
     .is('codigo_siafi', null) as { count: number | null }
 
-  // Section 2: orphan emendas
-  // The emendas table may have nome_parlamentar, valor_pago, valor_empenhado from a newer migration
-  type EmendaOrfã = { nome_parlamentar: string | null; valor_pago: number | null; valor_empenhado: number | null }
+  // Section 2: orphan emendas — fetch individual ones only (bancada/comissão are expected orphans)
   const { data: orphanEmendas } = await db
     .from('emendas')
-    .select('nome_parlamentar, valor_pago, valor_empenhado')
+    .select('nome_parlamentar, tipo_emenda, valor_pago, valor_empenhado')
     .is('politico_id', null)
-    .limit(100) as { data: EmendaOrfã[] | null }
+    .limit(3000) as { data: { nome_parlamentar: string | null; tipo_emenda: string | null; valor_pago: number | null; valor_empenhado: number | null }[] | null }
 
-  // Group orphan emendas by nome_parlamentar
-  const orphanMap = new Map<string, { count: number; total: number }>()
+  // Separate individual (fixable) from collective (expected)
+  const individualOrphans: typeof orphanEmendas = []
+  const collectiveOrphans: typeof orphanEmendas = []
   for (const e of orphanEmendas ?? []) {
+    const nm = (e.nome_parlamentar ?? '').toLowerCase()
+    const isBancada = nm.startsWith('bancada') || nm.startsWith('com.') || nm.startsWith('comissão') || nm.startsWith('comissao')
+    if (isBancada) collectiveOrphans.push(e)
+    else individualOrphans.push(e)
+  }
+
+  // Group individual orphans by nome_parlamentar
+  const orphanMap = new Map<string, { count: number; total: number }>()
+  for (const e of individualOrphans) {
     const key = e.nome_parlamentar ?? '(sem nome)'
     const entry = orphanMap.get(key) ?? { count: 0, total: 0 }
     entry.count++
@@ -63,7 +71,10 @@ export default async function DadosQualidadePage({
   }
   const orphanRows = Array.from(orphanMap.entries())
     .sort((a, b) => b[1].total - a[1].total)
-    .slice(0, 20)
+    .slice(0, 30)
+
+  // Summary for collective
+  const collectiveTotal = collectiveOrphans.reduce((sum, e) => sum + (e.valor_pago ?? e.valor_empenhado ?? 0), 0)
 
   // Section 3: politician editor search
   type PoliticoEditorRow = {
@@ -142,9 +153,14 @@ export default async function DadosQualidadePage({
       </div>
 
       {/* Section 2: Orphan emendas */}
-      <h2 style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', color: 'var(--ink-3)', marginBottom: 12 }}>
-        2 — EMENDAS SEM POLÍTICO VINCULADO
+      <h2 style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', color: 'var(--ink-3)', marginBottom: 8 }}>
+        2 — EMENDAS INDIVIDUAIS SEM POLÍTICO VINCULADO
       </h2>
+      {collectiveOrphans.length > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 12, padding: '8px 12px', background: 'var(--bg-2)', borderRadius: 6 }}>
+          ℹ️ <strong>{collectiveOrphans.length}</strong> emendas coletivas (bancada/comissão, total {fmtBRL(collectiveTotal)}) não aparecem aqui — não mapeiam para um único político. Isso é esperado.
+        </div>
+      )}
 
       {orphanRows.length === 0 ? (
         <div
@@ -161,7 +177,7 @@ export default async function DadosQualidadePage({
             gap: 8,
           }}
         >
-          <span>✓</span> Nenhuma emenda órfã encontrada.
+          <span>✓</span> Nenhuma emenda individual órfã. Execute <code>populate_siafi.py</code> após atualizar senadores.
         </div>
       ) : (
         <div

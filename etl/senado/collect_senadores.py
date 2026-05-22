@@ -297,7 +297,7 @@ def coletar_senadores():
                 .get('Parlamentar', {})
             )
             id_info_detalhe = parlamentar.get('IdentificacaoParlamentar', {})
-            mandato = parlamentar.get('MandatoAtual', {})
+            mandato = parlamentar.get('MandatoAtual', {}) or {}
 
             nome_eleitoral = id_info_detalhe.get('NomeParlamentar') or id_info.get('NomeParlamentar', '')
             nome_completo = id_info_detalhe.get('NomeCompletoParlamentar') or nome_eleitoral
@@ -309,8 +309,24 @@ def coletar_senadores():
             sexo = normalizar_sexo(id_info_detalhe.get('SiglaSexoParlamentar'))
             foto_url = id_info_detalhe.get('UrlFotoParlamentar') or id_info.get('UrlFotoParlamentar')
             email = id_info_detalhe.get('EmailParlamentar')
-            mandato_inicio = parse_data(mandato.get('DataInicio'))
-            mandato_fim = parse_data(mandato.get('DataFim'))
+
+            # DataInicio pode estar em MandatoAtual direto ou dentro de PrimeiraLegislatura
+            mandato_inicio_raw = (
+                mandato.get('DataInicio')
+                or mandato.get('PrimeiraLegislaturaDoMandato', {}).get('DataInicio')
+                or mandato.get('Exercicios', {}).get('Exercicio', [{}])[0].get('DataInicio')
+            )
+            mandato_fim_raw = (
+                mandato.get('DataFim')
+                or mandato.get('SegundaLegislaturaDoMandato', {}).get('DataFim')
+                or mandato.get('Exercicios', {}).get('Exercicio', [{}])[-1].get('DataFim')
+            )
+            # Fallback: se ainda null, log para diagnóstico
+            if not mandato_inicio_raw:
+                log.debug('MandatoAtual keys for %d: %s', id_senado, list(mandato.keys()))
+
+            mandato_inicio = parse_data(mandato_inicio_raw)
+            mandato_fim = parse_data(mandato_fim_raw)
             slug = gerar_slug(nome_eleitoral, uf)
 
             dados = {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useMemo, useState } from 'react'
 import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
+import type { VotacaoRecente } from '@/app/(site)/page'
 
 type SearchTab = 'cep' | 'nome'
 
@@ -191,7 +192,7 @@ function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) =
   )
 }
 
-export function HomeCidadaoClient() {
+export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: VotacaoRecente[] }) {
   const router = useRouter()
   const [tab, setTab] = useState<SearchTab>('cep')
   const [cep, setCep] = useState('')
@@ -540,54 +541,66 @@ export function HomeCidadaoClient() {
         </div>
       </section>
 
-      {/* ── Últimas votações ── */}
-      <section style={{ background: 'var(--bg)', padding: '80px 0 0' }}>
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
-            <div>
-              <div className="label" style={{ marginBottom: 8 }}>AO VIVO NO PLENÁRIO</div>
-              <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>Últimas votações</h2>
+      {/* ── Últimas votações (dados reais se disponíveis) ── */}
+      {recentVotacoes.length > 0 && (
+        <section style={{ background: 'var(--bg)', padding: '80px 0 0' }}>
+          <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <div className="label" style={{ marginBottom: 8 }}>CÂMARA DOS DEPUTADOS</div>
+                <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>Últimas votações</h2>
+              </div>
+              <Link href="/busca" style={{ fontSize: 13, color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                Ver todos os deputados →
+              </Link>
             </div>
-            <Link href="/busca" style={{ fontSize: 13, color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Ver todas →
-            </Link>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, paddingBottom: 80 }}>
+              {recentVotacoes.map((v, i) => {
+                const total = v.total_sim + v.total_nao + v.total_abstencao || 1
+                const pctSim = Math.round((v.total_sim / total) * 100)
+                const pctNao = Math.round((v.total_nao / total) * 100)
+                const pctAbs = 100 - pctSim - pctNao
+                const dia = new Date(v.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                // proposicao pode ser null/id-interno → mostrar "Câmara" como label
+                const isInternalId = /^\d+-\d+$/.test(v.proposicao ?? '')
+                const tag = (!v.proposicao || isInternalId) ? 'Plenário da Câmara' : v.proposicao
+                const texto = v.descricao_simples ?? v.proposicao ?? '—'
+                // Truncar na primeira frase para ficar mais limpo
+                const textoExibido = texto.includes('.') ? texto.slice(0, texto.indexOf('.') + 1) : texto.slice(0, 120)
+                return (
+                  <article key={i} style={{ background: 'var(--panel)', borderRadius: 10, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.03)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                      <span className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--brand-2)', fontWeight: 600 }}>
+                        {tag}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{dia}</span>
+                    </div>
+                    <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: 'var(--ink)' }}>
+                      {textoExibido}
+                    </p>
+
+                    {/* barra de votos */}
+                    <div style={{ display: 'flex', borderRadius: 4, overflow: 'hidden', marginBottom: 10, height: 8 }}>
+                      {pctSim > 0 && <div style={{ width: `${pctSim}%`, background: 'var(--pos)', opacity: 0.8 }} />}
+                      {pctNao > 0 && <div style={{ width: `${pctNao}%`, background: 'var(--neg)', opacity: 0.8 }} />}
+                      {pctAbs > 0 && <div style={{ width: `${pctAbs}%`, background: 'var(--warn)', opacity: 0.4 }} />}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 14, fontSize: 12 }}>
+                      <span style={{ color: 'var(--pos)', fontWeight: 700 }}>✓ {v.total_sim} Sim</span>
+                      <span style={{ color: 'var(--neg)', fontWeight: 700 }}>✕ {v.total_nao} Não</span>
+                      {v.total_abstencao > 0 && (
+                        <span style={{ color: 'var(--ink-3)', fontWeight: 500 }}>{v.total_abstencao} outros</span>
+                      )}
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, paddingBottom: 80 }}>
-            {([
-              { projeto: 'PL 1234/2025', ementa: 'Reforma tributária — segundo turno', data: 'Hoje, 14h32', sim: 312, nao: 118, votos: ['S','S','N','S','A','S','N','S','S','N'] },
-              { projeto: 'PEC 8/2024', ementa: 'Gastos públicos — Emenda constitucional', data: 'Ontem, 16h10', sim: 278, nao: 155, votos: ['S','N','S','S','S','N','A','S','N','S'] },
-              { projeto: 'PL 892/2025', ementa: 'Marco regulatório de inteligência artificial', data: '3 dias atrás', sim: 391, nao: 45, votos: ['S','S','S','S','S','S','A','S','S','S'] },
-              { projeto: 'PDL 77/2025', ementa: 'Decreto sobre taxação de plataformas digitais', data: '5 dias atrás', sim: 207, nao: 214, votos: ['N','S','N','N','A','S','N','N','S','N'] },
-            ] as const).map((v, i) => (
-              <article key={i} style={{ background: 'var(--panel)', borderRadius: 10, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.03)', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-                  <span className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--brand-2)', fontWeight: 600 }}>{v.projeto}</span>
-                  <span style={{ fontSize: 10, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{v.data}</span>
-                </div>
-                <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 600, lineHeight: 1.4, color: 'var(--ink)' }}>{v.ementa}</p>
-
-                {/* vote bar */}
-                <div style={{ display: 'flex', gap: 3, marginBottom: 12, height: 14 }}>
-                  {v.votos.map((voto, j) => (
-                    <div key={j} style={{
-                      flex: 1,
-                      borderRadius: 3,
-                      background: voto === 'S' ? 'var(--pos)' : voto === 'N' ? 'var(--neg)' : 'var(--warn)',
-                      opacity: 0.7,
-                    }} />
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', gap: 14, fontSize: 12 }}>
-                  <span style={{ color: 'var(--pos)', fontWeight: 700 }}>✓ {v.sim} Sim</span>
-                  <span style={{ color: 'var(--neg)', fontWeight: 700 }}>✕ {v.nao} Não</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Explore mais ── */}
       <section style={{ background: 'var(--bg-2)', borderTop: '1px solid var(--line-soft)', borderBottom: '1px solid var(--line-soft)', padding: '64px 0' }}>

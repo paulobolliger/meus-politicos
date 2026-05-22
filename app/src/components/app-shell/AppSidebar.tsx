@@ -35,7 +35,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Inicio', href: '/home', icon: <Home size={18} /> },
       { label: 'Buscar', href: '/busca', icon: <Search size={18} /> },
       { label: 'Meu estado', href: '/meu-estado', icon: <MapPin size={18} /> },
-      { label: 'Projetos de Lei', href: '/projetos', icon: <ScrollText size={18} /> },
+      { label: 'Projetos de Lei', href: '/proposicoes', icon: <ScrollText size={18} /> },
       { label: 'Candidatos 2026', href: '/candidatos-2026', icon: <Vote size={18} /> },
     ],
   },
@@ -364,7 +364,7 @@ export function AppSidebar() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {!collapsed && (
           <span className="mono" style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em' }}>
-            513 deputados monitorados
+            1.680 parlamentares
           </span>
         )}
         <a
