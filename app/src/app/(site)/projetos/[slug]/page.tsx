@@ -231,15 +231,22 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
                   {proposicao.ementa_simples ?? proposicao.ementa ?? 'Descricao nao disponivel.'}
                 </p>
                 <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
-                  <Link
-                    href="/glossario"
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      fontSize: 13, color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none',
-                    }}
-                  >
-                    Tem duvidas? Consulte o Glossario Politico
-                  </Link>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="Tire suas dúvidas sobre este projeto com nossa IA..."
+                      style={{
+                        width: '100%', background: 'var(--bg)', border: '1px solid var(--line)',
+                        borderRadius: 8, padding: '9px 44px 9px 14px', fontSize: 13,
+                        color: 'var(--ink)', outline: 'none', boxSizing: 'border-box',
+                      }}
+                      readOnly
+                    />
+                    <span style={{
+                      position: 'absolute', right: 10,
+                      fontSize: 18, color: 'var(--brand-2)', cursor: 'pointer',
+                    }}>➤</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -353,17 +360,13 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
               </p>
             </section>
 
-            {/* Votacoes por partido */}
-            {votacoesPartido.length > 0 && (
-              <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} />
-            )}
           </div>
 
           {/* Sidebar */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {autores.length > 0 && (
-              <section style={{ background: 'var(--brand)', borderRadius: 10, padding: '20px' }}>
+              <section style={{ background: '#131b2e', borderRadius: 10, padding: '20px' }}>
                 <h2 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#fff' }}>
                   {autores.length === 1 ? 'Autoria' : `Autoria (${autores.length})`}
                 </h2>
@@ -438,6 +441,13 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
             </Link>
           </aside>
         </div>
+
+        {/* Histórico de Votação — full width */}
+        {votacoesPartido.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} />
+          </div>
+        )}
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
