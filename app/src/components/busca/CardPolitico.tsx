@@ -1,10 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 
-import { Badge } from '@/components/ui/badge'
 import { BotaoAcompanhar } from '@/components/politico/BotaoAcompanhar'
 import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
-import { cn } from '@/lib/utils'
 
 export type PoliticoCard = {
   id: string
@@ -20,24 +21,6 @@ export type PoliticoCard = {
   partidos: { sigla: string | null } | null
 }
 
-const CARGO_BADGE: Record<string, string> = {
-  deputado_federal: 'bg-[#e8eefb] text-[#1a2b5e] border-[#d7e2fa]',
-  senador: 'bg-[#e8f5ee] text-[#085041] border-[#cce9da]',
-  governador: 'bg-[#fff0e8] text-[#7a3000] border-[#ffd9c7]',
-  prefeito: 'bg-[#f0e8ff] text-[#3c1489] border-[#dfd0ff]',
-  deputado_estadual: 'bg-[#fef9e8] text-[#7a6000] border-[#f8eab4]',
-  vereador: 'bg-[#fce8f0] text-[#7a0040] border-[#f4c7db]',
-}
-
-const CARGO_AVATAR: Record<string, string> = {
-  deputado_federal: 'bg-[#2952cc]',
-  senador: 'bg-[#0a7d58]',
-  governador: 'bg-[#cc6a29]',
-  prefeito: 'bg-[#673ab7]',
-  deputado_estadual: 'bg-[#a8860f]',
-  vereador: 'bg-[#b01264]',
-}
-
 const CARGO_LABEL: Record<string, string> = {
   deputado_federal: 'Deputado Federal',
   senador: 'Senador',
@@ -47,98 +30,155 @@ const CARGO_LABEL: Record<string, string> = {
   vereador: 'Vereador',
 }
 
-const FASE_2 = new Set(['governador', 'prefeito', 'deputado_estadual', 'vereador'])
-
-function iniciais(nome: string) {
-  return nome
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((parte) => parte[0]?.toUpperCase())
-    .join('')
+const CARGO_BADGE_BG: Record<string, string> = {
+  deputado_federal: 'var(--brand-2)',
+  senador: 'var(--pos)',
+  governador: 'var(--accent)',
+  prefeito: '#7c3aed',
+  deputado_estadual: 'var(--accent-gold)',
+  vereador: '#b01264',
 }
 
-function corPresenca(valor: number | null) {
-  if (valor == null) return 'text-slate-500'
-  if (valor >= 80) return 'text-emerald-700'
-  if (valor >= 60) return 'text-amber-700'
-  return 'text-red-700'
+const AVATAR_BG: Record<string, string> = {
+  deputado_federal: 'var(--brand)',
+  senador: 'var(--pos)',
+  governador: 'var(--accent)',
+  prefeito: '#7c3aed',
+  deputado_estadual: 'var(--accent-gold)',
+  vereador: '#b01264',
+}
+
+function iniciais(nome: string) {
+  return nome.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('')
+}
+
+function corPresenca(valor: number | null): string {
+  if (valor == null) return 'var(--ink-3)'
+  if (valor >= 80) return 'var(--pos)'
+  if (valor >= 60) return 'var(--warn)'
+  return 'var(--neg)'
 }
 
 function moeda(valor: number | null) {
-  if (valor == null) return '–'
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 2,
-  }).format(valor)
-}
-
-function formatarMandato(data: string | null) {
-  if (!data) return '–'
-  return data.slice(0, 4)
+  if (valor == null) return null
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(valor)
 }
 
 export function CardPolitico({ politico }: { politico: PoliticoCard }) {
+  const [hovered, setHovered] = useState(false)
   const nomeExibicao = politico.nome_eleitoral || politico.nome
   const cargoLabel = CARGO_LABEL[politico.cargo] ?? politico.cargo.replace(/_/g, ' ')
-  const badgeClass = CARGO_BADGE[politico.cargo] ?? 'bg-slate-100 text-slate-700 border-slate-300'
-  const avatarClass = CARGO_AVATAR[politico.cargo] ?? 'bg-slate-600'
+  const badgeBg = CARGO_BADGE_BG[politico.cargo] ?? 'var(--brand)'
+  const avatarBg = AVATAR_BG[politico.cargo] ?? 'var(--brand)'
+  const presencaCor = corPresenca(politico.presenca_pct_atual)
+  const presencaPct = politico.presenca_pct_atual ?? 0
+  const gastoFormatado = moeda(politico.gasto_total_ano)
 
   return (
-    <div className="group flex flex-col rounded-xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm">
-      <Link
-        href={`/politicos/${politico.slug}`}
-        className="block flex-1 p-4"
-        style={{ textDecoration: 'none' }}
-      >
-        <div className="flex items-start gap-3">
-          <div className={cn('relative h-12 w-12 shrink-0 overflow-hidden rounded-full text-white', avatarClass)}>
-            {politico.foto_url ? (
-              <Image
-                src={politico.foto_url}
-                alt={`Foto de ${nomeExibicao}`}
-                fill
-                className={`object-cover ${classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })}`}
-                unoptimized
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm font-semibold">
-                {iniciais(nomeExibicao)}
+    <div
+      style={{
+        background: 'var(--panel)',
+        border: '1px solid var(--line)',
+        borderRadius: 16,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: hovered ? '0 12px 28px -4px rgba(0,81,213,0.1), 0 4px 8px -2px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.04)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link href={`/politicos/${politico.slug}`} style={{ textDecoration: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+        {/* ── Área da foto ── */}
+        <div style={{ height: 192, position: 'relative', background: 'white', overflow: 'hidden', flexShrink: 0, borderRadius: '16px 16px 0 0', clipPath: 'inset(0 0 0 0 round 16px 16px 0 0)' }}>
+          {politico.foto_url ? (
+            <Image
+              src={politico.foto_url}
+              alt={`Foto de ${nomeExibicao}`}
+              fill
+              style={{ objectFit: 'contain', objectPosition: 'center top', background: 'white' }}
+              unoptimized
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <div style={{
+                width: 88, height: 88, borderRadius: '50%',
+                background: avatarBg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '4px solid rgba(255,255,255,0.9)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+              }}>
+                <span style={{ fontSize: 30, fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>
+                  {iniciais(nomeExibicao)}
+                </span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold text-slate-900">{nomeExibicao}</p>
-            <p className="truncate text-xs text-slate-500">{politico.nome}</p>
-          </div>
+          {/* Badge cargo */}
+          <span style={{
+            position: 'absolute', top: 10, right: 10,
+            background: badgeBg, color: 'white',
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
+            padding: '3px 8px', borderRadius: 4,
+            fontFamily: 'var(--font-mono)',
+            textTransform: 'uppercase',
+          }}>
+            {cargoLabel}
+          </span>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge className={badgeClass}>{cargoLabel}</Badge>
-          {FASE_2.has(politico.cargo) ? (
-            <Badge className="border border-slate-300 bg-slate-100 text-slate-600">Fase 2 — em breve</Badge>
-          ) : null}
-        </div>
+        {/* ── Corpo do card ── */}
+        <div style={{ padding: '16px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-        <p className="mt-3 text-xs text-slate-600">
-          {politico.uf ?? 'UF –'} · {politico.partidos?.sigla ?? 'Sem partido'} · mandato {formatarMandato(politico.mandato_inicio)}
-        </p>
+          {/* Nome */}
+          <h3 style={{
+            margin: '0 0 4px', fontSize: 16, fontWeight: 700, lineHeight: 1.25,
+            color: hovered ? 'var(--brand-2)' : 'var(--ink)',
+            transition: 'color 0.15s ease',
+          }}>
+            {nomeExibicao}
+          </h3>
 
-        <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs">
-          <p className={cn('font-semibold', corPresenca(politico.presenca_pct_atual))}>
-            Presença: {politico.presenca_pct_atual == null ? '–' : `${politico.presenca_pct_atual}%`}
+          {/* Partido · UF */}
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontWeight: 700, color: 'var(--brand-2)' }}>{politico.partidos?.sigla ?? '—'}</span>
+            <span style={{ opacity: 0.4 }}>·</span>
+            {politico.uf ?? '—'}
           </p>
-          <p className="font-medium text-slate-700">{moeda(politico.gasto_total_ano)}</p>
+
+          {/* Presença */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+              <span className="label">PRESENÇA</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: presencaCor }}>
+                {politico.presenca_pct_atual == null ? '–' : `${politico.presenca_pct_atual}%`}
+              </span>
+            </div>
+            <div style={{ height: 5, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${presencaPct}%`, background: presencaCor, borderRadius: 3 }} />
+            </div>
+          </div>
+
+          {/* Gasto */}
+          {gastoFormatado && (
+            <p style={{ margin: '0', fontSize: 11, color: 'var(--ink-3)' }}>
+              Cota usada:{' '}
+              <span style={{ fontWeight: 600, color: 'var(--ink-2)', fontVariantNumeric: 'tabular-nums' }}>
+                {gastoFormatado}
+              </span>
+            </p>
+          )}
         </div>
       </Link>
 
-      <BotaoAcompanhar
-        politicoId={politico.id}
-        politicoSlug={politico.slug}
-        variant="card"
-      />
+      {/* Seguir */}
+      <div style={{ padding: '0 16px 16px' }}>
+        <BotaoAcompanhar politicoId={politico.id} politicoSlug={politico.slug} variant="card" />
+      </div>
     </div>
   )
 }
