@@ -1,82 +1,93 @@
+---
+file: README.md
+module: Project Overview
+status: Active
+related: [docs/ARCHITECTURE.md, docs/GAP_ANALYSIS.md, docs/DATABASE.md, docs/ENVIRONMENT.md]
+---
+
 # Meus Políticos
 
 > **"Transparência para decidir melhor."**
-> O Google da política brasileira.
+> O sistema operacional da cidadania política brasileira.
 
-[![Status](https://img.shields.io/badge/status-pré--lançamento-orange)](https://meuspoliticos.com)
-[![Stack](https://img.shields.io/badge/stack-Next.js%20%2B%20Supabase-blue)](https://meuspoliticos.com)
+> **Nota de arquitetura de identidade:** a stack atual ainda documenta
+> Supabase Auth em alguns pontos, mas a decisao aprovada e migrar para Logto
+> como provedor de identidade. Ver `docs/auth/AUTH_MIGRATION_LOGTO.md` e
+> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+
+[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-orange)](https://meuspoliticos.com.br)
+[![Stack](https://img.shields.io/badge/stack-Next.js%2016%20%2B%20Supabase-blue)](https://meuspoliticos.com.br)
 [![Licença](https://img.shields.io/badge/licença-MIT-green)](LICENSE)
 
-Plataforma brasileira de transparência política e inteligência cívica.
+Plataforma brasileira de transparência política. Centralizamos dados públicos sobre políticos brasileiros — do presidente ao vereador — em um só lugar, com linguagem acessível, sem editoriais, sem opinião.
 
-Centralizamos dados públicos sobre políticos brasileiros — do presidente ao vereador — em um só lugar, com linguagem acessível, sem editoriais, sem opinião. Mostramos dados. O usuário conclui sozinho.
-
----
-
-## Governança documental
-
-Para crescimento organizado e sem duplicação de regras, use estes documentos como fonte oficial:
-
-- Contrato de dados de perfil (back office -> frontend): [docs/BACKOFFICE_DATA_CONTRACT.md](docs/BACKOFFICE_DATA_CONTRACT.md)
-- Metodologia de scores e regras de exibição: [docs/METRICS.md](docs/METRICS.md)
-- Fontes, ingestão e arquitetura de dados: [docs/data_source_master.md](docs/data_source_master.md)
-- Navegação geral do projeto (master doc): [docs/meuspoliticos_master.md](docs/meuspoliticos_master.md)
-
-Regra de organização:
-- README e master doc descrevem visão e navegação.
-- Regras operacionais detalhadas ficam somente nos documentos especializados acima.
+**Empresa:** NORO GURU (NORO Tecnologia e Turismo Ltda · CNPJ 63.429.497/0001-88)
 
 ---
 
-## O que é
+## Documentação técnica
 
-O cidadão pesquisa qualquer político e vê, em segundos:
+| Documento | Conteúdo |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitetura, subdomínios, roteamento, fluxo de dados |
+| [docs/DATABASE.md](docs/DATABASE.md) | Schema v2.12, tabelas, relacionamentos, RLS |
+| [docs/AUTH.md](docs/AUTH.md) | Autenticação, OAuth, proteção de rotas |
+| [docs/API.md](docs/API.md) | Endpoints internos e contratos de integração |
+| [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Todas as variáveis de ambiente (30+) |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy Vercel, CI/CD, scripts operacionais |
+| [docs/SECURITY.md](docs/SECURITY.md) | Segurança, RLS, auditoria de segredos |
+| [docs/GAP_ANALYSIS.md](docs/GAP_ANALYSIS.md) | Backlog técnico, gaps e pendências |
+| [docs/MODERNIZATION_ROADMAP.md](docs/MODERNIZATION_ROADMAP.md) | Roadmap de retomada e sprints |
 
-- O que votou
-- Como gastou dinheiro público
-- Com que frequência compareceu
-- Quem financiou sua campanha
+**Documentos de domínio de negócio (fonte oficial):**
 
-Tudo com rastreabilidade completa: cada dado tem link para a fonte oficial.
-
-**O projeto não recomenda candidatos, não ranqueia ideologicamente e não editorializa. Neutralidade é o produto.**
+| Documento | Conteúdo |
+|---|---|
+| [docs/meuspoliticos_master.md](docs/meuspoliticos_master.md) | Visão de produto, roadmap, regras de negócio (v2.0) |
+| [docs/data_source_master.md](docs/data_source_master.md) | Arquitetura de dados, APIs, ETL (v2.0) |
+| [docs/METRICS.md](docs/METRICS.md) | Metodologia de scores e exibição de métricas |
+| [docs/BACKOFFICE_DATA_CONTRACT.md](docs/BACKOFFICE_DATA_CONTRACT.md) | Contrato de dados do perfil do político |
+| [docs/design/wireframes.md](docs/design/wireframes.md) | Wireframes de todas as telas |
+| [docs/design/branding.md](docs/design/branding.md) | Identidade visual e manifesto de marca |
 
 ---
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Frontend | Next.js + TypeScript |
-| Banco de dados | Supabase (PostgreSQL) |
-| Autenticação | Supabase Auth |
-| Backend / API | Supabase Edge Functions |
-| Coleta de dados | Python + GitHub Actions |
-| Deploy | Vercel |
-| IA (fase 2) | OpenAI API |
-
-**Custo de infraestrutura no MVP: R$ 0/mês**
+| Camada | Tecnologia | Versão/Detalhe |
+|---|---|---|
+| Frontend | Next.js + TypeScript | 16.2.6 |
+| UI | Tailwind CSS v4 + shadcn/ui | v4 |
+| Banco de dados | PostgreSQL via Supabase self-hosted | Schema v2.12 |
+| Autenticação | Supabase Auth | — |
+| Coleta de dados | Python + scripts ETL | 3.10+ |
+| Deploy frontend | Vercel | `vercel.json` na raiz |
+| Infra banco | VPS Vultr via Coolify + Docker | `45.32.169.173` |
+| E-mail transacional | Resend | Free — 3k e-mails/mês |
+| Pagamentos | Stripe + InfinitePay | Modo teste ativo |
+| IA | OpenAI API | Tradução de juridiquês |
 
 ---
 
-## Rodando localmente
+## Pré-requisitos
 
-### Pré-requisitos
+- **Node.js 20+** (LTS recomendado — `@types/node ^20`)
+- **Python 3.10+** (para scripts ETL)
+- SSH tunnel ativo para acesso local ao banco de produção (ver seção ETL)
+- Acesso às credenciais em `.env.local` (solicitar ao responsável do projeto)
 
-- Node.js 18+
-- Python 3.8+
-- PostgreSQL client — `psql` (opcional, para acesso direto ao banco)
-- Conta no [Supabase](https://supabase.com)
-- Conta no [Vercel](https://vercel.com)
+---
+
+## Setup local — Frontend
 
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-org/meuspoliticos.git
+git clone https://github.com/paulobolliger/meuspoliticos.git
 cd meuspoliticos
 ```
 
-### 2. Instale as dependências do frontend
+### 2. Instale as dependências
 
 ```bash
 npm install
@@ -85,38 +96,62 @@ npm install
 ### 3. Configure as variáveis de ambiente
 
 ```bash
-cp .env.example .env.local
+cp .env.example app/.env.local
 ```
 
-Preencha no `.env.local`:
+Preencha `app/.env.local` com os valores reais. Variáveis mínimas para rodar em dev:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-OPENAI_API_KEY=
-IA_RESUMO_MAX_GERACOES_DIA=3
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://supabase.meuspoliticos.com.br
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<ver gerenciador de senhas>
+SUPABASE_SERVICE_ROLE_KEY=<ver gerenciador de senhas>
+SUPABASE_URL=https://supabase.meuspoliticos.com.br
+
+# URLs dos subdomínios (dev local)
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://app.localhost:3000
+NEXT_PUBLIC_PAINEL_URL=http://painel.localhost:3000
 ```
 
-Notas:
-- `OPENAI_API_KEY`: necessária para gerar resumo interpretativo sob demanda.
-- `IA_RESUMO_MAX_GERACOES_DIA`: limite diário por político para controlar custo (cache hit não consome).
+Para a lista completa das 30+ variáveis, ver [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md).
 
-### 4. Crie o banco de dados
+### 4. Configure roteamento por subdomínio
 
-No painel do Supabase, abra o SQL Editor e rode:
+Adicione ao arquivo de hosts do sistema:
 
-```bash
-001_schema.sql
+| OS | Arquivo |
+|---|---|
+| Windows | `C:\Windows\System32\drivers\etc\hosts` |
+| Linux / macOS | `/etc/hosts` |
+
+```
+127.0.0.1 app.localhost
+127.0.0.1 painel.localhost
 ```
 
-### 5. Rode o frontend
+### 5. Inicie o servidor de desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-Acesse em `http://localhost:3000`.
+| URL | Produto |
+|---|---|
+| `http://localhost:3000` | Site público |
+| `http://app.localhost:3000` | App analítico |
+| `http://painel.localhost:3000` | Painel do usuário |
+
+---
+
+## Scripts disponíveis
+
+| Script | Comando real | Descrição |
+|---|---|---|
+| `npm run dev` | `next dev` (em `app/`) | Servidor de desenvolvimento |
+| `npm run build` | `next build` (em `app/`) | Build de produção |
+| `npm run start` | `next start` (em `app/`) | Servidor de produção |
+| `npm run lint` | `eslint` (em `app/`) | Verificação de lint |
 
 ---
 
@@ -124,281 +159,123 @@ Acesse em `http://localhost:3000`.
 
 ```
 meuspoliticos/
-├── app/                        # Next.js App Router
-│   ├── (public)/
-│   │   ├── page.tsx            # Home — busca + CEP
-│   │   ├── politico/[slug]/    # Perfil do político
-│   │   ├── busca/              # Resultados de busca
-│   │   └── meu-estado/        # Quem me representa
-│   ├── (auth)/
-│   │   ├── meus-politicos/     # Painel do usuário
-│   │   └── feed/               # Feed de atividades
-│   └── admin/                  # Painel interno
-├── components/                 # Componentes reutilizáveis
-├── lib/                        # Utilitários e integrações
-├── etl/                        # Scripts Python de coleta
-│   ├── camara/                 # Deputados, votações, gastos
-│   ├── senado/                 # (fase 2)
-│   └── tse/                    # (fase 2+)
+├── app/                          # Next.js 16 — frontend principal
+│   └── src/
+│       ├── app/
+│       │   ├── (site)/           # Site público — meuspoliticos.com.br
+│       │   ├── (app)/            # App analítico — app.meuspoliticos.com.br
+│       │   ├── (painel)/         # Painel autenticado — painel.meuspoliticos.com.br
+│       │   │   ├── (auth)/       # Login, cadastro, recuperar senha
+│       │   │   └── (dashboard)/  # /painel, /meus-politicos
+│       │   ├── (admin)/          # Painel interno — /admin (role: admin)
+│       │   ├── (checkout)/       # Fluxo de doação/pagamento
+│       │   ├── (auth)/           # Callback OAuth Supabase
+│       │   └── api/              # Route Handlers (webhooks, busca, etc.)
+│       ├── components/
+│       │   ├── civic/            # Biblioteca cívica reutilizável
+│       │   ├── site/             # Componentes do site público
+│       │   ├── politico-v2/      # Perfil do político (app analítico)
+│       │   └── ui/               # shadcn/ui base
+│       ├── lib/supabase/         # client.ts · server.ts · middleware.ts · types.ts
+│       └── proxy.ts              # Middleware de roteamento por host
+├── etl/                          # Scripts Python de coleta de dados
+│   ├── camara/                   # Câmara dos Deputados (deputados, votações, gastos, proposições)
+│   ├── senado/                   # Senado Federal (senadores, votações, gastos)
+│   ├── tse/                      # TSE — eleitos 2022 e candidatos 2026
+│   ├── ale/                      # Assembleias Legislativas Estaduais
+│   ├── ibge/                     # Municípios e estados
+│   ├── portal_transparencia/     # CGU — emendas parlamentares
+│   ├── partidos/                 # Dados de partidos e fundos
+│   ├── ia/                       # Processamento com OpenAI
+│   ├── estados/                  # Governos e tribunais estaduais
+│   └── stn/                      # Secretaria do Tesouro Nacional
 ├── supabase/
-│   └── 001_schema.sql          # Schema principal
-└── public/
-    └── llms.txt                # AI SEO
+│   ├── migrations/               # 20+ migrations — schema atual v2.12
+│   ├── seeds/                    # Seeds de glossário e dados fixos
+│   └── 001_schema.sql            # Schema monolítico legado (referência histórica)
+├── docs/                         # Documentação técnica e de negócio
+│   ├── design/                   # Wireframes e identidade visual
+│   └── archive/                  # Documentos obsoletos e artefatos históricos
+├── .env.example                  # Template de variáveis de ambiente
+├── vercel.json                   # Configuração de deploy na Vercel
+└── requirements.txt              # Dependências Python para ETL
 ```
 
 ---
 
-## Coleta de dados
+## ETL — Coleta de dados
 
-Os scripts Python rodam via **GitHub Actions** em cron jobs e alimentam o banco via Supabase.
+Scripts Python em `etl/` se conectam ao PostgreSQL via SSH tunnel ou rede interna do VPS.
 
-> **Atenção:** o ETL usa conexão direta ao PostgreSQL via `psycopg2` — variáveis de ambiente **diferentes** das do frontend Next.js.
+### Tunnel SSH (desenvolvimento local)
 
-### Configuração do ETL (`.env` na raiz de `etl/`)
-
-```env
-# Banco de dados
-SUPABASE_DB_HOST=your-supabase-host
-SUPABASE_DB_PORT=5432
-SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=your-password
-
-# Controle de execução
-ETAPAS_TO_RUN=1,2,3,7,10,11   # quais ETAPAs rodar (padrão: todas)
-DRY_RUN=false                   # true = busca dados mas não insere (útil para testar)
-MAX_RECORDS=0                   # 0 = ilimitado; use ex: 100 para dev/debug
+```bash
+ssh -L 5433:10.0.2.2:5432 root@45.32.169.173 -N -o ServerAliveInterval=30
 ```
 
-### Câmara dos Deputados (MVP)
+Mapeia o banco remoto para `localhost:5433`.
+
+### Rodar um script
 
 ```bash
 cd etl/camara
-pip install -r requirements.txt
+# Ativar .venv da raiz ou instalar dependências
+pip install -r ../../requirements.txt
 python collect_deputados.py
 ```
 
-### Senado Federal (Fase 2 ✅)
+**Status dos dados coletados** (atualizar após cada ETL): ver [app/CLAUDE.md](app/CLAUDE.md).
 
-```bash
-cd etl/senado
-pip install -r requirements.txt
-python load_senado.py
-```
-
-Dependências do ETL (`requirements.txt`):
-```
-psycopg2-binary==2.9.9
-requests==2.31.0
-python-dateutil==2.8.2
-```
-
-Output esperado:
-
-```
-============================================================
-LOAD_SENADO.PY — Ingestão Senado Federal (Phase 2)
-============================================================
-
-ETAPA 1: Senadores
-  ✓ 81 senadores carregados
-  ✓ 81 senadores inseridos
-
-ETAPA 7: Raw Bronze Layer
-  ✓ Raw record ID 1 inserido
-
-ETAPA 10: Entity Resolution Validation
-  ✓ 45 linkagens confirmadas (confidence >= 0.90)
-
-ETAPA 11: Cross-linking
-  ✓ 12 políticos identificados em ambas as casas
-
-============================================================
-✓ Ingestão concluída com sucesso
-============================================================
-```
-
-Tempo de carga inicial: ~3s · Carga completa de produção (50M+ registros): ~2–4h
-
-### Fontes de dados
-
-| Fonte | Dados | Fase |
-|---|---|---|
-| [API Câmara](https://dadosabertos.camara.leg.br/api/v2) | 513 deputados, votações, gastos, presença | MVP |
-| [ViaCEP](https://viacep.com.br) | CEP → estado → representantes | MVP |
-| [IBGE](https://servicodados.ibge.gov.br/api/v1/localidades) | Municípios e geografias | MVP |
-| [API Senado](https://legis.senado.leg.br/dadosabertos) | 81 senadores | Fase 2 |
-| [Portal da Transparência](https://portaldatransparencia.gov.br/api-de-dados) | Dados federais | Fase 2 |
-| [TSE](https://dadosabertos.tse.jus.br) | Candidaturas, eleitos, doações | Fase 2+ |
-
-### Rastreabilidade — regra de ouro
-
-Todo dado inserido no banco precisa ter:
-
-```sql
-source_id         -- identificador da fonte
-source_record_id  -- ID do registro na fonte original
-collected_at      -- timestamp da coleta
-```
+**Documentação completa de fontes e APIs**: ver [docs/data_source_master.md](docs/data_source_master.md).
 
 ---
 
 ## Schema do banco
 
-Arquivo: [`supabase/001_schema.sql`](supabase/001_schema.sql) — versão 2.8
+20+ migrations em `supabase/migrations/` — versão atual: **v2.12** (maio/2026).
 
-Tabelas principais:
+Documentação completa em [docs/DATABASE.md](docs/DATABASE.md).
+
+**Enums principais:** `cargo_tipo`, `voto_tipo`, `dado_estado`, `impacto_nivel`, `situacao_candidato`
+
+**Tabelas centrais:**
 
 | Tabela | Descrição |
 |---|---|
-| `politicos` | Perfis — cargo, partido, estado, foto |
+| `politicos` | Hub central — 513 dep. federais + 81 senadores + 27 gov. + 1.059 dep. estaduais |
 | `partidos` | Partidos políticos com histórico |
 | `politico_partidos` | Histórico de migrações partidárias |
 | `votacoes` | Votações nominais com voto individual |
-| `gastos` | Cota parlamentar mensal |
-| `presenca` | Presença em plenário por sessão |
-| `senadores` | 81 senadores federais (Fase 2 ✅) |
-| `politico_senado_ids` | Entity resolution CPF — Câmara ↔ Senado (Fase 2 ✅) |
-| `senado_votacoes` | Votações do Senado (Fase 2 — carga pendente) |
-| `senado_materias` | Matérias legislativas (Fase 2 — carga pendente) |
-| `senado_comissoes` | Participação em comissões (Fase 2 — carga pendente) |
-| `senado_discursos` | Discursos em plenário (Fase 2 — carga pendente) |
-| `senado_sessoes` | Sessões do Senado (Fase 2 — carga pendente) |
-| `raw_senado` | Bronze layer — XML bruto com SHA-256 (Fase 2 ✅) |
-| `candidatos` | Candidatos 2026 com proposta e bens |
-| `municipios` | Base geográfica (IBGE) |
-| `usuarios` | Usuários logados |
-| `feed_eventos` | Eventos para o feed personalizado |
-| `coletas_log` | Log de execução dos pipelines |
-
----
-
-## Roadmap
-
-### MVP — agora
-- [ ] Repositório GitHub (monorepo)
-- [ ] Schema no Supabase (`001_schema.sql`)
-- [ ] Scripts Python — deputados, votações, gastos, presença
-- [ ] Frontend Next.js — home, busca, perfil, CEP
-- [ ] Painel "Meus Políticos" (usuário logado)
-- [ ] `/admin` — controle de ingestão e qualidade
-- [ ] Deploy Vercel + Search Console + GA4
-
-### Fase 2
-- Senado Federal (81 senadores)
-- IA explicativa — tradução de juridiquês
-- Candidatos 2026
-- Alertas por e-mail
-- RSS feeds por político
-
-### Fase 3
-- Governadores e assembleias estaduais
-- Prefeitos (via TSE)
-- Dados municipais
-
-### Fase 4
-- Vereadores — câmaras municipais
-- Capitais primeiro
-- OCR de diários oficiais
-
----
-
-## Escopo por cargo
-
-| Cargo | Quantidade | Fase |
-|---|---|---|
-| Deputados federais | 513 | **MVP** |
-| Senadores | 81 | Fase 2 |
-| Presidente / Governadores | 28 | Fase 2 |
-| Deputados estaduais | ~1.000 | Fase 3 |
-| Prefeitos | 5.570 | Fase 3 |
-| Vereadores | ~57.000 | Fase 4 |
+| `gastos` | Cota parlamentar (CEAP/CEAPS) |
+| `proposicoes` | Projetos de lei, PECs, MPs (~57k) |
+| `emendas` | Emendas parlamentares (Portal da Transparência) |
+| `candidatos` | Candidatos 2026 (TSE) |
+| `senadores` + 7 tabelas `senado_*` | Dados do Senado Federal (Fase 2) |
+| `estados` | Assembleias e governos estaduais |
+| `glossario` | Glossário cívico com seeds |
+| `perfis` | Usuários autenticados |
+| `acompanhamentos` | Políticos acompanhados por usuário |
+| `feed_eventos` | Feed de atividades dos políticos |
+| `coletas_log` | Log de execução dos ETLs |
+| `feature_flags` | Flags de features do sistema |
 
 ---
 
 ## Princípios
 
-### O que fazemos
-
-- Mostramos dados oficiais com rastreabilidade completa
-- Tornamos informação pública acessível e compreensível
-- Citamos a fonte em cada dado exibido
-- Identificamos o estado do dado (`oficial`, `parcial`, `atrasado`)
-
-### O que não fazemos — nunca
-
-- Score político ou "ranking moral"
-- Classificação ideológica automatizada (esquerda/direita/centro)
-- Comentários de usuários sobre políticos
-- Conteúdo patrocinado por partidos ou campanhas
-- Qualquer feature que misture dado oficial com opinião
-
-> **Filtro de decisão:** "Isso aumenta transparência ou só aumenta ruído?"
-> Se a resposta não for claramente "aumenta transparência", não entra.
-
----
-
-## Documentação interna
-
-| Arquivo | Conteúdo |
-|---|---|
-| `meuspoliticos_master.md` | Visão do produto, roadmap, escopo, estratégia |
-| `wireframes_meuspoliticos.md` | UX/UI — todas as telas |
-| `data_source_master.md` | Arquitetura de dados, pipelines, ETL |
-| `001_schema.sql` | Schema PostgreSQL/Supabase |
-| `branding_meus_politicos_manifesto_identidade.md` | Identidade visual e tom de voz |
-
----
-
-## Troubleshooting — ETL Senado
-
-### ❌ "Connection refused"
-Verifique o host no `.env` e teste a conexão direta:
-```bash
-psql -h <your-host> -U postgres -c "SELECT 1"
-```
-
-### ❌ "Table does not exist"
-O schema ainda não foi rodado. Execute antes do loader:
-```bash
-psql -h <host> -U postgres < 001_schema.sql
-```
-
-### ❌ "Permission denied"
-O usuário precisa de privilégio de criação:
-```sql
-ALTER ROLE postgres CREATEDB;
-```
-
-### ❌ Rate limit (erro 429)
-Aumente o delay entre requisições em `load_senado.py`:
-```python
-SENADO_RATE_LIMIT_DELAY = 1.0  # padrão: 0.5s
-```
-
----
-
-
-
-1. Fork o repositório
-2. Crie uma branch: `git checkout -b feature/nome-da-feature`
-3. Commit: `git commit -m 'feat: descrição'`
-4. Push: `git push origin feature/nome-da-feature`
-5. Abra um Pull Request
-
-### Antes de abrir um PR
-
-- Todo dado novo precisa ter `source_id`, `source_record_id` e `collected_at`
-- Nenhuma feature que adicione opinião, ranking ou comparação ideológica será aceita
-- Testes nos scripts de coleta são obrigatórios
+- **Sem opinião, sem ranking moral** — dados oficiais com rastreabilidade completa
+- **Neutralidade política absoluta** — nenhum partido, candidato ou ideologia é favorecido
+- **IA como facilitador, não árbitro** — resumos IA sempre rotulados; fonte original sempre acessível
+- **LGPD** — CEP nunca persistido; CPF apenas no ETL, nunca no banco público
+- **Filtro de decisão:** "Isso aumenta transparência ou só aumenta ruído?" — se não aumenta claramente, não entra
 
 ---
 
 ## Contato
 
-- Site: [meuspoliticos.com](https://meuspoliticos.com)
-- E-mail: contato@meuspoliticos.com
+- Site: [meuspoliticos.com.br](https://meuspoliticos.com.br)
+- E-mail: contato@meuspoliticos.com.br
 
 ---
 
-*meuspoliticos.com · meuspoliticos.com.br*
-*Transparência para decidir melhor.*
+*meuspoliticos.com.br · NORO GURU · Campinas, SP · 2026*
