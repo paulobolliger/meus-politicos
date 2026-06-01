@@ -11,12 +11,37 @@ related: [docs/ARCHITECTURE.md, docs/GAP_ANALYSIS.md, docs/DATABASE.md, docs/ENV
 > O sistema operacional da cidadania política brasileira.
 
 > **Nota de arquitetura de identidade:** a stack atual ainda documenta
-> Supabase Auth em alguns pontos, mas a decisao aprovada e migrar para Logto
-> como provedor de identidade. Ver `docs/auth/AUTH_MIGRATION_LOGTO.md` e
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+> Supabase Auth em alguns pontos, mas a decisão aprovada é migrar para Logto
+> como provedor de identidade. Ver `docs/auth/AUTH_MIGRATION_LOGTO.md`,
+> `docs/adr/ADR-001-logto-as-identity-provider.md` e
+> `docs/PROJECT_STATUS_2026-06.md`.
+
+## Status Atual da Plataforma
+
+Banco:
+
+- PostgreSQL VPS ativo
+
+Auth:
+
+- Supabase legado
+- Logto em preparação
+
+Público:
+
+- Migrado para PostgreSQL direto
+
+Painel/Admin:
+
+- Aguardando Logto
+
+Pagamentos:
+
+- Stripe removido
+- InfinitePay ativo
 
 [![Status](https://img.shields.io/badge/status-em%20desenvolvimento-orange)](https://meuspoliticos.com.br)
-[![Stack](https://img.shields.io/badge/stack-Next.js%2016%20%2B%20Supabase-blue)](https://meuspoliticos.com.br)
+[![Stack](https://img.shields.io/badge/stack-Next.js%2016%20%2B%20PostgreSQL%20VPS%20%2B%20Logto-blue)](https://meuspoliticos.com.br)
 [![Licença](https://img.shields.io/badge/licença-MIT-green)](LICENSE)
 
 Plataforma brasileira de transparência política. Centralizamos dados públicos sobre políticos brasileiros — do presidente ao vereador — em um só lugar, com linguagem acessível, sem editoriais, sem opinião.
@@ -32,6 +57,8 @@ Plataforma brasileira de transparência política. Centralizamos dados públicos
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitetura, subdomínios, roteamento, fluxo de dados |
 | [docs/DATABASE.md](docs/DATABASE.md) | Schema v2.12, tabelas, relacionamentos, RLS |
 | [docs/AUTH.md](docs/AUTH.md) | Autenticação, OAuth, proteção de rotas |
+| [docs/PROJECT_STATUS_2026-06.md](docs/PROJECT_STATUS_2026-06.md) | Status executivo atual da plataforma |
+| [docs/migrations/2026-06-postgres-logto-migration.md](docs/migrations/2026-06-postgres-logto-migration.md) | Cronologia oficial da migração PostgreSQL + Logto |
 | [docs/API.md](docs/API.md) | Endpoints internos e contratos de integração |
 | [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Todas as variáveis de ambiente (30+) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploy Vercel, CI/CD, scripts operacionais |
@@ -58,13 +85,13 @@ Plataforma brasileira de transparência política. Centralizamos dados públicos
 |---|---|---|
 | Frontend | Next.js + TypeScript | 16.2.6 |
 | UI | Tailwind CSS v4 + shadcn/ui | v4 |
-| Banco de dados | PostgreSQL via Supabase self-hosted | Schema v2.12 |
-| Autenticação | Supabase Auth | — |
+| Banco de dados | PostgreSQL VPS | Schema v2.12 + compat Logto |
+| Autenticação | Supabase Auth legado + Logto em preparação | — |
 | Coleta de dados | Python + scripts ETL | 3.10+ |
 | Deploy frontend | Vercel | `vercel.json` na raiz |
 | Infra banco | VPS Vultr via Coolify + Docker | `45.32.169.173` |
 | E-mail transacional | Resend | Free — 3k e-mails/mês |
-| Pagamentos | Stripe + InfinitePay | Modo teste ativo |
+| Pagamentos | InfinitePay | Stripe removido |
 | IA | OpenAI API | Tradução de juridiquês |
 
 ---

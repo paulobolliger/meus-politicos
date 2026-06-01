@@ -10,6 +10,7 @@ related: [docs/TODO_PRODUCTION.md, docs/GAP_ANALYSIS.md, docs/ARCHITECTURE.md, d
 **Situação em:** 2026-05-29
 **Branch:** `feat/redesign-2026`
 **Estado atual:** plataforma funcional com redesign aplicado, aguardando resolução de gaps antes de go-live público.
+**Atualização junho/2026:** Stripe foi removido do runtime; InfinitePay é o fluxo ativo de apoio.
 
 ---
 
@@ -43,7 +44,6 @@ O que **falta para o go-live** está detalhado em `docs/TODO_PRODUCTION.md`. Est
 |---|---|---|
 | Atualizar `.env.example` com 30+ variáveis | G-01 | 30 min |
 | Criar tabela `doacoes` + migration | G-02/G-03 pré-req | 1h |
-| Implementar INSERT no webhook Stripe | G-02 | 2h |
 | Implementar INSERT no webhook InfinitePay | G-03 | 1h |
 | Re-rodar ETL senadores (mandato_inicio) | G-08 | 2h |
 | Executar populate_siafi.py | G-09 | 1h |
@@ -66,8 +66,8 @@ O que **falta para o go-live** está detalhado em `docs/TODO_PRODUCTION.md`. Est
 | Tarefa | Gap | Esforço |
 |---|---|---|
 | Adicionar HTTP Security Headers no next.config.ts | — | 2h |
-| Ativar Stripe modo produção (trocar chaves) | — | 1h |
-| Configurar webhook Stripe de produção no Dashboard | — | 30 min |
+| Consolidar fluxo de apoio em InfinitePay | — | 1h |
+| Validar webhook InfinitePay em produção | — | 30 min |
 | Teste end-to-end: doação real R$5 → registro no banco | — | 1h |
 | Setup mínimo Vitest + 3 testes críticos | G-06 | 2h |
 | Merge `feat/redesign-2026` → `main` | — | — |
@@ -262,7 +262,7 @@ Estas decisões precisam ser tomadas **antes** de implementar as features relaci
 
 | Decisão | Opções | Impacto |
 |---|---|---|
-| **Stripe production mode** | Ativar antes ou após go-live? | Antes — para aceitar pagamentos reais desde o lançamento |
+| **Pagamentos ativos** | Stripe ou InfinitePay? | InfinitePay permanece ativo; Stripe foi removido |
 | **Modelo de acesso ao app analítico** | Free / donate-to-access / subscription | Define todo o fluxo de autenticação e payment do (app)/ |
 | **ETL automático: GitHub Actions vs. Coolify cron** | GH Actions (mais simples) vs. job no próprio Coolify | GitHub Actions preferível — CI/CD já na plataforma |
 | **Supabase self-hosted vs. Supabase Cloud** | Self-hosted (atual) vs. migrar para cloud | Migrar quando custo de operação VPS > ~$50/mês ou disponibilidade for problema |

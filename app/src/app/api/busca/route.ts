@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Pool } from 'pg'
 
-import { createClient } from '@/lib/supabase/server'
-
 // Singleton — evita criar/destruir pool a cada request
 let _pool: Pool | null = null
 function getPool(): Pool {
   if (!_pool) {
     _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? process.env.SUPABASE_DB_HOST,
-      port: Number(process.env.POSTGRES_PORT ?? process.env.SUPABASE_DB_PORT ?? '5432'),
-      user: process.env.POSTGRES_USER ?? process.env.SUPABASE_DB_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD ?? process.env.SUPABASE_DB_PASSWORD,
-      database: process.env.POSTGRES_DB ?? process.env.SUPABASE_DB_NAME ?? 'postgres',
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? '5432'),
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
       ssl: false,
       max: 3,
       idleTimeoutMillis: 30000,
@@ -83,17 +81,18 @@ function parseIntSafe(raw: string | null, fallback: number) {
 }
 
 async function countIndexados() {
-  const supabase = await createClient()
-  const { count } = await supabase
-    .from('politicos')
-    .select('id', { count: 'exact', head: true })
-    .eq('dado_estado', 'oficial')
-    .is('removido_em', null)
+  const pool = getPool()
+  const result = await pool.query<{ total: string }>(
+    `SELECT COUNT(*)::text AS total
+     FROM politicos
+     WHERE dado_estado = 'oficial'
+       AND removido_em IS NULL`
+  )
 
-  return count ?? 0
+  return Number(result.rows[0]?.total ?? '0')
 }
 
-async function buscarViaPostgres(
+async function buscarPoliticos(
   q: string,
   cargo: string,
   uf: string,
@@ -101,10 +100,6 @@ async function buscarViaPostgres(
   ordem: string,
   pagina: number
 ): Promise<{ data: PoliticoBusca[]; count: number }> {
-  if (!process.env.SUPABASE_DB_HOST || !process.env.SUPABASE_DB_PASSWORD) {
-    return { data: [], count: 0 }
-  }
-
   const pool = getPool()
 
   const whereParts = ["p.dado_estado = 'oficial'", 'p.removido_em IS NULL']
@@ -188,9 +183,9 @@ async function buscarViaPostgres(
       foto_url: row.foto_url,
       cargo: row.cargo,
       uf: row.uf,
-      presenca_pct_atual: row.presenca_pct_atual,
-      gasto_total_ano: row.gasto_total_ano,
-      total_votacoes: row.total_votacoes,
+      presenca_pct_atual: row.presenca_pct_atual != null ? Number(row.presenca_pct_atual) : null,
+      gasto_total_ano: row.gasto_total_ano != null ? Number(row.gasto_total_ano) : null,
+      total_votacoes: row.total_votacoes != null ? Number(row.total_votacoes) : null,
       mandato_inicio: row.mandato_inicio,
       partidos: { sigla: row.partido_sigla },
     })),
@@ -208,51 +203,8 @@ export async function GET(request: NextRequest) {
   const ordem = (url.searchParams.get('ordem') ?? 'relevancia').trim()
   const pagina = parseIntSafe(url.searchParams.get('pagina'), 1)
 
-  const offset = (pagina - 1) * POR_PAGINA
-  const supabase = await createClient()
-
-  let query = supabase
-    .from('politicos')
-    .select(
-      'id, slug, nome, nome_eleitoral, foto_url, cargo, uf, mandato_inicio, presenca_pct_atual, gasto_total_ano, total_votacoes, partidos(sigla)',
-      { count: 'exact' }
-    )
-    .eq('dado_estado', 'oficial')
-    .is('removido_em', null)
-
-  if (q) query = query.or(`nome_eleitoral.ilike.%${q}%,nome.ilike.%${q}%`)
-  if (cargo) query = query.eq('cargo', cargo)
-  if (uf) query = query.eq('uf', uf)
-
-  if (ordem === 'presenca') {
-    query = query.order('presenca_pct_atual', { ascending: false, nullsFirst: false })
-  } else if (ordem === 'gastos') {
-    query = query.order('gasto_total_ano', { ascending: false, nullsFirst: false })
-  } else if (ordem === 'votacoes') {
-    query = query.order('total_votacoes', { ascending: false, nullsFirst: false })
-  } else {
-    query = query.order('nome_eleitoral')
-  }
-
-  query = query.range(offset, offset + POR_PAGINA - 1)
-
-  const response = await query
-  const { data, count } = response
-  const errorCode = response.error ? (response.error as { code?: string }).code : undefined
-
-  let politicos: PoliticoBusca[] = (data ?? []) as PoliticoBusca[]
-  let totalResultados = count ?? 0
-
-  // Quando há filtro de partido, sempre usar Postgres (Supabase não filtra em FK corretamente)
-  if (partido) {
-    const fallback = await buscarViaPostgres(q, cargo, uf, partido, ordem, pagina)
-    politicos = fallback.data
-    totalResultados = fallback.count
-  } else if ((!data || errorCode === '42501') && totalResultados === 0) {
-    const fallback = await buscarViaPostgres(q, cargo, uf, partido, ordem, pagina)
-    politicos = fallback.data
-    totalResultados = fallback.count
-  }
+  const { data: politicos, count: totalResultados } =
+    await buscarPoliticos(q, cargo, uf, partido, ordem, pagina)
 
   const elapsedMs = Date.now() - startedAt
   const totalPaginas = Math.max(1, Math.ceil(totalResultados / POR_PAGINA))

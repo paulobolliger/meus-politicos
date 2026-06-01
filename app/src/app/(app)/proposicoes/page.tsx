@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -54,6 +54,23 @@ type ProposicaoRow = {
 
 const PAGE_SIZE = 30
 
+let _pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+  return _pool
+}
+
 export default async function AppProjetosPage({
   searchParams,
 }: {
@@ -66,21 +83,57 @@ export default async function AppProjetosPage({
   const pagina = Math.max(1, parseInt(params.pagina || '1', 10))
   const offset = (pagina - 1) * PAGE_SIZE
 
-  const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase as any)
-    .from('proposicoes')
-    .select('id, slug, tipo, numero, ano, ementa, ementa_simples, situacao, data_apresentacao, link_camara, link_senado, casa_origem', { count: 'exact' })
-    .order('data_apresentacao', { ascending: false, nullsFirst: false })
-    .range(offset, offset + PAGE_SIZE - 1)
+  const pool = getPool()
+  const whereParts: string[] = []
+  const values: Array<string | number> = []
 
-  if (tipo) query = query.eq('tipo', tipo)
-  if (ano)  query = query.eq('ano', ano)
-  if (q)    query = query.ilike('ementa', `%${q}%`)
+  if (tipo) {
+    values.push(tipo)
+    whereParts.push(`tipo = $${values.length}`)
+  }
+  if (ano) {
+    values.push(ano)
+    whereParts.push(`ano = $${values.length}`)
+  }
+  if (q) {
+    values.push(`%${q}%`)
+    whereParts.push(`ementa ILIKE $${values.length}`)
+  }
 
-  const { data, count } = await query
-  const projetos: ProposicaoRow[] = data || []
-  const total = (count as number) || 0
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : ''
+  const countResult = await pool.query<{ total: string }>(
+    `SELECT COUNT(*)::text AS total FROM proposicoes ${whereClause}`,
+    values
+  )
+
+  const dataValues = [...values, PAGE_SIZE, offset]
+  const limitParam = dataValues.length - 1
+  const offsetParam = dataValues.length
+  const dataResult = await pool.query<ProposicaoRow>(
+    `
+      SELECT
+        id,
+        slug,
+        tipo,
+        numero,
+        ano,
+        ementa,
+        ementa_simples,
+        situacao,
+        data_apresentacao::text AS data_apresentacao,
+        link_camara,
+        link_senado,
+        casa_origem
+      FROM proposicoes
+      ${whereClause}
+      ORDER BY data_apresentacao DESC NULLS LAST
+      LIMIT $${limitParam} OFFSET $${offsetParam}
+    `,
+    dataValues
+  )
+
+  const projetos = dataResult.rows
+  const total = Number(countResult.rows[0]?.total ?? '0')
   const totalPaginas = Math.ceil(total / PAGE_SIZE)
 
   // ── helpers de URL ──────────────────────────────────────────────────

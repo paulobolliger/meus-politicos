@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
 import Link from 'next/link'
 import { CompararClient } from '@/components/comparar/CompararClient'
 
@@ -26,7 +26,6 @@ type PoliticoCompar = {
   mandato_fim: string | null
 }
 
-// Shape returned by Supabase join
 type RawRow = {
   id: string
   slug: string
@@ -42,7 +41,24 @@ type RawRow = {
   total_emendas_historico: number | null
   mandato_inicio: string | null
   mandato_fim: string | null
-  partidos: { sigla: string } | null
+  partido_sigla: string | null
+}
+
+let _pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+  return _pool
 }
 
 export default async function CompararPage({
@@ -58,24 +74,37 @@ export default async function CompararPage({
     .filter(Boolean)
     .slice(0, 5)
 
-  const supabase = await createClient()
-
   let politicos: PoliticoCompar[] = []
 
   if (slugList.length > 0) {
-    const { data } = await supabase
-      .from('politicos')
-      .select([
-        'id', 'slug', 'nome', 'nome_eleitoral', 'foto_url', 'cargo', 'uf',
-        'presenca_pct_atual', 'gasto_total_ano', 'total_votacoes',
-        'total_emendas_ano', 'total_emendas_historico',
-        'mandato_inicio', 'mandato_fim',
-        'partidos(sigla)',
-      ].join(', '))
-      .in('slug', slugList)
-      .is('removido_em', null)
+    const pool = getPool()
+    const result = await pool.query<RawRow>(
+      `
+        SELECT
+          p.id,
+          p.slug,
+          p.nome,
+          p.nome_eleitoral,
+          p.foto_url,
+          p.cargo::text AS cargo,
+          p.uf,
+          p.presenca_pct_atual,
+          p.gasto_total_ano,
+          p.total_votacoes,
+          p.total_emendas_ano,
+          p.total_emendas_historico,
+          p.mandato_inicio::text AS mandato_inicio,
+          p.mandato_fim::text AS mandato_fim,
+          pt.sigla AS partido_sigla
+        FROM politicos p
+        LEFT JOIN partidos pt ON pt.id = p.partido_id
+        WHERE p.slug = ANY($1::text[])
+          AND p.removido_em IS NULL
+      `,
+      [slugList]
+    )
 
-    const rows = (data ?? []) as unknown as RawRow[]
+    const rows = result.rows
 
     // Preserve order from slugList
     const bySlug = new Map(rows.map((r) => [r.slug, r]))
@@ -90,7 +119,7 @@ export default async function CompararPage({
         foto_url: r.foto_url,
         cargo: r.cargo,
         uf: r.uf,
-        partido_sigla: r.partidos?.sigla ?? null,
+        partido_sigla: r.partido_sigla,
         presenca_pct_atual: r.presenca_pct_atual,
         gasto_total_ano: r.gasto_total_ano,
         total_votacoes: r.total_votacoes,

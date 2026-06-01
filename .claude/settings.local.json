@@ -6,11 +6,15 @@
       "PowerShell(cd \"c:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\app\" && npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"BrazilDots\" })",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\supabase\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\\", \"\"\\) })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\etl\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\\", \"\"\\) })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\.github\" -Recurse -ErrorAction SilentlyContinue | Where-Object { !$_.PSIsContainer } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\\", \"\"\\) })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\docs\" -Recurse | Where-Object { !$_.PSIsContainer } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\paulo\\\\0-dev\\\\02-aplicacoes\\\\05 meus-politicos\\\\\", \"\"\\) })"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

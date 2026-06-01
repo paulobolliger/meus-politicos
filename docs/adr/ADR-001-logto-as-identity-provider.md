@@ -33,6 +33,12 @@ O codigo e o banco ainda dependem de Supabase Auth:
 Essa arquitetura conflita com o objetivo de usar Logto como identidade central
 Norotec e manter PostgreSQL VPS como banco principal.
 
+## Status de execução
+
+- Sprint 1B aplicada via migration de compatibilidade
+- Sprint 1F consolidada: `email_normalizado` nao foi adotado
+- Reconciliacao temporaria usa `auth.users.email` via join legado
+
 ## Alternativas avaliadas
 
 ### Manter Supabase Auth
@@ -96,7 +102,6 @@ Alteracoes esperadas:
 
 - adicionar `perfis.logto_sub`;
 - adicionar `perfis.supabase_user_id`;
-- adicionar `perfis.email_normalizado`;
 - adicionar metadados de migracao;
 - migrar relacoes de usuario para `perfis.id`;
 - remover FKs futuras para `auth.users`;
@@ -128,4 +133,3 @@ Alteracoes esperadas:
 - documentar secrets Logto no gerenciador de segredos;
 - alinhar dominios e cookies com `meuspoliticos.com.br`,
   `app.meuspoliticos.com.br` e `painel.meuspoliticos.com.br`.
-

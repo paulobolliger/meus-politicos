@@ -122,7 +122,29 @@ export function SiteHeader() {
             </Link>
           </nav>
 
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            {/* Apoiar — destaque sutil âmbar */}
+            <Link
+              href="/apoio"
+              style={{
+                padding: '0 14px',
+                height: 38,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'rgba(217,119,6,0.08)',
+                border: '1px solid rgba(217,119,6,0.3)',
+                color: '#b45309',
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: 'none',
+                borderRadius: 6,
+                whiteSpace: 'nowrap',
+                transition: 'background 0.15s',
+              }}
+            >
+              <span style={{ fontSize: 14 }}>❤️</span> Apoiar
+            </Link>
             <Link
               href="/login"
               style={{

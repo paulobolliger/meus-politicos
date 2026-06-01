@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -30,6 +30,23 @@ type MunicipioRow = {
   per_capita: number
   qtd_parlamentares: number
   qtd_emendas: number
+}
+
+let _pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+  return _pool
 }
 
 function fmt(val: number): string {
@@ -69,28 +86,47 @@ export default async function CidadesPage({
   const ufParam = params.uf?.toUpperCase() || null
   const busca = params.q?.trim() || null
 
-  const supabase = await createClient()
+  const pool = getPool()
+  const whereParts = ['total_emendas > 0']
+  const values: string[] = []
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase as any)
-    .from('v_emendas_municipio')
-    .select('*')
-    .gt('total_emendas', 0)
-
-  if (faixaParam) query = query.eq('faixa_populacional', faixaParam)
-  if (ufParam)    query = query.eq('uf', ufParam)
-  if (busca)      query = query.ilike('nome', `%${busca}%`)
-
-  if (ord === 'per_capita') {
-    query = query.order('per_capita', { ascending: false })
-  } else {
-    query = query.order('total_emendas', { ascending: false })
+  if (faixaParam) {
+    values.push(faixaParam)
+    whereParts.push(`faixa_populacional = $${values.length}`)
+  }
+  if (ufParam) {
+    values.push(ufParam)
+    whereParts.push(`uf = $${values.length}`)
+  }
+  if (busca) {
+    values.push(`%${busca}%`)
+    whereParts.push(`nome ILIKE $${values.length}`)
   }
 
-  query = query.limit(100)
+  const orderClause = ord === 'per_capita'
+    ? 'per_capita DESC NULLS LAST'
+    : 'total_emendas DESC NULLS LAST'
 
-  const { data } = await query
-  const rows: MunicipioRow[] = (data as MunicipioRow[]) || []
+  const result = await pool.query<MunicipioRow>(
+    `
+      SELECT
+        codigo_ibge::text AS codigo_ibge,
+        nome,
+        uf,
+        populacao,
+        faixa_populacional,
+        total_emendas,
+        per_capita,
+        qtd_parlamentares,
+        qtd_emendas
+      FROM v_emendas_municipio
+      WHERE ${whereParts.join(' AND ')}
+      ORDER BY ${orderClause}
+      LIMIT 100
+    `,
+    values
+  )
+  const rows = result.rows
 
   const maxPerCapita = rows.reduce((m, r) => Math.max(m, r.per_capita), 0)
   const maxTotal     = rows.reduce((m, r) => Math.max(m, r.total_emendas), 0)

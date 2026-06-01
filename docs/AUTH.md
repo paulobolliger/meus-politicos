@@ -15,6 +15,16 @@ related: [docs/ARCHITECTURE.md, docs/DATABASE.md, docs/SECURITY.md, docs/auth/AU
 > principal. Ver `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
 
+## Status Atual da Plataforma
+
+| Eixo | Status |
+|---|---|
+| Banco | PostgreSQL VPS ativo |
+| Auth | Supabase legado; Logto em preparação |
+| Público | Migrado para PostgreSQL direto |
+| Painel/Admin | Aguardando Logto |
+| Pagamentos | Stripe removido; InfinitePay ativo |
+
 ## 1. Visão geral
 
 | Camada | Tecnologia | Responsabilidade |

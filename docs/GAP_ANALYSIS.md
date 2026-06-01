@@ -16,6 +16,9 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 > arquitetural conhecido. A decisao aprovada e migrar para Logto. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
+>
+> Atualização junho/2026: Stripe foi removido do runtime. O gap G-02 passou a
+> ser histórico; o fluxo ativo de apoio usa InfinitePay.
 
 ---
 
@@ -24,7 +27,7 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 | ID | Gap / Problema | Severidade | Arquivo(s) e Linhas | Impacto Técnico | Esforço Est. |
 |---|---|---|---|---|---|
 | G-01 | `.env.example` expõe apenas 6 de 30+ variáveis reais | **P0** | `.env.example` (raiz) | Bloqueio para novos devs e CI — ambiente impossível de configurar sem acesso ao `.env.local` real | 30 min |
-| G-02 | Webhook Stripe não persiste doação no banco | **P0** | `app/src/app/api/webhooks/stripe/route.ts:40` | Eventos de pagamento processados mas não registrados — perda de dados financeiros | 2h |
+| G-02 | Webhook Stripe removido do runtime | **Arquivado** | histórico | Fluxo Stripe não faz mais parte da aplicação ativa | — |
 | G-03 | Webhook InfinitePay não persiste doação no banco | **P0** | `app/src/app/api/webhooks/infinitepay/route.ts:34` | Idem G-02 — fluxo de doação estruturalmente incompleto | 1h |
 | G-04 | Nenhum GitHub Actions workflow existe | **P0** | `.github/` (diretório inexistente) | ETL documentado como "cron automatizado" mas depende 100% de execução manual — dados param sem intervenção humana | 1 dia |
 | G-05 | `href="#"` em produção — links inativos no perfil de candidato 2026 | **P1** | `app/src/app/(site)/candidatos-2026/[slug]/CandidatoPageClient.tsx:168,329` | UX quebrada — usuário clica e nada acontece; sinaliza feature incompleta | 2h |
@@ -52,7 +55,7 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 
 #### G-01 · .env.example incompleto
 
-**Situação:** `.env.example` contém 6 variáveis. `app/.env.local` de produção tem 30+ variáveis cobrindo Supabase, Stripe, InfinitePay, OpenAI, Resend, OAuth (Google / Twitter / LinkedIn), Postgres direto, MinIO, Portal da Transparência e subdomínios.
+**Situação:** `.env.example` contém o subconjunto mínimo de variáveis. `app/.env.local` de produção cobre Supabase, InfinitePay, OpenAI, Resend, OAuth (Google / Twitter / LinkedIn), Postgres direto, MinIO, Portal da Transparência e subdomínios.
 
 **Consequência:** novo desenvolvedor ou pipeline de CI que use `.env.example` como base não consegue rodar o projeto — erros crípticos de autenticação e conexão.
 
@@ -62,10 +65,7 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 
 #### G-02 / G-03 · Webhooks de pagamento sem persistência
 
-**Stripe** (`app/src/app/api/webhooks/stripe/route.ts:40`):
-```typescript
-// TODO: registrar em doacoes no banco
-```
+**Stripe:** removido do runtime e arquivado para auditoria.
 
 **InfinitePay** (`app/src/app/api/webhooks/infinitepay/route.ts:34`):
 ```typescript

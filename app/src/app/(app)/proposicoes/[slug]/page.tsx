@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -38,6 +38,35 @@ type Proposicao = {
   source_id: string | null
   source_record_id: string | null
   collected_at: string | null
+}
+
+type AutorPgRow = {
+  id: string
+  nome: string
+  politico_id: string | null
+  nome_eleitoral: string | null
+  slug: string | null
+  foto_url: string | null
+  cargo: string | null
+  uf: string | null
+  partido_sigla: string | null
+}
+
+let _pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+  return _pool
 }
 
 const TIPO_FULL: Record<string, string> = {
@@ -78,13 +107,12 @@ function fmtDate(iso: string | null) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
-    .from('proposicoes')
-    .select('tipo, numero, ano')
-    .eq('slug', slug)
-    .maybeSingle()
+  const pool = getPool()
+  const result = await pool.query<Pick<Proposicao, 'tipo' | 'numero' | 'ano'>>(
+    'SELECT tipo, numero, ano FROM proposicoes WHERE slug = $1 LIMIT 1',
+    [slug]
+  )
+  const data = result.rows[0] ?? null
 
   if (!data) return { title: 'Proposição não encontrada' }
   return { title: `${data.tipo} ${data.numero}/${data.ano} · Análise | Meus Políticos` }
@@ -92,24 +120,71 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function AppProjetoDetalhe({ params }: PageProps) {
   const { slug } = await params
-  const supabase = await createClient()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: p } = await (supabase as any)
-    .from('proposicoes')
-    .select('id, slug, tipo, numero, ano, ementa, ementa_simples, situacao, casa_origem, data_apresentacao, link_camara, link_senado, source_id, source_record_id, collected_at')
-    .eq('slug', slug)
-    .maybeSingle() as { data: Proposicao | null }
+  const pool = getPool()
+  const proposicaoResult = await pool.query<Proposicao>(
+    `
+      SELECT
+        id,
+        slug,
+        tipo,
+        numero,
+        ano,
+        ementa,
+        ementa_simples,
+        situacao,
+        casa_origem,
+        data_apresentacao::text AS data_apresentacao,
+        link_camara,
+        link_senado,
+        source_id,
+        source_record_id,
+        collected_at::text AS collected_at
+      FROM proposicoes
+      WHERE slug = $1
+      LIMIT 1
+    `,
+    [slug]
+  )
+  const p = proposicaoResult.rows[0] ?? null
 
   if (!p) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: autoresRaw } = await (supabase as any)
-    .from('proposicao_autores')
-    .select('id, nome, politico_id, politico:politicos(nome_eleitoral, slug, foto_url, cargo, uf, partido:partidos(sigla))')
-    .eq('proposicao_id', p.id) as { data: Autor[] | null }
+  const autoresResult = await pool.query<AutorPgRow>(
+    `
+      SELECT
+        pa.id,
+        pa.nome,
+        pa.politico_id,
+        pol.nome_eleitoral,
+        pol.slug,
+        pol.foto_url,
+        pol.cargo::text AS cargo,
+        pol.uf,
+        pt.sigla AS partido_sigla
+      FROM proposicao_autores pa
+      LEFT JOIN politicos pol ON pol.id = pa.politico_id
+      LEFT JOIN partidos pt ON pt.id = pol.partido_id
+      WHERE pa.proposicao_id = $1
+      ORDER BY pa.nome ASC NULLS LAST
+    `,
+    [p.id]
+  )
 
-  const autores = autoresRaw ?? []
+  const autores: Autor[] = autoresResult.rows.map((a) => ({
+    id: a.id,
+    nome: a.nome,
+    politico_id: a.politico_id,
+    politico: a.politico_id
+      ? {
+          nome_eleitoral: a.nome_eleitoral ?? a.nome,
+          slug: a.slug,
+          foto_url: a.foto_url,
+          cargo: a.cargo,
+          uf: a.uf,
+          partido: a.partido_sigla ? { sigla: a.partido_sigla } : null,
+        }
+      : null,
+  }))
   const sit = getSit(p.situacao)
   const tipoLabel = TIPO_FULL[p.tipo] ?? p.tipo
 

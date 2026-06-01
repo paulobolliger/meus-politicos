@@ -10,7 +10,7 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 **Engine:** PostgreSQL 15 (Supabase self-hosted)
 **Host produção:** `45.32.169.173` (VPS Vultr via Coolify + Docker)
 **URL pública:** `https://supabase.meuspoliticos.com.br`
-**Schema atual:** v2.12 — 20 migrations aplicadas (mai/2026)
+**Schema atual:** v2.12 + compat Logto — 21 migrations aplicadas (jun/2026)
 
 > ⚠️ **Regra P0:** NUNCA conectar ao banco de produção durante análise de código. Toda análise de schema deve usar os arquivos em `supabase/migrations/`.
 
@@ -57,6 +57,7 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 | `20260522007000_fixes.sql` | — | 2026-05-22 | Correções gerais |
 | `20260522_proposicao_tramitacoes.sql` | — | 2026-05-22 | Tabela `proposicao_tramitacoes` |
 | `20260523b_ale_setup.sql` | — | 2026-05-23 | ALE: `ale_sessoes`, `ale_presencas`, view `v_presenca_deputado_estadual` |
+| `20260601000000_logto_identity_compat.sql` | — | 2026-06-01 | Compatibilidade Logto: `logto_sub`, `supabase_user_id`, `auth_provider`, `migrado_logto_em` |
 
 ---
 
@@ -148,7 +149,7 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 
 | Tabela | RLS | Descrição |
 |---|---|---|
-| `perfis` | `auth.uid() = id` | Perfil de usuário (1:1 com `auth.users`) |
+| `perfis` | `auth.uid() = id` | Perfil de usuário (1:1 com `auth.users`; compatibilizado com `logto_sub`, `supabase_user_id`, `auth_provider`, `migrado_logto_em`) |
 | `acompanhamentos` | `auth.uid() = usuario_id` | Políticos seguidos por usuário |
 | `correcoes` | INSERT público / ALL admin | Fluxo de correção de dados públicos |
 | `feature_flags` | Admin only | Flags de features gerenciadas sem deploy |

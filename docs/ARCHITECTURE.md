@@ -13,6 +13,16 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
 
+## Status Atual da Plataforma
+
+| Eixo | Status |
+|---|---|
+| Banco | PostgreSQL VPS ativo |
+| Auth | Supabase legado; Logto em preparação |
+| Público | Migrado para PostgreSQL direto |
+| Painel/Admin | Aguardando Logto |
+| Pagamentos | Stripe removido; InfinitePay ativo |
+
 ## 1. Tipo de Aplicação
 
 **Plataforma multi-produto** servida por um único deploy Next.js diferenciado por host (subdomínio). Três produtos distintos — site público, app analítico e painel do usuário — compartilham código, banco de dados e autenticação sem múltiplos deploys.
@@ -31,11 +41,11 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 | Decisão | Escolha | Justificativa |
 |---|---|---|
 | Framework | Next.js 16 App Router | SSR, ISR, Route Handlers e Server Components em um único runtime |
-| Backend | Supabase (PostgreSQL) self-hosted | Banco + Auth + RLS sem servidor dedicado |
+| Backend | PostgreSQL VPS + Supabase legado | Banco + Auth + RLS sem servidor dedicado |
 | Route groups | `(site)/`, `(app)/`, `(painel)/`, `(admin)/`, `(checkout)/` | Separação de produtos sem múltiplos deploys |
 | Roteamento multi-produto | `proxy.ts` (middleware por host) | Diferencia produtos pelo header `Host` da requisição |
 | ETL | Scripts Python independentes | Acesso direto ao PostgreSQL; desacoplado do frontend |
-| Auth | Supabase Auth + cookies SSR | `@supabase/ssr` para Server Components e API Routes |
+| Auth | Supabase Auth legado + Logto em preparação | `@supabase/ssr` para Server Components e API Routes |
 | Estado global | Nenhum (sem Redux/Zustand) | Server Components para dados; `useState` local para UI |
 
 ---
@@ -72,7 +82,7 @@ graph TD
 
     E --> E1["Páginas públicas\nhome · busca · estado · candidatos · projetos · glossario"]
     E --> E2["(admin)/\n/admin — protegido por role"]
-    E --> E3["(checkout)/\n/apoio/checkout · /apoio/confirmacao"]
+    E --> E3["(checkout)/\n/apoio/confirmacao"]
 
     style B fill:#2952cc,color:#fff
     style C fill:#1a2b5e,color:#fff
@@ -223,8 +233,7 @@ Proteção implementada em `(admin)/admin/layout.tsx` — verifica role `admin` 
 
 | Rota | Descrição |
 |---|---|
-| `/apoio/checkout` | Checkout de doação (Stripe / InfinitePay) |
-| `/apoio/confirmacao` | Confirmação de pagamento |
+| `/apoio/confirmacao` | Confirmação de pagamento via InfinitePay |
 
 ---
 
@@ -237,10 +246,8 @@ Proteção implementada em `(admin)/admin/layout.tsx` — verifica role `admin` 
 | `/api/analytics` | POST | Pública | Registro de evento |
 | `/api/acompanhamentos` | GET · POST | Autenticado | Listar / criar acompanhamentos |
 | `/api/acompanhamentos/[politicoId]` | DELETE | Autenticado | Remover acompanhamento |
-| `/api/apoio/criar-intent` | POST | Pública | PaymentIntent Stripe |
 | `/api/apoio/criar-link` | POST | Pública | Link pagamento InfinitePay |
 | `/api/apoio/verificar-pagamento` | GET | Pública | Status do pagamento |
-| `/api/webhooks/stripe` | POST | Stripe signature | Eventos Stripe ⚠️ TODO: persistir doação |
 | `/api/webhooks/infinitepay` | POST | IP signature | Eventos InfinitePay ⚠️ TODO: persistir doação |
 | `/api/admin/etl/run` | POST | Admin | Disparo manual de ETL |
 | `/api/admin/flags` | GET · POST | Admin | Feature flags |

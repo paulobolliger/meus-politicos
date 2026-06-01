@@ -1,0 +1,230 @@
+# Meus Políticos — Cursor AI Governance Rules
+# Gerado pela Auditoria v2.1 (2026-05-29) a partir de AI_INSTRUCTIONS.md
+# Referência completa: AI_INSTRUCTIONS.md · docs/ (ver mapa abaixo)
+
+---
+
+## LEITURA OBRIGATÓRIA ANTES DE QUALQUER EDIÇÃO
+
+1. `app/CLAUDE.md` — regras de ETL, métricas e arquitetura de subdomínios
+2. `app/AGENTS.md` — aviso crítico sobre Next.js 16 (APIs podem diferir do seu treinamento)
+3. `AI_INSTRUCTIONS.md` — referência completa de governança
+4. O arquivo de docs relevante para a área que você vai editar (ver mapa abaixo)
+
+---
+
+## MAPA DE DOCUMENTAÇÃO
+
+| Área | Documento |
+|---|---|
+| Arquitetura geral, rotas, subdomínios | `docs/ARCHITECTURE.md` |
+| Schema do banco, tabelas, RLS, migrations | `docs/DATABASE.md` |
+| Autenticação, cookies, OAuth, role system | `docs/AUTH.md` |
+| Todos os route handlers (request/response) | `docs/API.md` |
+| Integrações externas (Stripe, OpenAI, etc.) | `docs/INTEGRATIONS.md` |
+| Variáveis de ambiente (30+ variáveis) | `docs/ENVIRONMENT.md` |
+| Deploy, Vercel, VPS, SSH, migrations | `docs/DEPLOYMENT.md` |
+| Segurança, RLS, webhooks, checklist | `docs/SECURITY.md` |
+| **Métricas e scores — LEITURA OBRIGATÓRIA** | `docs/METRICS.md` |
+| Fallback de dados cadastrais | `docs/BACKOFFICE_DATA_CONTRACT.md` |
+| Entidades, temas, glossário, fluxos de negócio | `docs/BUSINESS_DOMAIN.md` |
+| Design system, wireframes, badges de cargo | `docs/DESIGN.md` |
+| Estratégia de testes (Vitest + Playwright) | `docs/TESTING.md` |
+| 19 gaps catalogados | `docs/GAP_ANALYSIS.md` |
+| Checklist de go-live | `docs/TODO_PRODUCTION.md` |
+| Roadmap por fase | `docs/MODERNIZATION_ROADMAP.md` |
+
+---
+
+## REGRAS ABSOLUTAS (NUNCA VIOLAR)
+
+### Segurança
+- NUNCA conectar diretamente a `45.32.169.173` (VPS produção) a partir de código ou terminal em dev
+- NUNCA expor `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY` ou `OPENAI_API_KEY` no cliente
+- NUNCA colocar variável sem prefixo `NEXT_PUBLIC_` em código de Client Component
+- NUNCA usar interpolação de string com input do usuário em SQL — usar sempre `$1, $2` ou métodos do Supabase client
+
+### Cliente Supabase — seleção obrigatória
+```
+Client Component ('use client')  → createClient() de lib/supabase/client.ts
+Server Component / API Route     → createClient() de lib/supabase/server.ts
+Admin (bypassa RLS)              → createAdminClient() de lib/supabase/server.ts
+```
+- `createAdminClient()` NUNCA em Client Component
+- `createAdminClient()` apenas em: `(admin)/` Server Components, webhooks, API routes com verificação de `role = 'admin'`
+
+### Webhook Stripe
+```typescript
+const body = await req.text()  // OBRIGATÓRIO — nunca req.json()
+const event = stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)
+```
+
+---
+
+## REGRAS DE ARQUITETURA
+
+### Subdomínios — roteamento por host (proxy.ts)
+```
+localhost:3000           → (site)/ — site público
+app.localhost:3000       → (app)/  — app analítico
+painel.localhost:3000    → (painel)/ — painel do usuário
+localhost:3000/admin     → (admin)/ — painel interno (role: admin)
+```
+
+### Onde criar componentes
+- Componentes cívicos (domínio político): `app/src/components/civic/`
+- Componentes do site público: `app/src/components/site/`
+- Componentes UI genéricos (shadcn): `app/src/components/ui/`
+- **Verificar `civic/` antes de criar qualquer componente de domínio**
+
+### Variáveis de ambiente
+- O `app/next.config.ts` carrega `.env.local` do diretório `app/` (não da raiz do monorepo)
+- SSH tunnel necessário para conexão local ao banco: `ssh -L 5433:10.0.2.2:5432 root@45.32.169.173 -N`
+
+---
+
+## MÉTRICAS E SCORES
+
+**Consultar `docs/METRICS.md` antes de criar qualquer componente que exiba scores.**
+
+- Dados indisponíveis → exibir `"–"` com tooltip `"Dados sendo coletados"`
+- Nunca exibir score sem benchmark com peers (mesma UF/partido)
+- Disclaimer obrigatório em páginas com scores
+- Cores: `verde` ≥+10% da média · `âmbar` ±10% · `vermelho` ≤-10% · `cinza` sem dados
+
+---
+
+## REGRAS DE DESIGN
+
+### Badges de cargo — cores fixas
+```
+Dep. Federal  → fundo #e8eefb  texto #1a2b5e
+Senador       → fundo #e8f5ee  texto #085041
+Governador    → fundo #fff0e8  texto #7a3000
+Prefeito      → fundo #f0e8ff  texto #3c1489
+Dep. Estadual → fundo #fef9e8  texto #7a6000
+Vereador      → fundo #fce8f0  texto #7a0040
+```
+
+### Presença
+- ≥ 80% → verde · 60–79% → âmbar · < 60% → vermelho · sem dado → cinza + "–"
+
+### Conteúdo IA — obrigatório
+- Badge "Gerado por IA" + link para fonte original em **todo** conteúdo OpenAI
+- Candidatos 2026: banner âmbar de neutralidade na aba Proposta (texto fixo em `docs/DESIGN.md §6.5`)
+- Candidatos em listagens: **sempre em ordem alfabética**
+
+### Features não implementadas
+- Nunca retornar 404 silencioso — exibir card/badge "Em breve" desabilitado
+
+---
+
+## FORMULÁRIOS E VALIDAÇÃO
+
+Padrão obrigatório:
+```typescript
+const schema = z.object({ ... })
+const form = useForm({ resolver: zodResolver(schema) })
+```
+- Validação duplicada: client-side (UX) + server-side nas API routes
+
+---
+
+## ETL — REGRAS DE OPERAÇÃO
+
+- O Next.js NUNCA chama APIs de dados políticos (Câmara, Senado, TSE, Portal Transparência) em runtime
+- ETL é 100% via scripts Python em `etl/` com acesso direto ao PostgreSQL
+- Antes de sugerir rodar ETL: verificar `coletas_log` para estado atual dos dados
+- Gastos 2026 Câmara, mandato_inicio senadores e populate_siafi.py estão pendentes (G-07, G-08, G-09)
+
+---
+
+## PAGAMENTOS — ESTADO ATUAL
+
+- Stripe: modo **teste** (`sk_test_*`) — não processa pagamentos reais
+- Tabela `doacoes` ainda não existe — ambos os webhooks têm TODO de persistência (G-02, G-03)
+- InfinitePay webhook: sem HMAC — não implementar lógica financeira irreversível nele ainda
+
+---
+
+## ANALYTICS — PADRÃO BEST-EFFORT
+
+```typescript
+// Chamar sem await — nunca bloquear o fluxo principal
+fetch('/api/analytics', { method: 'POST', body: JSON.stringify({ tipo, payload }) })
+```
+
+---
+
+## CHECKLIST PRÉ-EDIÇÃO
+
+Antes de editar qualquer arquivo, confirmar:
+- [ ] Li `app/AGENTS.md` (Next.js 16 tem breaking changes)
+- [ ] Li o doc de docs/ relevante para a área que vou editar
+- [ ] Para métricas/scores: li `docs/METRICS.md`
+- [ ] Para dados de perfil: li `docs/BACKOFFICE_DATA_CONTRACT.md`
+- [ ] Sei qual cliente Supabase usar (browser / server / admin)
+- [ ] Não há `href="#"` no código que vou entregar (G-05)
+
+---
+
+## CHECKLIST PÓS-EDIÇÃO
+
+Após editar, verificar:
+- [ ] Nenhuma variável secreta exposta no cliente
+- [ ] Nenhum SQL com interpolação de string de input do usuário
+- [ ] Conteúdo IA com badge "Gerado por IA"
+- [ ] Se mudei rotas ou middleware → `docs/ARCHITECTURE.md` precisa ser atualizado?
+- [ ] Se mudei tabelas → `docs/DATABASE.md` precisa ser atualizado?
+- [ ] Se mudei variáveis de ambiente → `.env.example` e `docs/ENVIRONMENT.md` atualizados?
+- [ ] `CHANGELOG.md` reflete a mudança (se for feature ou fix significativo)?
+
+---
+
+## GATILHOS DE ATUALIZAÇÃO DE DOCUMENTAÇÃO
+
+| Se você editar... | Atualizar também... |
+|---|---|
+| `proxy.ts` ou middleware | `docs/ARCHITECTURE.md` |
+| Qualquer tabela SQL / migration | `docs/DATABASE.md` |
+| `lib/supabase/` ou auth callback | `docs/AUTH.md` |
+| Qualquer route handler `api/` | `docs/API.md` |
+| Integração externa (Stripe, OpenAI...) | `docs/INTEGRATIONS.md` |
+| `.env.local` (adicionar variável) | `.env.example` + `docs/ENVIRONMENT.md` |
+| `vercel.json` ou Coolify | `docs/DEPLOYMENT.md` |
+| `app/package.json` (adicionar dep) | `docs/DEPENDENCIES.md` |
+| Feature nova (qualquer) | `CHANGELOG.md` [Não lançado] |
+
+---
+
+## COMENTÁRIOS NO CÓDIGO
+
+Por padrão: **zero comentários**. Apenas quando o WHY é não óbvio:
+- Restrição oculta que o código não comunica
+- Workaround para bug específico de biblioteca
+- Invariante que surpreenderia um leitor futuro
+
+Nunca comentar o WHAT — nomes de variáveis e funções já fazem isso.
+
+---
+
+## FONTE DA VERDADE
+
+Em caso de conflito entre documentação e código:
+**O código sempre vence.** A documentação descreve a intenção; o código descreve a realidade.
+
+Se encontrar divergência, documentar como Gap em `docs/GAP_ANALYSIS.md`.
+
+---
+
+## GAPS CRÍTICOS ABERTOS (resolução prioritária)
+
+| Gap | Arquivo | Ação |
+|---|---|---|
+| G-02 | `api/webhooks/stripe/route.ts:40` | Implementar INSERT em `doacoes` |
+| G-03 | `api/webhooks/infinitepay/route.ts:34` | Implementar INSERT em `doacoes` |
+| G-05 | `candidatos-2026/[slug]/CandidatoPageClient.tsx:168,329` | Corrigir `href="#"` |
+| G-07 | `etl/camara/collect_camara_gastos.py` | Rodar com `--ano 2026` |
+| G-08 | `etl/senado/collect_senadores.py` | Re-rodar para `mandato_inicio` |
+
+Lista completa: `docs/GAP_ANALYSIS.md` · Checklist de go-live: `docs/TODO_PRODUCTION.md`

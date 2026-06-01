@@ -37,39 +37,35 @@ related: [docs/API.md, docs/ENVIRONMENT.md, docs/SECURITY.md, docs/DATABASE.md]
 
 ---
 
-## 2. Stripe
+## 2. Stripe (histórico)
 
-**Papel:** processamento de doações via cartão de crédito e PIX.
+**Papel histórico:** processamento de doações via cartão de crédito e PIX.
+
+Stripe foi removido do runtime e das dependências da aplicação.
 
 | Aspecto | Detalhe |
 |---|---|
-| SDK | `stripe` ^22.1.1 (server) + `@stripe/stripe-js` ^9.6.0 + `@stripe/react-stripe-js` ^6.4.0 (client) |
-| API version | `2026-04-22.dahlia` |
-| Modo atual | **Teste** — `sk_test_*` / `pk_test_*` |
-| Endpoint webhook | `POST /api/webhooks/stripe` |
-| Verificação webhook | `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)` |
+| SDK | Removido de `app/package.json` |
+| Modo atual | Não aplicável |
+| Endpoint webhook | Removido |
+| Variáveis | `STRIPE_*` removidas do `.env.example` |
 
-**Fluxo de pagamento:**
+**Fluxo histórico:**
 
 ```
 1. Cliente POST /api/apoio/criar-intent { nome, email, tipo, valor }
-2. Backend cria/recupera Customer pelo e-mail
-3. Backend cria PaymentIntent (BRL, automatic_payment_methods)
-4. Backend retorna clientSecret
-5. Frontend confirma pagamento via Stripe Elements
-6. Stripe chama POST /api/webhooks/stripe com payment_intent.succeeded
-7. ⚠️ TODO (G-02): persistir em tabela doacoes
+2. Backend criava PaymentIntent
+3. Frontend confirmava pagamento via Stripe Elements
+4. Stripe chamava POST /api/webhooks/stripe com payment_intent.succeeded
 ```
 
-**Metadata do PaymentIntent:** `{ tipo, nome, email, site }` — usada no webhook para identificar a doação.
-
-**Para ativar produção:** substituir chaves `test_` por `live_` + configurar webhook endpoint no Stripe Dashboard.
+**Estado atual:** o fluxo ativo de pagamento usa InfinitePay.
 
 ---
 
 ## 3. InfinitePay
 
-**Papel:** alternativa ao Stripe para doações via link de pagamento (PIX, boleto, cartão).
+**Papel:** fluxo ativo de doações via link de pagamento (PIX, boleto, cartão).
 
 | Aspecto | Detalhe |
 |---|---|

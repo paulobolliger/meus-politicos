@@ -1,47 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+---
+file: app/README.md
+module: App — Technical Reference
+status: Active
+related: [README.md, docs/ARCHITECTURE.md, docs/ENVIRONMENT.md, app/CLAUDE.md]
+---
 
-## Getting Started
+# app/ — Next.js 16 Application
 
-First, run the development server:
+Diretório raiz do frontend do Meus Políticos. Para visão geral do projeto, ver o [README principal](../README.md).
+
+## Desenvolvimento local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Na raiz do monorepo:
+npm run dev    # inicia Next.js em localhost:3000
+
+# Direto neste diretório:
+cd app && npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requer `app/.env.local` configurado. Ver [docs/ENVIRONMENT.md](../docs/ENVIRONMENT.md).
 
-## Subdominio Local
+## Subdomínios locais
 
-Para testar o roteamento por subdominio na Fase 0, adicione no seu arquivo de hosts:
+Adicione ao arquivo `hosts` do sistema:
 
-```txt
+```
 127.0.0.1 app.localhost
+127.0.0.1 painel.localhost
 ```
 
-No Linux/macOS, use `/etc/hosts`.
-No Windows, use `C:\Windows\System32\drivers\etc\hosts`.
+| URL | Produto |
+|---|---|
+| `localhost:3000` | Site público |
+| `app.localhost:3000` | App analítico |
+| `painel.localhost:3000` | Painel do usuário autenticado |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estrutura interna
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── (site)/      # meuspoliticos.com.br — site público
+│   ├── (app)/       # app.meuspoliticos.com.br — app analítico
+│   ├── (painel)/    # painel.meuspoliticos.com.br — usuário autenticado
+│   │   ├── (auth)/       # login, cadastro, recuperar-senha
+│   │   └── (dashboard)/  # /painel, /meus-politicos
+│   ├── (admin)/     # /admin — painel interno (role: admin)
+│   ├── (checkout)/  # fluxo de doação/pagamento
+│   ├── (auth)/      # callback OAuth
+│   └── api/         # route handlers: webhooks, busca, acompanhamentos
+├── components/
+│   ├── civic/       # Biblioteca cívica reutilizável — consultar ANTES de criar novo componente
+│   ├── site/        # Componentes exclusivos do site público
+│   ├── politico-v2/ # Perfil do político (app analítico)
+│   ├── ui/          # shadcn/ui base
+│   └── ...          # outros grupos por feature
+├── lib/
+│   └── supabase/    # client.ts · server.ts · middleware.ts · types.ts
+├── types/           # TypeScript types globais
+└── proxy.ts         # Middleware de roteamento por host (subdomínios)
+```
 
-## Learn More
+## Regras críticas
 
-To learn more about Next.js, take a look at the following resources:
+- **Antes de criar componente:** verificar `src/components/civic/` primeiro
+- **Antes de exibir score ou métrica:** ler [`docs/METRICS.md`](../docs/METRICS.md)
+- **Antes de exibir campo de perfil:** ler [`docs/BACKOFFICE_DATA_CONTRACT.md`](../docs/BACKOFFICE_DATA_CONTRACT.md)
+- **Tokens CSS:** `src/app/globals.css` — seção `:root`
+- **Dados indisponíveis:** exibir `"–"` com tooltip `"Dados sendo coletados"`
+- **Antes de rodar ETL:** consultar banco para verificar dados já existentes (ver `app/CLAUDE.md`)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Para instruções completas de agentes IA: ver [CLAUDE.md](CLAUDE.md) e [AGENTS.md](AGENTS.md).

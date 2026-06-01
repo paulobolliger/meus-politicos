@@ -31,6 +31,8 @@ type ProposicaoPg = {
   ano: number
   ementa: string | null
   ementa_simples: string | null
+  titulo_simplificado: string | null
+  frases_chave: string[] | null
   situacao: string | null
   casa_origem: string | null
   data_apresentacao: string | null
@@ -56,6 +58,16 @@ type VotacaoPartidoPg = {
   nao: string
   abstencao: string
   total: string
+}
+
+type TramitacaoPg = {
+  sequencia: number
+  data_hora: string | null
+  sigla_orgao: string | null
+  descricao_tramitacao: string | null
+  descricao_situacao: string | null
+  despacho: string | null
+  url_documento: string | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -111,10 +123,11 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
   const { slug } = await params
   const pool = getPool()
 
-  const [propResult, autoresResult] = await Promise.all([
+  const [propResult, autoresResult, tramitacoesResult] = await Promise.all([
     pool.query<ProposicaoPg>(
-      `SELECT id, slug, tipo, numero, ano, ementa, ementa_simples, situacao,
-              casa_origem, data_apresentacao, link_camara, link_senado
+      `SELECT id, slug, tipo, numero, ano, ementa, ementa_simples,
+              titulo_simplificado, frases_chave,
+              situacao, casa_origem, data_apresentacao, link_camara, link_senado
        FROM proposicoes WHERE slug = $1 LIMIT 1`,
       [slug]
     ),
@@ -133,14 +146,39 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
        LIMIT 10`,
       [slug]
     ),
+    pool.query<TramitacaoPg>(
+      `SELECT t.sequencia, t.data_hora, t.sigla_orgao,
+              t.descricao_tramitacao, t.descricao_situacao,
+              t.despacho, t.url_documento
+       FROM proposicao_tramitacoes t
+       JOIN proposicoes p ON p.id_camara = t.id_camara
+       WHERE p.slug = $1
+       ORDER BY t.sequencia ASC`,
+      [slug]
+    ),
   ])
 
   const proposicao = propResult.rows[0]
   if (!proposicao) notFound()
 
-  const autores = autoresResult.rows
+  const autores       = autoresResult.rows
+  const tramitacoes   = tramitacoesResult.rows
 
   const propRef = `${proposicao.tipo} ${proposicao.numero}/${proposicao.ano}`
+
+  // Pega a sessão de votação mais recente (maior data + maior proposicao_id)
+  // para não somar múltiplas rodadas do mesmo PL
+  const ultimaSessaoResult = await pool.query<{ proposicao_id: string; data: string }>(
+    `SELECT proposicao_id, data
+     FROM votacoes
+     WHERE proposicao = $1
+     GROUP BY proposicao_id, data
+     ORDER BY data DESC, proposicao_id DESC
+     LIMIT 1`,
+    [propRef]
+  )
+  const ultimaSessao = ultimaSessaoResult.rows[0]
+
   const votacoesResult = await pool.query<VotacaoPartidoPg>(
     `SELECT pt.sigla,
             COUNT(*) FILTER (WHERE v.voto = 'sim')        AS sim,
@@ -151,10 +189,11 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
      JOIN politicos pol ON pol.id = v.politico_id
      LEFT JOIN partidos pt ON pt.id = pol.partido_id
      WHERE v.proposicao = $1
+       AND v.proposicao_id = $2
      GROUP BY pt.sigla
      ORDER BY COUNT(*) DESC
      LIMIT 20`,
-    [propRef]
+    [propRef, ultimaSessao?.proposicao_id ?? '']
   )
   const votacoesPartido = votacoesResult.rows
 
@@ -170,290 +209,360 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px 80px' }}>
 
-      {/* Hero */}
-      <section style={{
-        background: 'linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%)',
-        borderBottom: '1px solid var(--line-soft)',
-        padding: '40px 24px 32px',
-      }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {/* ── Grid único: conteúdo principal + sidebar sticky ─────────────────── */}
+        <div className="projeto-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) 320px',
+          gap: 32,
+          alignItems: 'start',
+        }}>
 
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
-            <Link href="/" style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}>Inicio</Link>
-            <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>/</span>
-            <Link href="/projetos" style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}>Projetos de Lei</Link>
-            <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>/</span>
-            <span style={{ fontSize: 12, color: 'var(--ink-2)', fontWeight: 500 }}>{tituloCompleto}</span>
-          </div>
+          {/* ══ COLUNA PRINCIPAL ══════════════════════════════════════════════ */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-          {/* Grid 2fr/1fr */}
-          <div className="projeto-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 24, alignItems: 'start' }}>
+            {/* ── Hero: badge + h1 + ementa + resumo + IA ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-            {/* Esquerda */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                <span className="mono" style={{
-                  fontSize: 11, padding: '3px 10px',
-                  background: 'var(--brand-soft)', color: 'var(--brand)',
+              {/* Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{
+                  fontSize: 11, padding: '3px 10px', borderRadius: 4,
+                  background: '#131b2e', color: '#7c839b',
                   letterSpacing: '0.08em', fontWeight: 700,
-                }}>
-                  {tipoLabel.toUpperCase()}
+                  fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+                }}>{tipoLabel}</span>
+                <span style={{ fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                  {tituloCompleto}
                 </span>
-                <span style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 500 }}>{tituloCompleto}</span>
               </div>
 
+              {/* Título */}
               <h1 style={{
-                margin: '0 0 20px',
-                fontSize: 'clamp(20px, 3vw, 30px)',
-                lineHeight: 1.25,
-                letterSpacing: '-0.02em',
-                color: 'var(--ink)',
-                fontWeight: 700,
+                margin: '0 0 12px',
+                fontSize: 'clamp(22px, 2.6vw, 34px)',
+                lineHeight: 1.2, letterSpacing: '-0.02em',
+                color: 'var(--ink)', fontWeight: 800,
               }}>
-                {proposicao.ementa ?? tituloCompleto}
+                {proposicao.titulo_simplificado ?? (
+                  proposicao.ementa && proposicao.ementa.length > 100
+                    ? proposicao.ementa.slice(0, 100) + '…'
+                    : (proposicao.ementa ?? tituloCompleto)
+                )}
               </h1>
 
-              {/* AI box */}
+              {/* Ementa original */}
+              {proposicao.ementa && (
+                <p style={{
+                  margin: '0 0 20px', fontSize: 13, lineHeight: 1.65,
+                  color: 'var(--ink-3)', fontStyle: 'italic',
+                }}>
+                  {proposicao.ementa}
+                </p>
+              )}
+
+              {/* Em Resumo */}
+              {proposicao.frases_chave && proposicao.frases_chave.length > 0 && (
+                <div style={{
+                  background: 'white', border: '1px solid #c6c6cd',
+                  borderRadius: 12, padding: '20px 22px', marginBottom: 16,
+                }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                    color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
+                    textTransform: 'uppercase', marginBottom: 14,
+                  }}>Em Resumo</div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {proposicao.frases_chave.map((frase, i) => (
+                      <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, lineHeight: 1.5, color: 'var(--ink)' }}>
+                        <span style={{
+                          flexShrink: 0, marginTop: 1, width: 22, height: 22, borderRadius: '50%',
+                          background: '#e5eeff', color: 'var(--brand-2)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 11, fontWeight: 800,
+                        }}>{i + 1}</span>
+                        {frase}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* IA box */}
               <div style={{
-                background: 'var(--panel)',
-                border: '1px solid var(--line)',
+                background: '#eff4ff', border: '1px solid #c6c6cd',
                 borderLeft: '4px solid var(--brand-2)',
-                borderRadius: '0 8px 8px 0',
-                padding: '18px 20px',
+                borderRadius: '0 12px 12px 0', padding: '20px 22px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 16 }}>&#129504;</span>
-                  <span className="label" style={{ color: 'var(--brand-2)' }}>INTELIGENCIA CIVICA</span>
-                </div>
-                <p style={{ margin: '0 0 16px', fontSize: 15, lineHeight: 1.7, color: 'var(--ink)', fontWeight: 500 }}>
-                  {proposicao.ementa_simples ?? proposicao.ementa ?? 'Descricao nao disponivel.'}
-                </p>
-                <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      placeholder="Tire suas dúvidas sobre este projeto com nossa IA..."
-                      style={{
-                        width: '100%', background: 'var(--bg)', border: '1px solid var(--line)',
-                        borderRadius: 8, padding: '9px 44px 9px 14px', fontSize: 13,
-                        color: 'var(--ink)', outline: 'none', boxSizing: 'border-box',
-                      }}
-                      readOnly
-                    />
-                    <span style={{
-                      position: 'absolute', right: 10,
-                      fontSize: 18, color: 'var(--brand-2)', cursor: 'pointer',
-                    }}>➤</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Direita - status card */}
-            <div style={{
-              background: 'var(--panel)',
-              border: '1px solid var(--line)',
-              borderRadius: 10,
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-            }}>
-              <div>
-                <div className="label" style={{ color: 'var(--ink-3)', marginBottom: 12 }}>STATUS ATUAL</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{
-                    width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                    background: sit.dot,
-                    boxShadow: `0 0 0 3px ${sit.bg}`,
-                  }} />
-                  <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>
-                    {sit.label}
+                  <span style={{ fontSize: 18 }}>🧠</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand-2)', letterSpacing: '-0.01em' }}>
+                    Inteligência Cívica (IA)
                   </span>
                 </div>
-                {proposicao.situacao && (
-                  <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    {proposicao.situacao.length > 120 ? proposicao.situacao.slice(0, 120) + '...' : proposicao.situacao}
-                  </p>
-                )}
-                {dataApresentacao && (
-                  <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--mute)' }}>
-                    Apresentado em {dataApresentacao}{casaLabel ? ` - ${casaLabel}` : ''}
-                  </p>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {/* Seguir Projeto - stub ate acompanhamentos_proposicoes existir */}
-                <Link
-                  href="/login"
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    padding: '11px 16px', background: 'var(--brand)', color: '#fff',
-                    borderRadius: 7, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                  }}
-                >
-                  Seguir Projeto
-                </Link>
-                {(proposicao.link_camara ?? proposicao.link_senado) ? (
-                  <a
-                    href={(proposicao.link_camara ?? proposicao.link_senado)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                  Tem dúvidas sobre este projeto? Pergunte à nossa IA em linguagem simples.
+                </p>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input type="text"
+                    placeholder="Ex: Como isso afeta minha conta de água?"
+                    readOnly
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      padding: '10px 16px', background: 'var(--bg-2)', color: 'var(--ink-2)',
-                      borderRadius: 7, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                      border: '1px solid var(--line)',
+                      width: '100%', background: 'white', border: '1px solid #c6c6cd',
+                      borderRadius: 8, padding: '9px 44px 9px 14px', fontSize: 13,
+                      color: 'var(--ink)', outline: 'none', boxSizing: 'border-box',
+                      fontFamily: 'var(--font-sans)',
                     }}
-                  >
-                    Ver Documento Original
-                  </a>
-                ) : null}
+                  />
+                  <span style={{ position: 'absolute', right: 10, fontSize: 18, color: 'var(--brand-2)', cursor: 'pointer' }}>➤</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Conteudo principal */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
-        <div className="projeto-content-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 24, alignItems: 'start' }}>
-
-          {/* Coluna principal */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* Timeline */}
+            {/* ── Tramitação ── */}
             <section style={{
-              background: 'var(--panel)',
-              border: '1px solid var(--line)',
-              borderRadius: 10,
-              padding: '24px 24px 20px',
+              background: 'white', border: '1px solid #c6c6cd',
+              borderRadius: 12, padding: '28px 28px 12px',
             }}>
-              <h2 style={{ margin: '0 0 24px', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
-                Tramitacao do Projeto
+              <h2 style={{ margin: '0 0 28px', fontSize: 18, fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                🗺 Tramitação do Projeto
               </h2>
-              <div style={{ position: 'relative', paddingLeft: 40 }}>
-                <div style={{ position: 'absolute', left: 16, top: 0, bottom: 0, width: 2, background: 'var(--line)' }} />
-
-                {dataApresentacao && (
-                  <TimelineItem
-                    data={dataApresentacao}
-                    titulo="Apresentacao do Projeto"
-                    descricao={`Leitura em plenario${casaLabel ? ` da ${casaLabel}` : ''} e distribuicao as comissoes tecnicas.`}
-                    status="done"
-                  />
+              <div style={{ position: 'relative' }}>
+                <div style={{
+                  position: 'absolute', left: 20, top: 0, bottom: 0,
+                  width: 2, background: '#e5e7eb',
+                  transform: 'translateX(-50%)', zIndex: 0,
+                }} />
+                {tramitacoes.length > 0 ? (
+                  tramitacoes.map((t, idx) => {
+                    const isLast  = idx === tramitacoes.length - 1
+                    const dataFmt = t.data_hora
+                      ? new Date(t.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()
+                      : ''
+                    const titulo  = t.descricao_tramitacao ?? t.descricao_situacao ?? 'Despacho'
+                    const orgao   = t.sigla_orgao ? `[${t.sigla_orgao}] ` : ''
+                    return (
+                      <TimelineItem key={t.sequencia}
+                        data={dataFmt}
+                        titulo={`${orgao}${titulo}`}
+                        descricao={t.despacho ?? t.descricao_situacao ?? ''}
+                        status={isLast ? 'current' : 'done'}
+                        dotColor={isLast ? sit.dot : undefined}
+                        urlDocumento={t.url_documento ?? undefined}
+                      />
+                    )
+                  })
+                ) : (
+                  <>
+                    {dataApresentacao && (
+                      <TimelineItem data={dataApresentacao}
+                        titulo="Apresentação do Projeto"
+                        descricao={`Projeto lido em plenário${casaLabel ? ` da ${casaLabel}` : ''} e enviado para comissões técnicas da casa legislativa.`}
+                        status="done"
+                      />
+                    )}
+                    <TimelineItem data="EM ANDAMENTO"
+                      titulo={proposicao.situacao && proposicao.situacao.length < 60 ? proposicao.situacao : sit.label}
+                      descricao={proposicao.situacao && proposicao.situacao.length >= 60 ? proposicao.situacao : 'Aguardando próximos passos na tramitação.'}
+                      status="current" dotColor={sit.dot}
+                    />
+                    <p style={{ margin: '4px 0 20px 56px', fontSize: 12, color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                      Histórico detalhado disponível em breve.
+                    </p>
+                  </>
                 )}
-
-                <TimelineItem
-                  data="EM ANDAMENTO"
-                  titulo={sit.label}
-                  descricao={proposicao.situacao ?? 'Situacao atual do projeto.'}
-                  status="current"
-                  dotColor={sit.dot}
-                />
               </div>
-              <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--mute)', fontStyle: 'italic' }}>
-                Historico completo de despachos disponivel em breve.
-              </p>
+              {tramitacoes.length > 0 && (
+                <p style={{ margin: '4px 0 16px', fontSize: 11, color: 'var(--ink-3)', fontStyle: 'italic', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
+                  {tramitacoes.length} despachos · Câmara dos Deputados
+                </p>
+              )}
             </section>
 
-          </div>
-
-          {/* Sidebar */}
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {autores.length > 0 && (
-              <section style={{ background: '#131b2e', borderRadius: 10, padding: '20px' }}>
-                <h2 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#fff' }}>
-                  {autores.length === 1 ? 'Autoria' : `Autoria (${autores.length})`}
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {autores.map((a) => {
-                    const nome = a.pol_nome_eleitoral ?? a.nome
-                    const href = a.pol_slug ? `/politicos/${a.pol_slug}` : null
-                    const cargo = a.pol_cargo ? (CARGO_LABEL[a.pol_cargo] ?? a.pol_cargo) : null
-                    const info = [a.partido_sigla, a.pol_uf].filter(Boolean).join(' - ')
-
-                    const inner = (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 8px', borderRadius: 8 }}>
-                        {a.pol_foto_url ? (
-                          <Image
-                            src={a.pol_foto_url}
-                            alt={nome}
-                            width={56}
-                            height={56}
-                            style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.4)' }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-                            background: 'rgba(255,255,255,0.15)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 20, fontWeight: 800, color: '#fff',
-                          }}>
-                            {nome.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{nome}</div>
-                          {(cargo ?? info) && (
-                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
-                              {[cargo, info].filter(Boolean).join(' - ')}
-                            </div>
-                          )}
-                        </div>
+            {/* ── Votação ── */}
+            {votacoesPartido.length > 0 ? (
+              <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} dataSessao={ultimaSessao?.data ?? null} />
+            ) : (
+              <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, overflow: 'hidden' }}>
+                <div style={{
+                  background: '#eff4ff', borderBottom: '1px solid #c6c6cd',
+                  padding: '20px 28px', display: 'flex',
+                  alignItems: 'center', justifyContent: 'space-between', gap: 16,
+                }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Votação Final</h2>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', fontStyle: 'italic' }}>{tituloCompleto}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 24 }}>
+                    {['SIM','NÃO','ABS'].map(label => (
+                      <div key={label} style={{ textAlign: 'center' }}>
+                        <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color: '#e5e7eb', lineHeight: 1 }}>—</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>{label}</span>
                       </div>
-                    )
-
-                    return href ? (
-                      <Link key={a.id} href={href} style={{ textDecoration: 'none' }}>{inner}</Link>
-                    ) : (
-                      <div key={a.id}>{inner}</div>
-                    )
-                  })}
+                    ))}
+                  </div>
+                </div>
+                <div style={{ padding: '40px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
+                  <div style={{ fontSize: 32 }}>🗳️</div>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--ink-2)' }}>Dados de votação não disponíveis</p>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', maxWidth: 440, lineHeight: 1.6 }}>
+                    O histórico nominal de votos para este projeto ainda não foi coletado.
+                  </p>
+                  <a href={proposicao.link_camara ?? proposicao.link_senado ?? 'https://dadosabertos.camara.leg.br'}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{ marginTop: 4, fontSize: 13, color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none' }}
+                  >Ver votações na fonte oficial ↗</a>
                 </div>
               </section>
             )}
 
-            <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, padding: '18px 20px' }}>
-              <div className="label" style={{ marginBottom: 12, color: 'var(--ink-3)' }}>DOCUMENTOS OFICIAIS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {proposicao.link_camara && (
-                  <DocLink href={proposicao.link_camara} icon="edificio" label="Ver na Camara dos Deputados" />
-                )}
-                {proposicao.link_senado && (
-                  <DocLink href={proposicao.link_senado} icon="balanca" label="Ver no Senado Federal" />
-                )}
-                {!proposicao.link_camara && !proposicao.link_senado && (
-                  <p style={{ margin: 0, fontSize: 12, color: 'var(--mute)' }}>Sem links disponiveis.</p>
+          </div>{/* fim coluna principal */}
+
+          {/* ══ SIDEBAR STICKY ════════════════════════════════════════════════ */}
+          <aside style={{
+            position: 'sticky', top: 24,
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+
+            {/* Status */}
+            <section style={{
+              background: 'white', border: '1px solid #c6c6cd',
+              borderRadius: 12, padding: '22px',
+            }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
+                color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase', marginBottom: 14,
+              }}>Status Atual</div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: sit.dot }} />
+                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>
+                  {proposicao.situacao && proposicao.situacao.length < 60 ? proposicao.situacao : sit.label}
+                </span>
+              </div>
+
+              {proposicao.situacao && proposicao.situacao.length >= 60 && (
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                  {proposicao.situacao.length > 140 ? proposicao.situacao.slice(0, 140) + '…' : proposicao.situacao}
+                </p>
+              )}
+              {dataApresentacao && (
+                <p style={{ margin: '0 0 18px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.4 }}>
+                  Apresentado em {dataApresentacao}{casaLabel ? ` — ${casaLabel}` : ''}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Link href="/login" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '12px 16px', background: 'var(--brand-2)', color: '#fff',
+                  borderRadius: 8, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                }}>🔔 Seguir Projeto</Link>
+                {(proposicao.link_camara ?? proposicao.link_senado) && (
+                  <a href={(proposicao.link_camara ?? proposicao.link_senado)!}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '10px 16px', background: 'transparent', color: 'var(--ink-2)',
+                      borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                      border: '1px solid #c6c6cd',
+                    }}
+                  >Ver Documento Original</a>
                 )}
               </div>
             </section>
 
-            <Link
-              href="/projetos"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none', fontWeight: 500 }}
-            >
-              Todos os projetos
-            </Link>
-          </aside>
-        </div>
+            {/* Autoria */}
+            <section style={{ background: '#131b2e', borderRadius: 12, padding: '22px' }}>
+              <h2 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.02em' }}>
+                {autores.length > 1 ? `Autoria (${autores.length})` : 'Autoria'}
+              </h2>
+              {autores.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0' }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                    background: 'rgba(255,255,255,0.08)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 16, color: 'rgba(255,255,255,0.3)',
+                  }}>?</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.45)', marginBottom: 2 }}>Autor não identificado</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>Dados de autoria não disponíveis.</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {autores.map((a) => {
+                    const nome    = a.pol_nome_eleitoral ?? a.nome
+                    const href    = a.pol_slug ? `/politicos/${a.pol_slug}` : null
+                    const partido = a.partido_sigla ? `${a.partido_sigla}${a.pol_uf ? ` · ${a.pol_uf}` : ''}` : null
+                    const inner = (
+                      <div className="autor-row" style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '8px 8px', borderRadius: 8, transition: 'background 0.15s',
+                      }}>
+                        {a.pol_foto_url ? (
+                          <Image src={a.pol_foto_url} alt={nome} width={48} height={48}
+                            style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.25)' }}
+                            unoptimized />
+                        ) : (
+                          <div style={{
+                            width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+                            background: 'rgba(255,255,255,0.12)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 18, fontWeight: 800, color: '#fff',
+                          }}>{nome.charAt(0).toUpperCase()}</div>
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{nome}</div>
+                          {partido && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{partido}</div>}
+                        </div>
+                      </div>
+                    )
+                    return href
+                      ? <Link key={a.id} href={href} style={{ textDecoration: 'none' }}>{inner}</Link>
+                      : <div key={a.id}>{inner}</div>
+                  })}
+                </div>
+              )}
+            </section>
 
-        {/* Histórico de Votação — full width */}
-        {votacoesPartido.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} />
-          </div>
-        )}
+            {/* Documentos */}
+            <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, padding: '20px 22px' }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
+                color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase', marginBottom: 12,
+              }}>Documentos Oficiais</div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {proposicao.link_camara && <DocLink href={proposicao.link_camara} label="Íntegra do Projeto (PDF)" />}
+                {proposicao.link_senado && <DocLink href={proposicao.link_senado} label="Ver no Senado Federal" />}
+                {proposicao.link_camara && <DocLink href={proposicao.link_camara + '/historico'} label="Histórico de Pareceres" />}
+                <DocLink href="https://dadosabertos.camara.leg.br" label="Dados via API Cívica" />
+                {!proposicao.link_camara && !proposicao.link_senado && (
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)' }}>Sem links disponíveis.</p>
+                )}
+              </div>
+            </section>
+
+            <Link href="/projetos" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none', fontWeight: 500,
+            }}>← Todos os projetos</Link>
+
+          </aside>{/* fim sidebar */}
+
+        </div>{/* fim grid */}
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 860px) {
-          .projeto-hero-grid, .projeto-content-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 960px) {
+          .projeto-grid { grid-template-columns: 1fr !important; }
+          .projeto-grid aside { position: static !important; }
         }
+        .autor-row:hover { background: rgba(255,255,255,0.08) !important; }
       ` }} />
     </div>
   )
@@ -461,75 +570,109 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
 
 // Sub-componentes
 
-function TimelineItem({ data, titulo, descricao, status, dotColor }: {
+function TimelineItem({ data, titulo, descricao, status, dotColor, urlDocumento }: {
   data: string
   titulo: string
   descricao: string
   status: 'done' | 'current'
   dotColor?: string
+  urlDocumento?: string
 }) {
-  const bg = status === 'done' ? 'var(--brand-2)' : (dotColor ?? 'var(--accent-gold)')
+  const bg = status === 'done' ? 'var(--brand-2)' : (dotColor ?? '#F59E0B')
   return (
-    <div style={{ position: 'relative', marginBottom: 28 }}>
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', paddingBottom: 28 }}>
       <div style={{
-        position: 'absolute', left: -32, top: 4,
-        width: 20, height: 20, borderRadius: '50%',
-        background: bg, border: '3px solid var(--panel)',
-        boxShadow: '0 0 0 2px var(--line)',
+        position: 'absolute', left: 0, top: 0,
+        width: 40, height: 40, borderRadius: '50%',
+        background: bg,
+        border: '4px solid white',
+        boxShadow: '0 0 0 2px #c6c6cd',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, zIndex: 1,
       }}>
-        <span style={{ fontSize: 9, color: '#fff', fontWeight: 900 }}>
-          {status === 'done' ? 'v' : 'o'}
+        <span style={{ fontSize: 16, color: 'white', fontWeight: 900, lineHeight: 1 }}>
+          {status === 'done' ? '✓' : '↻'}
         </span>
       </div>
-      <span className="label" style={{ display: 'block', marginBottom: 4, color: status === 'current' ? bg : 'var(--ink-3)' }}>
-        {data}
-      </span>
-      <h4 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>{titulo}</h4>
-      <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{descricao}</p>
+      <div style={{ marginLeft: 56, paddingTop: 2 }}>
+        <span style={{
+          display: 'block', marginBottom: 4,
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+          fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+          color: status === 'current' ? bg : 'var(--ink-3)',
+        }}>
+          {data}
+        </span>
+        <h4 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3 }}>
+          {titulo}
+        </h4>
+        {descricao && (
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{descricao}</p>
+        )}
+        {urlDocumento && (
+          <a href={urlDocumento} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-block', marginTop: 6, fontSize: 12, color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>
+            Ver documento ↗
+          </a>
+        )}
+      </div>
     </div>
   )
 }
 
-function VotacoesTable({ rows, tituloCompleto }: { rows: VotacaoPartidoPg[]; tituloCompleto: string }) {
+function VotacoesTable({ rows, tituloCompleto, dataSessao }: { rows: VotacaoPartidoPg[]; tituloCompleto: string; dataSessao: string | null }) {
   const totalSim = rows.reduce((s, r) => s + Number(r.sim), 0)
   const totalNao = rows.reduce((s, r) => s + Number(r.nao), 0)
   const totalAbs = rows.reduce((s, r) => s + Number(r.abstencao), 0)
+
+  function orientacao(row: VotacaoPartidoPg) {
+    const sim = Number(row.sim), nao = Number(row.nao)
+    if (sim > nao * 2) return { label: 'Liberado', bg: 'rgba(16,185,129,0.1)', color: '#10B981', border: 'rgba(16,185,129,0.2)' }
+    if (nao > sim * 2) return { label: 'Não',      bg: 'rgba(239,68,68,0.1)',  color: '#EF4444', border: 'rgba(239,68,68,0.2)' }
+    return                     { label: 'Sim',      bg: 'rgba(16,185,129,0.1)', color: '#10B981', border: 'rgba(16,185,129,0.2)' }
+  }
+
   return (
-    <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden' }}>
+    <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, overflow: 'hidden' }}>
+      {/* Header */}
       <div style={{
-        background: 'var(--bg-2)', borderBottom: '1px solid var(--line)',
-        padding: '16px 24px', display: 'flex', flexWrap: 'wrap',
-        alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        background: '#eff4ff', borderBottom: '1px solid #c6c6cd',
+        padding: '20px 28px', display: 'flex', flexWrap: 'wrap',
+        alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
         <div>
-          <h2 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>Historico de Votacao</h2>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', fontStyle: 'italic' }}>{tituloCompleto}</p>
+          <h2 style={{ margin: '0 0 2px', fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>Votação Final</h2>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', fontStyle: 'italic' }}>
+            {tituloCompleto}
+            {dataSessao && ` · ${new Date(dataSessao).toLocaleDateString('pt-BR')}`}
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 24 }}>
+        <div style={{ display: 'flex', gap: 28 }}>
           {[
             { label: 'SIM', value: totalSim, color: '#10B981' },
-            { label: 'NAO', value: totalNao, color: '#EF4444' },
+            { label: 'NÃO', value: totalNao, color: '#EF4444' },
             { label: 'ABS', value: totalAbs, color: '#F59E0B' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ textAlign: 'center' }}>
-              <span style={{ display: 'block', fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{value}</span>
-              <span className="label" style={{ color: 'var(--ink-3)' }}>{label}</span>
+              <span style={{ display: 'block', fontSize: 36, fontWeight: 800, color, lineHeight: 1 }}>{value}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>{label}</span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Tabela */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
-            <tr>
-              {['Partido', 'Sim', 'Nao', 'Abs', 'Engajamento'].map(h => (
-                <th key={h} className="label" style={{
+            <tr style={{ background: 'rgba(211,228,254,0.3)' }}>
+              {['Bancada / Partido', 'Orientação', 'Sim', 'Não', 'Abs', 'Engajamento'].map(h => (
+                <th key={h} style={{
                   padding: '10px 20px',
-                  textAlign: h === 'Partido' ? 'left' : 'center',
-                  color: 'var(--ink-3)',
-                  borderBottom: '1px solid var(--line)',
-                  background: 'rgba(0,0,0,0.02)',
+                  textAlign: h === 'Bancada / Partido' || h === 'Orientação' ? 'left' : 'center',
+                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                  color: 'var(--ink)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+                  borderBottom: '1px solid #c6c6cd',
                 }}>{h}</th>
               ))}
             </tr>
@@ -538,14 +681,28 @@ function VotacoesTable({ rows, tituloCompleto }: { rows: VotacaoPartidoPg[]; tit
             {rows.map((row) => {
               const tot = Number(row.total)
               const pct = tot > 0 ? Math.round((Number(row.sim) / tot) * 100) : 0
+              const ori = orientacao(row)
               return (
-                <tr key={row.sigla ?? 'sem-partido'} style={{ borderBottom: '1px solid var(--line-soft)' }}>
-                  <td style={{ padding: '12px 20px', fontWeight: 700, color: 'var(--ink)' }}>{row.sigla ?? 'Sem partido'}</td>
-                  <td style={{ padding: '12px 20px', textAlign: 'center', color: '#10B981', fontWeight: 600 }}>{row.sim}</td>
-                  <td style={{ padding: '12px 20px', textAlign: 'center', color: '#EF4444', fontWeight: 600 }}>{row.nao}</td>
-                  <td style={{ padding: '12px 20px', textAlign: 'center', color: '#F59E0B', fontWeight: 600 }}>{row.abstencao}</td>
-                  <td style={{ padding: '12px 20px' }}>
-                    <div style={{ background: 'var(--line)', height: 6, borderRadius: 3, overflow: 'hidden', minWidth: 80 }}>
+                <tr key={row.sigla ?? 'sem-partido'} style={{ borderBottom: '1px solid #e5e7eb' }}
+                  className="vot-row">
+                  <td style={{ padding: '13px 20px', fontWeight: 700, color: 'var(--ink)' }}>
+                    {row.sigla ?? 'Sem partido'}
+                  </td>
+                  <td style={{ padding: '13px 20px' }}>
+                    <span style={{
+                      display: 'inline-block', padding: '3px 10px', borderRadius: 4,
+                      background: ori.bg, color: ori.color,
+                      border: `1px solid ${ori.border}`,
+                      fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)',
+                    }}>
+                      {ori.label}
+                    </span>
+                  </td>
+                  <td style={{ padding: '13px 20px', textAlign: 'center', color: '#10B981', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.sim}</td>
+                  <td style={{ padding: '13px 20px', textAlign: 'center', color: '#EF4444', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.nao}</td>
+                  <td style={{ padding: '13px 20px', textAlign: 'center', color: '#F59E0B', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.abstencao}</td>
+                  <td style={{ padding: '13px 20px' }}>
+                    <div style={{ background: '#c6c6cd', height: 6, borderRadius: 3, overflow: 'hidden', minWidth: 80 }}>
                       <div style={{ background: 'var(--brand-2)', height: '100%', width: `${pct}%` }} />
                     </div>
                   </td>
@@ -559,8 +716,7 @@ function VotacoesTable({ rows, tituloCompleto }: { rows: VotacaoPartidoPg[]; tit
   )
 }
 
-function DocLink({ href, icon, label }: { href: string; icon: string; label: string }) {
-  void icon
+function DocLink({ href, label }: { href: string; label: string }) {
   return (
     <a
       href={href}
@@ -568,12 +724,13 @@ function DocLink({ href, icon, label }: { href: string; icon: string; label: str
       rel="noopener noreferrer"
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: '9px 12px', borderRadius: 7,
+        padding: '10px 4px', borderRadius: 6,
         fontSize: 13, color: 'var(--brand-2)', fontWeight: 500,
         textDecoration: 'none',
+        borderBottom: '1px solid #f3f4f6',
       }}
     >
-      {label} &rarr;
+      📄 <span style={{ textDecoration: 'underline' }}>{label}</span>
     </a>
   )
 }

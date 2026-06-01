@@ -5,6 +5,54 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## [2026-06] - Migração PostgreSQL + Logto + Stripe Removal
+
+### Added / Adicionado
+- `docs/migrations/2026-06-postgres-logto-migration.md` como cronologia oficial das últimas sprints
+- `docs/PROJECT_STATUS_2026-06.md` como status executivo da plataforma
+- Atualização da documentação principal para refletir PostgreSQL VPS ativo, Supabase legado, Logto em preparação e InfinitePay ativo
+
+### Sprint 0R - Auditoria Banco Real
+- Confirmação do banco correto `meuspoliticos_db`
+- Identificação do usuário auditado `noro_master`
+- Registro do volume total auditado em 587.63 MB
+- Inventário dos schemas Supabase e das dependências legadas
+
+### Sprint 1B - Compatibilidade Logto
+- Criação da migration `20260601000000_logto_identity_compat.sql`
+- Inclusão de `logto_sub`, `supabase_user_id`, `auth_provider` e `migrado_logto_em`
+- Criação dos índices parciais de compatibilidade
+
+### Sprint 1F - Ajustes de Compatibilidade
+- Abandono da estratégia de `email_normalizado`
+- Reconciliação temporária via `auth.users.email` e join legado
+
+### Sprint 1G - Aplicação da Migration
+- Backup prévio
+- Aplicação da migration
+- Validação dos índices e da preservação do legado Supabase
+
+### Sprint 1H-A - Migração das Rotas Públicas
+- Home, busca e `estado/[sigla]` passaram a ler PostgreSQL direto
+- Supabase saiu do caminho runtime do site público
+
+### Sprint 1H-B - Migração de `politicos/[id]`
+- Remoção de `auth.getUser` do fluxo público
+- Remoção dos acompanhamentos do caminho dessa rota
+- A rota passou a consultar PostgreSQL direto
+
+### Sprint 1I-A - Migração Pública Final
+- `proposicoes`, `comparar`, `cidades` e `glossario` migrados para PostgreSQL direto
+- Consolidação do site público sem dependência runtime do Supabase para leitura
+
+### Stripe Removal
+- Stripe removido do runtime
+- Dependências Stripe removidas do app
+- `STRIPE_*` removidas do template de ambiente
+- Fluxo ativo mantido em InfinitePay
+
+---
+
 ## [Unreleased / Não lançado] — branch `feat/redesign-2026`
 
 ### Added / Adicionado

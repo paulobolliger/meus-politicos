@@ -6,6 +6,7 @@ const COLUNAS = [
     titulo: 'Plataforma',
     links: [
       { label: 'Buscar Políticos', href: '/busca' },
+      { label: 'Partidos Políticos', href: '/partidos' },
       { label: 'Meu Estado', href: '/meu-estado' },
       { label: 'Projetos de Lei', href: '/projetos' },
       { label: 'Emendas por Cidade', href: '/cidades' },
@@ -44,6 +45,38 @@ const COLUNAS = [
 export function SiteFooter() {
   return (
     <footer style={{ borderTop: '1px solid var(--line)', background: 'var(--bg-2)', marginTop: 64 }}>
+
+      {/* Faixa de apoio — acima das colunas */}
+      <div style={{
+        background: 'linear-gradient(90deg, #1d3a8a 0%, #1e40af 100%)',
+        padding: '28px 32px',
+      }}>
+        <div style={{
+          maxWidth: 1320, margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 24, flexWrap: 'wrap',
+        }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+              ❤️ Este projeto é independente e vive de apoio da comunidade
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
+              Sem paywall. Sem alinhamento partidário. Transparência real exige infraestrutura real.
+            </div>
+          </div>
+          <Link
+            href="/apoio"
+            style={{
+              background: '#fff', color: '#1d3a8a',
+              padding: '12px 28px', borderRadius: 8,
+              fontSize: 14, fontWeight: 700, textDecoration: 'none',
+              whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            Apoiar o projeto →
+          </Link>
+        </div>
+      </div>
 
       {/* Corpo principal */}
       <div style={{ maxWidth: 1320, margin: '0 auto', padding: '48px 32px 40px' }}>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
 import { HomeCidadaoClient } from '@/components/site/home/HomeCidadaoClient'
 
 export const metadata: Metadata = {
@@ -17,20 +17,41 @@ export type VotacaoRecente = {
   total_abstencao: number
 }
 
+type VotacaoRecenteRow = {
+  proposicao_id: string | null
+  proposicao: string | null
+  descricao_simples: string | null
+  data: string | null
+  voto: string | null
+}
+
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) _pool = new Pool({
+    host: process.env.POSTGRES_HOST ?? 'localhost',
+    port: Number(process.env.POSTGRES_PORT ?? 5432),
+    database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+    user: process.env.POSTGRES_USER ?? 'postgres',
+    password: process.env.POSTGRES_PASSWORD,
+    max: 5,
+    idleTimeoutMillis: 30_000,
+  })
+  return _pool
+}
+
 export default async function HomePage() {
-  const supabase = await createClient()
+  const pool = getPool()
 
   // Buscar votações recentes da Câmara (proposicao_id preenchido), agrupar por votação
-  // Como Supabase client não faz GROUP BY, buscamos raw e agregamos em JS
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: raw } = await (supabase as any)
-    .from('votacoes')
-    .select('proposicao_id, proposicao, descricao_simples, data, voto')
-    .not('proposicao_id', 'is', null)
-    .not('data', 'is', null)
-    .eq('source_id', 'camara_votos_bulk')
-    .order('data', { ascending: false })
-    .limit(600)
+  const { rows: raw } = await pool.query<VotacaoRecenteRow>(
+    `SELECT proposicao_id, proposicao, descricao_simples, data::text AS data, voto
+     FROM votacoes
+     WHERE proposicao_id IS NOT NULL
+       AND data IS NOT NULL
+       AND source_id = 'camara_votos_bulk'
+     ORDER BY data DESC
+     LIMIT 600`
+  )
 
   // Agrupar por proposicao_id → pegar as 4 mais recentes distintas
   type VotMap = {

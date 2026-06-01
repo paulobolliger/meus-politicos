@@ -2,7 +2,7 @@
 
 ## Status atual
 
-Status: planejamento aprovado, implementacao nao iniciada.
+Status: compatibilidade Logto em andamento; Sprint 1B aplicada e Sprint 1F/1G documentadas.
 
 Este documento consolida os diagnosticos feitos ate agora sobre a migracao de
 autenticacao do projeto Meus Politicos.
@@ -26,6 +26,17 @@ Contexto confirmado:
 - Endpoint central Logto: `https://auth.norotec.cloud`.
 - Projeto alvo: `meuspoliticos.com.br`.
 - O codigo e o schema ainda possuem dependencias de Supabase Auth.
+
+## Progresso registrado
+
+- Sprint 0R: auditoria do banco real e confirmação do banco `meuspoliticos_db`
+- Sprint 1B: migration de compatibilidade `logto_sub` / `supabase_user_id`
+- Sprint 1F: abandono da estratégia `email_normalizado`
+- Sprint 1G: aplicação da migration e validação dos índices
+- Sprint 1H-A: rotas públicas migradas para PostgreSQL direto
+- Sprint 1H-B: `politicos/[id]` migrada para PostgreSQL direto
+- Sprint 1I-A: finalização da migração pública
+- Stripe Removal: Stripe retirado do runtime; InfinitePay mantido
 
 ## Referencias de governanca
 
@@ -107,6 +118,8 @@ Modelo alvo recomendado:
 - `public.perfis.supabase_user_id`: identificador legado para auditoria e
   reconciliacao.
 - `public.perfis.role`: autorizacao de aplicacao.
+- `public.perfis.auth_provider`: marcador do provedor atual/legado durante a transicao.
+- `public.perfis.migrado_logto_em`: timestamp de vinculacao ao Logto.
 
 O `sub` do Logto deve ser a identidade externa definitiva. Email pode ser usado
 para reconciliacao inicial, mas nao deve ser a chave primaria de identidade. A
@@ -247,10 +260,6 @@ Migrations previstas:
 - adicionar `perfis.migrado_logto_em`;
 - criar indices parciais para `logto_sub` e `supabase_user_id`;
 - preencher `supabase_user_id = id` para perfis existentes.
-
-Observacao do banco real: `public.perfis` nao tem email. A lista de usuarios
-reconciliaveis por email deve ser extraida temporariamente de `auth.users.email`
-por join legado com `public.perfis.id = auth.users.id`.
 
 Codigo previsto:
 
