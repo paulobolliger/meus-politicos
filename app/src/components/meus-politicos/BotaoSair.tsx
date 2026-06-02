@@ -1,23 +1,14 @@
 'use client'
 
 import { LogOut } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { createClient } from '@/lib/supabase/client'
-
 export function BotaoSair() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  async function sair() {
+  function sair() {
     setLoading(true)
-
-    const supabase = createClient()
-    await supabase.auth.signOut()
-
-    router.push('/')
-    router.refresh()
+    window.location.href = '/api/auth/logto/sign-out'
   }
 
   return (
@@ -32,4 +23,3 @@ export function BotaoSair() {
     </button>
   )
 }
-

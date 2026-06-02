@@ -4,8 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { createClient } from '@/lib/supabase/client'
-
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 16px',
@@ -20,59 +18,28 @@ const inputStyle: React.CSSProperties = {
 }
 
 export function LoginForm() {
-  const supabase = createClient()
   const searchParams = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
   const [loadingEmail, setLoadingEmail] = useState(false)
   const [loadingOAuth, setLoadingOAuth] = useState<'google' | 'x' | 'linkedin' | null>(null)
 
   const redirectTo = searchParams.get('redirectTo') || '/painel'
 
-  function painelCallbackUrl() {
-    const isDev = window.location.hostname.includes('localhost')
-    const base = isDev
-      ? 'http://localhost:3000'
-      : (process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br')
-    return `${base}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+  function signInUrl() {
+    return `/api/auth/logto/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`
   }
 
-  async function entrarComOAuth(provider: 'google' | 'twitter' | 'linkedin_oidc', key: 'google' | 'x' | 'linkedin') {
-    setErrorMessage('')
+  function entrarComOAuth(key: 'google' | 'x' | 'linkedin') {
     setLoadingOAuth(key)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: painelCallbackUrl() },
-    })
-    if (error) {
-      setErrorMessage(`Não foi possível iniciar o login.`)
-      setLoadingOAuth(null)
-    }
+    window.location.href = signInUrl()
   }
 
   async function entrarComEmail(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setErrorMessage('')
     setLoadingEmail(true)
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) {
-      setErrorMessage('Email ou senha incorretos.')
-      setLoadingEmail(false)
-      return
-    }
-
-    const isPainelHost = window.location.hostname.startsWith('painel.')
-    const isDev = window.location.hostname.includes('localhost') || window.location.hostname === '127.0.0.1'
-    if (isPainelHost || isDev) {
-      window.location.href = redirectTo
-    } else {
-      const painelBase = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
-      window.location.href = `${painelBase}${redirectTo}`
-    }
+    window.location.href = signInUrl()
   }
 
   return (
@@ -85,7 +52,7 @@ export function LoginForm() {
         {/* Google */}
         <button
           type="button"
-          onClick={() => entrarComOAuth('google', 'google')}
+          onClick={() => entrarComOAuth('google')}
           disabled={loadingOAuth !== null}
           title="Continuar com Google"
           style={{
@@ -122,7 +89,7 @@ export function LoginForm() {
         {/* X */}
         <button
           type="button"
-          onClick={() => entrarComOAuth('twitter', 'x')}
+          onClick={() => entrarComOAuth('x')}
           disabled={loadingOAuth !== null}
           title="Continuar com X"
           style={{
@@ -159,7 +126,7 @@ export function LoginForm() {
         {/* LinkedIn */}
         <button
           type="button"
-          onClick={() => entrarComOAuth('linkedin_oidc', 'linkedin')}
+          onClick={() => entrarComOAuth('linkedin')}
           disabled={loadingOAuth !== null}
           title="Continuar com LinkedIn"
           style={{
@@ -238,10 +205,6 @@ export function LoginForm() {
       >
         {loadingEmail ? 'Entrando...' : 'Entrar →'}
       </button>
-
-      {errorMessage ? (
-        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--neg)' }}>{errorMessage}</p>
-      ) : null}
 
       <div className="mono" style={{ marginTop: 16, fontSize: 12, color: 'var(--ink-3)' }}>
         Não tem conta?{' '}

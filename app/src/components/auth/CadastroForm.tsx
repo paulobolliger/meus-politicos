@@ -2,9 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-
-import { createClient } from '@/lib/supabase/client'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -34,9 +31,6 @@ const oauthBtnBase: React.CSSProperties = {
 }
 
 export function CadastroForm() {
-  const supabase = createClient()
-  const router = useRouter()
-
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,38 +41,20 @@ export function CadastroForm() {
   const [loadingGoogle, setLoadingGoogle] = useState(false)
   const [loadingTwitter, setLoadingTwitter] = useState(false)
 
-  async function cadastrarComGoogle() {
-    setErrorMessage('')
-    setLoadingGoogle(true)
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-
-    if (error) {
-      setErrorMessage('Nao foi possivel iniciar o cadastro com Google.')
-      setLoadingGoogle(false)
-    }
+  function signUpUrl() {
+    return '/api/auth/logto/sign-up?redirectTo=/meus-politicos'
   }
 
-  async function cadastrarComX() {
+  function cadastrarComGoogle() {
+    setErrorMessage('')
+    setLoadingGoogle(true)
+    window.location.href = signUpUrl()
+  }
+
+  function cadastrarComX() {
     setErrorMessage('')
     setLoadingTwitter(true)
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-
-    if (error) {
-      setErrorMessage('Nao foi possivel iniciar o cadastro com X.')
-      setLoadingTwitter(false)
-    }
+    window.location.href = signUpUrl()
   }
 
   async function cadastrarComEmail(event: React.FormEvent<HTMLFormElement>) {
@@ -101,26 +77,7 @@ export function CadastroForm() {
 
     setErrorMessage('')
     setLoadingEmail(true)
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome } },
-    })
-
-    if (error) {
-      const mensagem = error.message.toLowerCase()
-      if (mensagem.includes('already') || mensagem.includes('registered') || mensagem.includes('exists')) {
-        setErrorMessage('Este e-mail ja esta em uso. Entre ou recupere sua senha.')
-      } else {
-        setErrorMessage('Nao foi possivel criar sua conta agora.')
-      }
-      setLoadingEmail(false)
-      return
-    }
-
-    router.push('/meus-politicos')
-    router.refresh()
+    window.location.href = signUpUrl()
   }
 
   const requisitosSenha = [
