@@ -3,34 +3,16 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { createClient } from '@/lib/supabase/client'
-
 export function RecuperarSenhaForm() {
   const [email, setEmail] = useState('')
-  const [sentEmail, setSentEmail] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function enviarLink(event: React.FormEvent<HTMLFormElement>) {
+  function enviarLink(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    setErrorMessage('')
-    setSentEmail('')
     setLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/conta/nova-senha`,
-    })
-
-    setLoading(false)
-
-    if (error) {
-      setErrorMessage('Nao foi possivel enviar o link de recuperacao. Verifique o e-mail e tente novamente.')
-      return
-    }
-
-    setSentEmail(email)
+    window.location.href = `/api/auth/logto/reset-password?email=${encodeURIComponent(email)}`
   }
 
   return (
@@ -75,28 +57,6 @@ export function RecuperarSenhaForm() {
       >
         {loading ? 'Enviando...' : 'Enviar link de recuperação →'}
       </button>
-
-      {sentEmail ? (
-        <div
-          style={{
-            marginTop: 16,
-            padding: 16,
-            border: '1px solid var(--pos)',
-            background: 'var(--bg)',
-          }}
-        >
-          <div className="mono" style={{ fontSize: 11, color: 'var(--pos)', letterSpacing: '0.1em', marginBottom: 6 }}>
-            LINK ENVIADO
-          </div>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-            Verifique sua caixa de entrada em <strong>{sentEmail}</strong>. O link expira em 1 hora.
-          </p>
-        </div>
-      ) : null}
-
-      {errorMessage ? (
-        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--neg)' }}>{errorMessage}</p>
-      ) : null}
 
       <div style={{ marginTop: 20 }}>
         <Link
