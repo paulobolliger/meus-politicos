@@ -1,291 +1,255 @@
 ---
 file: docs/ARCHITECTURE.md
-module: Architecture Manual
+module: System Architecture
 status: Active
-related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.md, docs/auth/AUTH_MIGRATION_LOGTO.md, docs/adr/ADR-001-logto-as-identity-provider.md]
+related: [README.md, docs/INVENTORY_ROUTES.md, docs/API.md, docs/DATABASE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/INTEGRATIONS.md]
 ---
 
-# Arquitetura — Meus Políticos
+# Arquitetura
 
-> **Nota de transição:** as secoes abaixo descrevem a arquitetura ativa/legada
-> Logto e mantem PostgreSQL VPS como banco principal. Ver
-> `docs/auth/AUTH_MIGRATION_LOGTO.md` e
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+Este documento descreve a arquitetura real identificada no código do projeto Meus Politicos em 2026-06-02. A fonte de verdade e o runtime Next.js em `app/src`, os scripts ETL em `etl/`, o schema SQL documentado em `docs/DATABASE.md` e os contratos de API em `docs/API.md`.
 
-## Status Atual da Plataforma
+## 1. Tipo de Aplicacao
 
-| Eixo | Status |
-|---|---|
-| Banco | PostgreSQL VPS ativo |
-| Público | Migrado para PostgreSQL direto |
-| Painel/Admin | Aguardando Logto |
-| Pagamentos | Stripe removido; InfinitePay ativo |
+O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Router, React 19, TypeScript, PostgreSQL/Supabase como banco relacional, Logto como provedor de identidade, InfinitePay para checkout e OpenAI para geracao/simplificacao de texto.
 
-## 1. Tipo de Aplicação
-
-**Plataforma multi-produto** servida por um único deploy Next.js diferenciado por host (subdomínio). Três produtos distintos — site público, app analítico e painel do usuário — compartilham código, banco de dados e autenticação sem múltiplos deploys.
-
-| Produto | Domínio (produção) | Domínio (dev local) | Audiência |
-|---|---|---|---|
-| Site Público | `meuspoliticos.com.br` | `localhost:3000` | Cidadão geral |
-| App Analítico | `app.meuspoliticos.com.br` | `app.localhost:3000` | Usuário avançado / imprensa |
-| Painel do Usuário | `painel.meuspoliticos.com.br` | `painel.localhost:3000` | Usuário autenticado |
-| Painel Interno | `meuspoliticos.com.br/admin` | `localhost:3000/admin` | Equipe interna (role: admin) |
-
----
-
-## 2. Padrão Arquitetural
-
-| Decisão | Escolha | Justificativa |
+| Dimensao | Classificacao real | Evidencia operacional |
 |---|---|---|
-| Framework | Next.js 16 App Router | SSR, ISR, Route Handlers e Server Components em um único runtime |
-| Route groups | `(site)/`, `(app)/`, `(painel)/`, `(admin)/`, `(checkout)/` | Separação de produtos sem múltiplos deploys |
-| Roteamento multi-produto | `proxy.ts` (middleware por host) | Diferencia produtos pelo header `Host` da requisição |
-| ETL | Scripts Python independentes | Acesso direto ao PostgreSQL; desacoplado do frontend |
-| Estado global | Nenhum (sem Redux/Zustand) | Server Components para dados; `useState` local para UI |
+| Produto | Plataforma de transparencia politica com site publico, app analitico, painel do usuario e admin interno | Grupos de rota `app/src/app/(site)`, `(app)`, `(painel)`, `(admin)`, `(checkout)` |
+| Renderizacao | Hibrida: Server Components, Client Components e Route Handlers | Paginas server-side consultam `pg`; componentes client chamam APIs internas e usam estado local |
+| Backend | Route Handlers Next.js + Server Actions | `app/src/app/api/**/route.ts`; `app/src/actions/resumo-interpretativo.ts` |
+| Banco | PostgreSQL direto via `pg`, com modelagem Supabase/PostgreSQL | Uso recorrente de `new Pool()` com `POSTGRES_*`; docs e schema apontam Supabase/PostgreSQL |
+| Autenticacao | Logto server-side e edge | `app/src/lib/logto/*`, `app/src/app/api/auth/logto/*`, `app/src/proxy.ts` |
+| RBAC | Role persistida em `perfis.role` | `app/src/lib/auth/current-user.ts`, endpoints admin |
+| Pagamentos | InfinitePay checkout link + webhook incompleto | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento`, `/api/webhooks/infinitepay` |
+| IA | OpenAI server-side com cache em tabela de resumo | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` |
+| ETL | Scripts Python externos ao runtime web | `etl/camara`, `etl/senado`, `etl/tse`, `etl/ibge`, `etl/portal_transparencia`, `etl/ale` |
+| Estado global | Nao ha store global identificada | `useState`, `useEffect`, `useMemo`, `useTransition`; sem Zustand/Redux/SWR/TanStack Query |
 
----
+## 2. Visao de Ecossistema
 
-### Roadmap de identidade
+O sistema se organiza em quatro superficies de usuario:
 
-| Horizonte | Arquitetura |
-|---|---|
+| Superficie | Grupo de rotas | Objetivo | Status |
+|---|---|---|---|
+| Site publico | `app/src/app/(site)` | Descoberta, paginas de estado, partidos, glossario, apoio e conteudo civico | Parcialmente produtivo |
+| App analitico | `app/src/app/(app)` | Busca, comparacao, perfis, proposicoes e telas de exploracao | MVP funcional com lacunas |
+| Painel do usuario | `app/src/app/(painel)` | Acompanhamentos, feed civico e area autenticada | Parcial; feed ainda usa mock/local state |
+| Admin | `app/src/app/(admin)` | Edicao de politicos, feature flags, analytics, usuarios, ETL | Funcional limitado; ETL nao dispara jobs |
 
-O roadmap completo esta em `docs/auth/AUTH_MIGRATION_LOGTO.md`.
-
----
-
-## 3. Diagrama de Subdomínios
-
-```mermaid
-graph TD
-    A["Requisição HTTP"] --> B["proxy.ts — Middleware de Host"]
-
-    B -->|"host = painel.*"| C["(painel)/ Route Group"]
-    B -->|"host = app.*"| D["(app)/ Route Group"]
-    B -->|"host = meuspoliticos.*\nou localhost"| E["(site)/ Route Group"]
-
-    C --> C1["(auth)/\nlogin · cadastro · recuperar-senha"]
-    C --> C2["(dashboard)/\n/painel · /meus-politicos"]
-    C -->|"sem sessão → redirect /login"| C1
-
-    D --> D1["/home · /app-busca"]
-    D --> D2["/politicos/[id] · /proposicoes · /comparar"]
-    D -->|"host /login → redirect painel.*"| C1
-
-    E --> E1["Páginas públicas\nhome · busca · estado · candidatos · projetos · glossario"]
-    E --> E2["(admin)/\n/admin — protegido por role"]
-    E --> E3["(checkout)/\n/apoio/confirmacao"]
-
-    style B fill:#2952cc,color:#fff
-    style C fill:#1a2b5e,color:#fff
-    style D fill:#1a2b5e,color:#fff
-    style E fill:#1a2b5e,color:#fff
-```
-
----
-
-## 4. Diagrama de Camadas do Sistema
+## 3. Diagrama Geral de Camadas
 
 ```mermaid
-graph TD
-    subgraph "Camada 4 — Interface"
-        UI["Next.js 16 App Router\nSite · App · Painel · Admin"]
-    end
+flowchart TB
+  U[Usuario cidadao] --> SITE[Site publico Next.js]
+  U --> APP[App analitico Next.js]
+  U --> PAINEL[Painel autenticado]
+  ADMIN[Operador admin] --> ADMINUI[Admin interno]
 
-    subgraph "Camada 3 — IA"
-        AI["OpenAI API\nJuridiquês → PT simples\nResumo candidatos/propostas"]
-    end
+  SITE --> API[Route Handlers /api]
+  APP --> API
+  PAINEL --> API
+  ADMINUI --> API
 
-    subgraph "Camada 2 — Banco Estruturado"
-    end
+  SITE --> PG[(PostgreSQL / Supabase)]
+  APP --> PG
+  PAINEL --> PG
+  ADMINUI --> PG
+  API --> PG
 
-    subgraph "Camada 1 — Coleta ETL"
-        ETL["Python Scripts\netl/camara · senado · tse · ale\nibge · portal_transparencia · partidos"]
-        APIS["APIs Oficiais\nCâmara · Senado · TSE\nPortal Transparência · IBGE\nAssembleias Estaduais"]
-    end
+  PAINEL --> LOGTO[Logto]
+  ADMINUI --> LOGTO
+  API --> LOGTO
+  PROXY[proxy.ts] --> LOGTO
 
-    AI -->|"batch insert via ETL"| DB
-    ETL --> DB
-    APIS --> ETL
+  SITE --> IPAY[InfinitePay]
+  API --> IPAY
+  IPAY --> WEBHOOK[/api/webhooks/infinitepay/]
+
+  API --> OPENAI[OpenAI]
+  ETL[Scripts Python ETL] --> PG
+  ETL --> PUBLICAS[APIs publicas: Camara, Senado, TSE, IBGE, CGU, ALEs]
+  ETL --> OPENAI
 ```
 
----
+## 4. Fluxo de Dados do Ecossistema
 
-## 5. Fluxo de Dados (Ciclo completo)
+O ciclo de dados e dividido em ingestao, modelagem relacional, entrega de produto e telemetria.
+
+```mermaid
+flowchart LR
+  A[Fontes publicas] --> B[ETL Python]
+  B --> C[(PostgreSQL / Supabase)]
+  C --> D[Paginas Server Components]
+  C --> E[APIs internas]
+  E --> F[Componentes Client]
+  F --> G[Acoes do usuario]
+  G --> H[Analytics e acompanhamentos]
+  H --> C
+
+  I[Logto] --> J[perfil autenticado]
+  J --> H
+
+  K[OpenAI] --> L[resumo interpretativo / simplificacao]
+  L --> C
+```
+
+### 4.1 Ingestao
+
+| Origem | Scripts | Saida esperada | Status arquitetural |
+|---|---|---|---|
+| Camara dos Deputados | `etl/camara/*` | Deputados, gastos, votacoes, proposicoes, tramitacoes | Existe, fora do runtime web |
+| Senado | `etl/senado/*` | Senadores, gastos, votacoes | Existe, fora do runtime web |
+| TSE | `etl/tse/*` | Eleitos 2022, candidatos 2026 | Existe; produto 2026 ainda incompleto |
+| IBGE | `etl/ibge/*` | Estados e municipios | Existe |
+| Portal da Transparencia/CGU | `etl/portal_transparencia/*` | Emendas e codigos SIAFI | Existe |
+| ALEs | `etl/ale/*` | Assembleias estaduais | Existe; cobertura depende de fonte |
+| OpenAI ETL | `etl/ia/simplificar_proposicoes.py` | Textos simplificados | Existe, exige `OPENAI_API_KEY` |
+
+### 4.2 Persistencia
+
+O backend acessa o banco diretamente via `pg`, sem camada Prisma/Drizzle. A aplicacao depende de variaveis `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` e `POSTGRES_PASSWORD`. Parte dos scripts ETL aceita fallback `SUPABASE_DB_*`, mas o runtime web usa majoritariamente `POSTGRES_*`.
+
+### 4.3 Entrega
+
+| Canal | Padrao predominante | Exemplo |
+|---|---|---|
+| Paginas publicas | Server Component consulta PostgreSQL direto e entrega HTML | `app/src/app/(site)/page.tsx` |
+| Busca | Client Component chama Route Handler | `BuscaClient.tsx` -> `/api/busca` |
+| Perfil politico | Pagina server-side monta dados, componente client troca abas/modo | `app/src/app/(app)/politicos/[id]/page.tsx`, `PerfilApp.tsx` |
+| Acompanhamento | Botao client chama API autenticada | `BotaoAcompanhar.tsx` -> `/api/acompanhamentos` |
+| Admin | Paginas server-side consultam banco; componentes client fazem PATCH/POST | `FeatureFlagList.tsx`, `PoliticoEditorSection.tsx`, `EtlSourceCard.tsx` |
+
+## 5. Core Loop Obrigatorio
+
+O MVP real identificado e: buscar politico, abrir perfil, acompanhar e receber/consultar feed civico. O loop existe parcialmente: busca e acompanhamento persistem, mas o feed civico ainda nao esta conectado a um pipeline real completo.
 
 ```mermaid
 sequenceDiagram
-    participant F as Fonte Oficial (API/CSV)
-    participant E as ETL Python
-    participant D as PostgreSQL
-    participant N as Next.js (SSR)
-    participant U as Usuário
+  actor C as Cidadao
+  participant UI as UI Next.js
+  participant API as API interna
+  participant DB as PostgreSQL
+  participant LOGTO as Logto
 
-    F->>E: Dados brutos (JSON / XML / CSV)
-    E->>E: Validar · normalizar · entity resolution
-    E->>D: UPSERT (ON CONFLICT UPDATE)
-    E->>D: INSERT coletas_log (status, registros, duração)
-    U->>N: GET /estado/SP
-    D-->>N: Dados + RLS aplicado por role
-    N-->>U: HTML renderizado (SSR)
+  C->>UI: Pesquisa politico
+  UI->>API: GET /api/busca?q=...
+  API->>DB: SELECT politicos + partidos
+  DB-->>API: resultados
+  API-->>UI: items, total, chips
+  C->>UI: Abre perfil
+  UI->>DB: Server Component consulta perfil, gastos, votacoes, proposicoes
+  DB-->>UI: dados consolidados
+  C->>UI: Clica acompanhar
+  UI->>LOGTO: redireciona para login se necessario
+  LOGTO-->>UI: sessao Logto
+  UI->>API: POST /api/acompanhamentos
+  API->>DB: INSERT acompanhamentos
+  DB-->>API: sucesso ou conflito
+  API-->>UI: ok
+  C->>UI: Abre painel
+  UI->>DB: consulta acompanhamentos e alertas
+  DB-->>UI: estado do painel
 ```
 
----
+### 5.1 Pontos Solidos do Loop
 
-## 6. Mapeamento Completo de Rotas
-
-### (site)/ — Site Público
-
-**Dados e conteúdo:**
-
-| Rota | Status | Notas |
+| Etapa | Status | Evidencia |
 |---|---|---|
-| `/` | ✅ Ativo | Home com busca e mapa |
-| `/busca` | ✅ Ativo | Resultados com filtros |
-| `/estado` | ✅ Ativo | Seleção de estado |
-| `/estado/[sigla]` | ✅ Ativo | Representantes do estado |
-| `/estado/[sigla]/assembleia` | ✅ Ativo | Deputados estaduais |
-| `/estado/[sigla]/assembleia/[slug]` | ✅ Ativo | Perfil do dep. estadual |
-| `/candidatos-2026` | ✅ Ativo | Lista de candidatos TSE |
-| `/candidatos-2026/[slug]` | ⚠️ Parcial | `href="#"` em 2 links — Gap G-05 |
-| `/camara` | ✅ Ativo (novo) | Câmara dos Deputados |
-| `/partidos` | ✅ Ativo (novo) | Lista de partidos |
-| `/partidos/[sigla]` | ✅ Ativo (novo) | Detalhe do partido |
-| `/projetos` | ✅ Ativo | Proposições legislativas |
-| `/projetos/[slug]` | ✅ Ativo | Detalhe da proposição |
-| `/glossario` | ✅ Ativo | Glossário cívico |
-| `/glossario/[slug]` | ✅ Ativo | Termo do glossário |
-| `/meu-estado` | ✅ Ativo | "Quem me representa" por CEP |
-| `/apoio` | ✅ Ativo | Página de doações |
+| Busca por nome/filtro | Funcional | `app/src/components/busca/BuscaClient.tsx`, `app/src/app/api/busca/route.ts` |
+| Perfil politico | Funcional parcial | `app/src/app/(app)/politicos/[id]/page.tsx`, `PerfilApp.tsx` |
+| Acompanhar politico | Funcional autenticado | `BotaoAcompanhar.tsx`, `/api/acompanhamentos` |
+| Painel autenticado | Parcial | `app/src/app/(painel)/(dashboard)/painel/page.tsx` |
+| Feed civico | Bloqueado para producao plena | `app/src/components/painel/FeedCivico.tsx` ainda usa estado/mock local |
 
-**Institucional e legal:**
+### 5.2 Fraturas do Loop
 
-| Rota | Status |
-|---|---|
-| `/sobre` · `/fontes` · `/manifesto` | ✅ Ativo |
-| `/metodologia` · `/privacidade` · `/termos` | ✅ Ativo |
-| `/como-funciona` · `/cidades` | ✅ Ativo |
-
-**Páginas de sistema:** `/acesso-negado` · `/confirmacao` · `/erro` · `/indisponivel` · `/manutencao`
-
----
-
-### (app)/ — App Analítico
-
-| Rota | Arquivo | Notas |
+| Fratura | Impacto | Arquivos |
 |---|---|---|
-| `/home` | `(app)/home/page.tsx` | Rewrite de `/` via proxy.ts |
-| `/app-busca` | `(app)/app-busca/page.tsx` | Rewrite de `/busca` via proxy.ts |
-| `/politicos/[id]` | `(app)/politicos/[id]/page.tsx` | Perfil analítico completo |
-| `/proposicoes` | `(app)/proposicoes/page.tsx` | Lista de proposições |
-| `/proposicoes/[slug]` | `(app)/proposicoes/[slug]/page.tsx` | Detalhe de proposição |
-| `/comparar` | `(app)/comparar/page.tsx` | Comparar políticos |
+| Feed civico nao deriva de eventos reais completos | O usuario acompanha, mas nao recebe uma linha do tempo civica confiavel | `app/src/components/painel/FeedCivico.tsx` |
+| Admin ETL nao dispara scripts | Dados podem ficar desatualizados apesar do painel exibir acao de ETL | `app/src/app/api/admin/etl/run/route.ts`, `app/src/components/admin/EtlSourceCard.tsx` |
+| InfinitePay nao persiste confirmacao | Apoio financeiro pode ser criado, mas o estado confirmado nao entra no banco pelo webhook | `app/src/app/api/webhooks/infinitepay/route.ts` |
 
----
+## 6. Gerenciamento de Estado
 
-### (painel)/ — Painel do Usuário
+Nao ha biblioteca de estado global identificada. O estado e distribuido por:
 
-**Rotas de auth** (acessíveis sem sessão):
+| Categoria | Implementacao | Exemplos |
+|---|---|---|
+| Estado local de UI | `useState`, `useMemo`, `useEffect`, `useTransition` | Busca, tabs de perfil, sidebar, formularios, admin |
+| Estado remoto | Fetch client-side para APIs internas | `/api/busca`, `/api/acompanhamentos`, `/api/admin/*` |
+| Estado autenticado | Sessao Logto server-side/edge + perfil PostgreSQL | `getLogtoSession()`, `getCurrentUser()` |
+| Estado persistente | PostgreSQL | `acompanhamentos`, `perfis`, `analytics_eventos`, tabelas civicas |
+| Estado de pagamento | Link InfinitePay e payload webhook | Falta persistencia do webhook |
+| Estado de IA | Cache/resultado em banco e limite diario por usuario | `resumo-interpretativo.ts` |
 
-| Rota | Arquivo |
-|---|---|
-| `/login` | `(painel)/(auth)/login/page.tsx` |
-| `/cadastro` | `(painel)/(auth)/cadastro/page.tsx` |
-| `/recuperar-senha` | `(painel)/(auth)/recuperar-senha/page.tsx` |
-| `/recuperar-senha/confirmar` | `(painel)/(auth)/recuperar-senha/confirmar/page.tsx` |
+### 6.1 Consequencias Tecnicas
 
-**Dashboard** (exigem sessão — `proxy.ts` redireciona para `/login` se não autenticado):
+| Decisao atual | Beneficio | Risco |
+|---|---|---|
+| Sem store global | Menor complexidade inicial | Duplicacao de fetch, estado e tratamento de erro |
+| Sem SWR/TanStack Query | Menos dependencias | Ausencia de cache client, retry, invalidacao e deduplicacao |
+| Server Components com `pg` direto | Simplicidade para paginas de dados | Repeticao de pools e acoplamento forte ao banco |
+| APIs internas para interacoes | Contratos claros para mutate/search | Alguns contratos divergem dos consumidores (`limite`, `porPagina`) |
 
-| Rota | Arquivo |
-|---|---|
-| `/painel` | `(painel)/(dashboard)/painel/page.tsx` |
-| `/meus-politicos` | `(painel)/(dashboard)/meus-politicos/page.tsx` |
+## 7. Autenticacao e Barreiras
 
----
+```mermaid
+flowchart TD
+  R[Request] --> P[proxy.ts]
+  P --> H{Host}
+  H -->|painel.*| PAINEL{Rota auth?}
+  PAINEL -->|sim| ALLOW1[Permite login/cadastro/callback]
+  PAINEL -->|nao| SESSAO{Sessao Logto?}
+  SESSAO -->|nao| LOGIN[Redirect /login ou 401 API]
+  SESSAO -->|sim| DASH[Permite painel]
 
-### (admin)/ — Painel Interno
+  H -->|app.*| APPHOST[Rewrites /busca -> /app-busca, / -> /home]
+  H -->|site principal| SITE[Site publico]
 
+  DASH --> APIADMIN[/api/admin/*]
+  APIADMIN --> USER[getCurrentUser]
+  USER --> ROLE{role admin?}
+  ROLE -->|sim| ADMINOK[Executa mutacao]
+  ROLE -->|nao| FORBID[403]
+```
 
-| Rota | Descrição |
-|---|---|
-| `/admin` | Dashboard com KPIs e alertas |
-| `/admin/analytics` | Analytics de uso |
-| `/admin/dados` | Gerenciamento de dados |
-| `/admin/etl` | Status e disparo manual de ETL |
-| `/admin/flags` | Feature flags |
-| `/admin/usuarios` | Gerenciamento de usuários |
+O proxy protege o host do painel, mas o RBAC de admin e aplicado nos endpoints e paginas por `getCurrentUser()` e `role === 'admin'`. A documentacao detalhada esta em `docs/AUTH.md`.
 
----
+## 8. APIs e Contratos
 
-### (checkout)/ — Fluxo de Pagamento
+O backend HTTP identificado possui 18 endpoints, documentados em `docs/API.md`:
 
-| Rota | Descrição |
-|---|---|
-| `/apoio/confirmacao` | Confirmação de pagamento via InfinitePay |
+| Familia | Endpoints | Papel |
+|---|---:|---|
+| Auth Logto | 5 | Login, cadastro, reset, callback, logout |
+| Busca/glossario/analytics | 3 | Produto publico e telemetria |
+| Acompanhamentos | 2 | Core loop autenticado |
+| Apoio/InfinitePay | 3 | Criacao de checkout, verificacao e webhook |
+| Admin | 4 | Flags, politicos, emendas, ETL |
+| Total mapeado | 18 | Superficie backend atual |
 
----
+## 9. Observabilidade
 
-## 7. API Routes
+| Camada | Estado atual | Risco |
+|---|---|---|
+| Logs runtime | `console.error`/`console.log` em handlers especificos | Sem correlacao, sem tracing |
+| Analytics produto | `/api/analytics` insere eventos best-effort | Sem contrato forte de schema/payload |
+| Admin logs | Mutacoes admin inserem `admin_logs` em alguns endpoints | Parcial, sem auditoria centralizada |
+| ETL logs | Scripts Python usam logging local | Sem orquestrador e sem status central |
+| Pagamentos | Logs no webhook InfinitePay | Sem persistencia e sem assinatura verificada |
 
-| Endpoint | Método | Auth | Descrição |
+## 10. Riscos Arquiteturais Prioritarios
+
+| Prioridade | Risco | Impacto | Acao tecnica recomendada |
 |---|---|---|---|
-| `/api/busca` | GET | Pública | Busca de políticos |
-| `/api/glossario/[slug]` | GET | Pública | Termo do glossário |
-| `/api/analytics` | POST | Pública | Registro de evento |
-| `/api/acompanhamentos` | GET · POST | Autenticado | Listar / criar acompanhamentos |
-| `/api/acompanhamentos/[politicoId]` | DELETE | Autenticado | Remover acompanhamento |
-| `/api/apoio/criar-link` | POST | Pública | Link pagamento InfinitePay |
-| `/api/apoio/verificar-pagamento` | GET | Pública | Status do pagamento |
-| `/api/webhooks/infinitepay` | POST | IP signature | Eventos InfinitePay ⚠️ TODO: persistir doação |
-| `/api/admin/etl/run` | POST | Admin | Disparo manual de ETL |
-| `/api/admin/flags` | GET · POST | Admin | Feature flags |
-| `/api/admin/politicos/[id]` | PATCH | Admin | Editar político |
-| `/api/admin/emendas/match` | POST | Admin | Match manual de emendas |
+| P0 | Chave privada aparente em `docs/meuspoliticos_master.md` | Exposicao de segredo | Revogar chave, remover valor do repo e auditar historico Git |
+| P0/P1 | Webhook InfinitePay nao persiste doacao | Perda de confirmacao financeira | Implementar tabela/servico de doacoes, idempotencia e validacao de origem |
+| P1 | ETL admin nao executa scripts | Dados civicos desatualizados | Criar job runner/orquestrador e status persistente por fonte |
+| P1 | Uso direto e repetido de `new Pool()` | Duplicacao e risco operacional | Centralizar factory de DB e politica de timeout |
+| P1 | Contratos de busca divergentes | UI envia params ignorados | Normalizar `limite`/`porPagina`/`pagina` |
+| P2 | Ausencia de cache client estruturado | UX instavel em fetches recorrentes | Avaliar cache/retry/invalidacao nas superficies com busca/admin |
 
----
+## 11. Resumo Executivo
 
-## 8. Middleware e Proteção de Rotas
-
-**Arquivo:** `app/src/proxy.ts`
-
-Executado em cada requisição (via Next.js middleware config com `matcher` global).
-
-**Fluxo:**
-2. Lê o header `host` da requisição
-3. Aplica lógica de routing:
-   - `painel.*` → sem sessão: redireciona para `/login`; API routes retornam `401`
-   - `app.*` → `/login` redireciona para `painel.*`; `/` rewrite para `/home`; `/busca` rewrite para `/app-busca`
-   - `meuspoliticos.*` → em produção, `/login` redireciona para `painel.*`
-
----
-
-## 9. Gerenciamento de Estado
-
-| Estratégia | Uso |
-|---|---|
-| **Client Components (`'use client'`)** | Componentes interativos: busca, formulários, abas, carrossel |
-| **React Hook Form + Zod** | Formulários com validação client-side |
-
----
-
-## 10. Deploy e Infraestrutura
-
-| Componente | Tecnologia | Detalhe |
-|---|---|---|
-| Frontend | Vercel | Configurado via `vercel.json` na raiz |
-| DNS / CDN | Cloudflare | `meuspoliticos.com.br` + redirect `.com` → `.com.br` |
-| E-mail transacional | Resend (SES / sa-east-1) | `noreply@meuspoliticos.com.br` |
-
-**Build config `vercel.json`:**
-```json
-{
-  "installCommand": "cd app && npm ci --include=optional && npm i --no-save [linux tailwind oxide libs]",
-  "buildCommand": "cd app && npm run build",
-  "outputDirectory": "app/.next"
-}
-```
-
----
-
-*Atualizado em: 2026-05-29 · Auditoria v2.1*
+A arquitetura atual e coerente para um MVP civic-tech: Next.js concentra produto e backend, PostgreSQL armazena o dominio, Logto autentica e o ETL Python alimenta dados publicos. O principal problema nao e conceitual; e de consolidacao operacional. Os pontos que impedem producao robusta sao persistencia financeira incompleta, acionamento real do ETL ausente, segredo exposto em doc legado e repeticao de acesso direto ao banco sem camada compartilhada de confiabilidade.

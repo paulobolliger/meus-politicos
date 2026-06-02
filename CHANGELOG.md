@@ -1,219 +1,106 @@
-# Changelog — Meus Políticos
-
-Histórico de versões e marcos do projeto.
-Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
-
+---
+file: CHANGELOG.md
+module: Project Changelog
+status: Active
+related: [README.md, docs/TODO_PRODUCTION.md, docs/MODERNIZATION_ROADMAP.md, AI_INSTRUCTIONS.md]
 ---
 
-## [2026-06] - Migração PostgreSQL + Logto + Stripe Removal
+# Changelog
 
-### Added / Adicionado
-- `docs/migrations/2026-06-postgres-logto-migration.md` como cronologia oficial das últimas sprints
-- `docs/PROJECT_STATUS_2026-06.md` como status executivo da plataforma
-- `docs/auth/LOGTO_IMPLEMENTATION_PLAN.md` como inventário completo do uso atual de Supabase Auth
-- `docs/auth/LOGTO_RUNTIME_PLAN.md` como plano técnico do runtime Logto
-- `docs/auth/LOGTO_RUNTIME_CHECKLIST.md` como checklist de implementação por PRs
-- `docs/auth/LOGTO_EXECUTION_PLAN.md` como plano de execução por branches e commits
-- Atualização da documentação principal para refletir PostgreSQL VPS ativo, Supabase legado, Logto em preparação e InfinitePay ativo
+All notable changes to this project will be documented in this file.
 
-### Sprint 0R - Auditoria Banco Real
-- Confirmação do banco correto `meuspoliticos_db`
-- Identificação do usuário auditado `noro_master`
-- Registro do volume total auditado em 587.63 MB
-- Inventário dos schemas Supabase e das dependências legadas
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning where product releases are explicitly tagged. Documentation audit versions are recorded as operational milestones.
 
-### Sprint 1B - Compatibilidade Logto
-- Criação da migration `20260601000000_logto_identity_compat.sql`
-- Inclusão de `logto_sub`, `supabase_user_id`, `auth_provider` e `migrado_logto_em`
-- Criação dos índices parciais de compatibilidade
+## [Unreleased]
 
-### Sprint 1F - Ajustes de Compatibilidade
-- Abandono da estratégia de `email_normalizado`
-- Reconciliação temporária via `auth.users.email` e join legado
+### Added
 
-### Sprint 1G - Aplicação da Migration
-- Backup prévio
-- Aplicação da migration
-- Validação dos índices e da preservação do legado Supabase
+- Pending implementation items from `docs/TODO_PRODUCTION.md`.
+- Strategic modernization plan from `docs/MODERNIZATION_ROADMAP.md`.
+- Inventory classification for extra `.txt` and `.csv` artifacts in `docs/INVENTORY_DATABASE_USAGE.md`.
+- Wireframe-derived product scope and authenticated civic panel evidence in `docs/BUSINESS_DOMAIN.md`.
+- Archive recommendations for obsolete temporary artifacts in `docs/GAP_ANALYSIS.md`.
 
-### Sprint 1H-A - Migração das Rotas Públicas
-- Home, busca e `estado/[sigla]` passaram a ler PostgreSQL direto
-- Supabase saiu do caminho runtime do site público
+### Changed
 
-### Sprint 1H-B - Migração de `politicos/[id]`
-- Remoção de `auth.getUser` do fluxo público
-- Remoção dos acompanhamentos do caminho dessa rota
-- A rota passou a consultar PostgreSQL direto
+- Updated ETL documentation assumptions to recognize root `requirements.txt` as the Python dependency reference while keeping ETL orchestration as an open gap.
 
-### Sprint 1I-A - Migração Pública Final
-- `proposicoes`, `comparar`, `cidades` e `glossario` migrados para PostgreSQL direto
-- Consolidação do site público sem dependência runtime do Supabase para leitura
+## [4.0.0-audit] - 2026-06-02
 
-### Stripe Removal
-- Stripe removido do runtime
-- Dependências Stripe removidas do app
-- `STRIPE_*` removidas do template de ambiente
-- Fluxo ativo mantido em InfinitePay
+### Added
 
-### Sprint 5B/5C - Reconciliação Logto Operacional
-- Login Logto operacional com scopes `openid`, `profile` e `email`
-- Callback Logto operacional em `/api/auth/logto/callback`
-- Reconciliação automática por e-mail legado operacional via `auth.users.email`
-- `logto_sub` preenchido automaticamente em `public.perfis` no primeiro vínculo válido
-- `auth_provider` migrado automaticamente para `logto`
-- `migrado_logto_em` preenchido automaticamente no vínculo
-- Supabase Auth deixou de ser necessário para usuários já migrados
+- Initialized the v4.0 functional and technical macro audit knowledge base.
+- Added canonical MVP identification in `docs/MVP_REAL_IDENTIFICADO.md`.
+- Added production readiness assessment in `docs/PRODUCAO_READINESS.md`.
+- Added route inventory in `docs/INVENTORY_ROUTES.md`.
+- Added feature inventory in `docs/INVENTORY_FEATURES.md`.
+- Added UI placeholder and visual debt report in `docs/PLACEHOLDER_REPORT.md`.
+- Added consolidated gap analysis in `docs/GAP_ANALYSIS.md`.
+- Added business domain model in `docs/BUSINESS_DOMAIN.md`.
+- Added database schema map and structural audit in `docs/DATABASE.md`.
+- Added real database usage inventory in `docs/INVENTORY_DATABASE_USAGE.md`.
+- Added Logto authentication/RBAC map in `docs/AUTH.md`.
+- Added API reference for the 18 mapped HTTP endpoints in `docs/API.md`.
+- Added API consumption audit in `docs/INVENTORY_API_CONSUMPTION.md`.
+- Added architecture document with Mermaid diagrams in `docs/ARCHITECTURE.md`.
+- Added environment variable audit in `docs/ENVIRONMENT.md`.
+- Added external integrations manual in `docs/INTEGRATIONS.md`.
+- Added deployment and operations guide in `docs/DEPLOYMENT.md`.
+- Added security audit and Resend P0 rotation plan in `docs/SECURITY.md`.
+- Added visual governance and page-by-page UI migration matrix in `docs/DESIGN.md`.
+- Added dependency audit for React 19 and Next.js 16 in `docs/DEPENDENCIES.md`.
+- Added consolidated production backlog in `docs/TODO_PRODUCTION.md`.
+- Added modernization roadmap in `docs/MODERNIZATION_ROADMAP.md`.
+- Added future-agent governance guide in `AI_INSTRUCTIONS.md`.
 
----
+### Changed
 
-## [Unreleased / Não lançado] — branch `feat/redesign-2026`
+- Rewrote `README.md` as the current project entry point for Next.js 16, React 19, Logto, PostgreSQL/Supabase, InfinitePay, OpenAI and ETL.
+- Reclassified Stripe references as historical/legacy where they appeared in older project context.
+- Reclassified Logto as the active identity provider in the current runtime.
+- Reclassified InfinitePay as the active payment provider, with webhook persistence still incomplete.
+- Reframed Supabase as PostgreSQL/Supabase data infrastructure rather than active Supabase Auth runtime.
+- Consolidated old readiness, roadmap, security, design and dependency notes into current operational documents.
 
-### Added / Adicionado
-- Documento `docs/auth/AUTH_MIGRATION_LOGTO.md`
-- ADR `docs/adr/ADR-001-logto-as-identity-provider.md`
-- Redesign completo de header, footer e home page (site público) com nova identidade 2026
-- Refactor do layout hero, seções e mapa interativo do Brasil
-- Redesign de `/projetos/[slug]` seguindo wireframe aprovado
-- Redesign de `/busca`, `/meu-estado` e `/projetos`
-- Documentação técnica completa em `docs/` (Auditoria v2.1):
-  - `ARCHITECTURE.md`, `DATABASE.md`, `AUTH.md`, `BUSINESS_DOMAIN.md`
-  - `ENVIRONMENT.md`, `DEPLOYMENT.md`, `MONOREPO.md`
-  - `SECURITY.md`, `DEPENDENCIES.md`, `MONITORING.md`
-  - `API.md`, `INTEGRATIONS.md`, `ADMIN.md`
-  - `TESTING.md`, `DESIGN.md`
-  - `TODO_PRODUCTION.md`, `MODERNIZATION_ROADMAP.md`
-  - `GAP_ANALYSIS.md` com 19 gaps catalogados
+### Security
 
-### Corrigido
-- Layout de `/projetos/[slug]` espelhando wireframe aprovado
+- Confirmed an apparent real `RESEND_API_KEY` in `docs/meuspoliticos_master.md` without reproducing the value in new documentation.
+- Recorded affected Git history for nominal `RESEND_API_KEY` occurrences in `docs/SECURITY.md`.
+- Added urgent P0 rotation and remediation plan for the Resend key.
+- Documented lack of InfinitePay webhook persistence and lack of identified webhook authenticity validation.
+- Documented that no `NEXT_PUBLIC_*` private key exposure was identified in the mapped runtime.
 
----
+### Fixed
 
-## [0.7.0] — Redesign 2026 (inicial)
+- Removed misleading documentation stance that treated Stripe as an active payment runtime.
+- Removed outdated documentation stance that treated Supabase Auth as the active authentication runtime.
+- Replaced fragmented production TODOs with a P0-P3 backlog tied to the real MVP.
 
-### Adicionado
-- Nova identidade visual: header redesenhado com novo logotipo e navegação
-- Footer público com links institucionais e botão "Apoie"
-- Home page v3: hero navy, pills de cargos, busca e CEP, grid de cargos, feed de votações, destaque da semana
+### Known Issues
 
----
+- Resend exposed key must be revoked and removed from the legacy document before any public go-live.
+- InfinitePay webhook still requires persistence, idempotency and authenticity validation.
+- Admin ETL trigger currently records intent but does not execute Python ETL jobs.
+- Feed civic loop is not fully connected to real event data.
+- DB pre-flight was intentionally not executed against remote/dev-unknown host.
+- Build, lint and browser QA were not executed during the documentation-only macro audit.
 
-## [0.6.0] — Infraestrutura de produção e autenticação
+## Historical Notes Before v4.0
 
-### Adicionado
-- Migração para Supabase self-hosted (VPS Vultr via Coolify + Docker)
-- OAuth Google e LinkedIn integrados ao Supabase Auth
-- OAuth Twitter/X
-- Trigger `handle_new_user()` para criar perfil automaticamente no cadastro (extrai nome do OAuth ou email)
-- Painel admin: página de usuários, match manual de emendas via `/api/admin/emendas/match`
-- Schema v2.12: campos `uf_nascimento`, `sexo`, `data_falecimento`, campos de gabinete em `politicos`
-- ETL de auditoria e migrations idempotentes (IF NOT EXISTS + DO blocks)
-- MCP Postgres integrado ao painel admin
+### Added
 
-### Corrigido
-- ETL Senado: path do `.env.local` e uso de `POSTGRES_HOST`/`POSTGRES_PORT` com tunnel SSH
-- ETL Emendas, municípios, gastos Câmara: melhorias de robustez
-- Migrations: tornar todas as 5 migrations de auditoria idempotentes
-- `populate_siafi.py`: script criado para cruzar políticos com códigos SIAFI
+- Initial Next.js application structure.
+- Civic public site pages.
+- Political profile pages, dashboard components and ETL scripts.
+- PostgreSQL/Supabase schema and migrations.
+- Logto migration work.
+- InfinitePay payment flow.
+- OpenAI-powered interpretive summaries and ETL simplification.
 
----
+### Changed
 
-## [0.5.0] — Terminal Cívico (Design System)
+- Project moved from older documented assumptions toward the current stack: Next.js 16, React 19, Logto, PostgreSQL/Supabase, InfinitePay and OpenAI.
 
-### Adicionado
-- Design system "Terminal Cívico": tokens CSS, tipografia, componentes atômicos em `globals.css`
-- `SiteHeader`, `AppHeader`, `SiteFooter`, `AppFooter` com novo visual
-- Home Cidadão: hero, 3 perguntas, mapa interativo, como funciona, CTA
-- Home App: hero analítico, acesso ao terminal de dados
-- `/busca`: tabela densa com visual terminal cívico
-- `/meu-estado`: visual terminal cívico com geolocalização automática por CEP
-- Painel `/painel`: visual terminal cívico com sidebar desktop
-- Páginas de autenticação: visual terminal cívico (login, cadastro, recuperar senha)
-- Páginas institucionais: tokens terminal cívico em sobre, fontes, manifesto, metodologia
-- Páginas legais redesenhadas: privacidade, termos de uso
-- Páginas de sistema: 404, error
+### Removed
 
-### Corrigido
-- Unificação de rotas `/politico` → `/politicos` em todo o projeto
-- Acentos na home cidadão
-
----
-
-## [0.4.0] — IA e Resumos Interpretativos
-
-### Adicionado
-- Resumo interpretativo de perfil do político via OpenAI (juridiquês → linguagem cidadã)
-- Cache de resumos em `politico_resumos_ia` com `hash_dados` (regenera apenas quando dados mudam)
-- Cota diária por político (`politico_resumos_ia_cotas`) — default: 3 gerações/dia
-- Toggle Cidadão/Analista no perfil do político — alterna entre linguagem simples e técnica
-- Schema: tabelas `politico_resumos_ia` e `politico_resumos_ia_cotas` com RLS admin-only
-
----
-
-## [0.3.0] — Dashboard V2 e ETL
-
-### Adicionado
-- Dashboard V2 com dados reais: presença, gastos, gabinete, redes sociais
-- Bento grid V2: remove labels ETL, expande seção de gabinete, substitui abas por seções inline
-- Scores com placeholders ETL documentados (presença_pct, LES, alinhamento de bancada)
-- ScoreRow: componente de exibição de métricas com benchmark visual
-- ETL deputados completo: gabinete, sexo, naturalidade, mandato
-- ETL votações bulk: 378.695 votos (2023–2025)
-- ETL gastos CEAP Câmara: ~527k registros (2022–2025)
-- ETL gastos CEAP Senado: ~40k registros (2023–2026)
-- ETL emendas parlamentares: ~16.6k registros via Portal da Transparência/SIAFI
-- ETL proposições: ~57k proposições da Câmara
-- ETL senadores: 81 senadores com dados completos
-- ETL municípios via IBGE: municípios com código IBGE e UF
-- ETL STN/SICONFI: dados fiscais (FPE) via RREO Anexo 3
-- Tabelas de estados econômicos (IBGE 2022/2023) e governos em migrations
-- Suporte a Vercel: binários Tailwind oxide linux instalados via `installCommand`
-
-### Corrigido
-- ScoreRow: converter `value` para Number antes de `toFixed`
-- Vercel: output directory, turbopack root, instalação de binários linux
-- Fonts: migrar para Inter em tudo — remover Fraunces serif
-- ETL STN: migrar coleta FPE para SICONFI RREO Anexo 3 (URL STN migrada)
-
----
-
-## [0.2.0] — MVP do site público
-
-### Adicionado
-- Página de perfil do político (`/politicos/[id]`): votações com filtros de tema, gastos por categoria, presença com gráfico mensal
-- Página de busca (`/busca`): filtros por cargo, UF, partido; paginação; ordenação por relevância/presença/gastos
-- Quem me representa (`/meu-estado`): busca por CEP via ViaCEP; lista de representantes por nível (Federal, Estadual, Municipal)
-- Geolocalização automática no Quem me representa
-- Login e cadastro com Supabase Auth (e-mail + senha)
-- Páginas de sistema e autenticação padronizadas: `/acesso-negado`, `/indisponivel`, `/manutencao`, `/confirmacao`
-- Página de recuperação de senha
-- Identidade visual institucional inicial (logotipo, cores, tipografia)
-- Páginas legais: privacidade, termos de uso (conteúdo jurídico redigido)
-- Login com X (Twitter) OAuth
-
-### Corrigido
-- Contagem de governadores
-- Links internos entre páginas institucionais
-- Rotas de termos e privacidade em português + email de contato correto
-
----
-
-## [0.1.0] — Setup inicial
-
-### Adicionado
-- Estrutura inicial do monorepo (`npm workspaces: ["app"]`)
-- Next.js 16 App Router com route groups: `(site)/`, `(app)/`, `(painel)/`, `(admin)/`, `(auth)/`
-- Middleware de subdomínio (`proxy.ts`): roteamento por header `Host` para site, app e painel
-- Clientes Supabase configurados: browser (`createBrowserClient`), server (`createServerClient`), admin (`createAdminClient`)
-- Cookie cross-subdomain: `Domain=.meuspoliticos.com.br` em produção / `localhost` em dev
-- Componentes shadcn/ui integrados
-- Layout base: SiteHeader, SiteFooter
-- Home page v1: hero, busca por nome, grid de cargos, stats da plataforma
-- `vercel.json` configurado com `installCommand` e `buildCommand` para monorepo
-- Turbopack configurado com root apontando para raiz do monorepo
-- `loadEnvConfig` carregando `.env.local` do diretório pai no `next.config.ts`
-
----
-
-*Mantido por: NORO GURU LTDA · CNPJ 63.429.497/0001-88*
-*Formato: Keep a Changelog · Versionamento: Semântico (semver)*
+- Stripe is no longer treated as active runtime in the v4.0 documentation base.

@@ -2,268 +2,177 @@
 file: docs/MODERNIZATION_ROADMAP.md
 module: Modernization Roadmap
 status: Active
-related: [docs/TODO_PRODUCTION.md, docs/GAP_ANALYSIS.md, docs/ARCHITECTURE.md, docs/DESIGN.md, docs/auth/AUTH_MIGRATION_LOGTO.md, docs/adr/ADR-001-logto-as-identity-provider.md]
+related: [docs/TODO_PRODUCTION.md, docs/MVP_REAL_IDENTIFICADO.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT.md, docs/SECURITY.md, docs/DESIGN.md]
 ---
 
-# Roadmap de Retomada — Meus Políticos
+# Modernization Roadmap
 
-**Situação em:** 2026-05-29
-**Branch:** `feat/redesign-2026`
-**Estado atual:** plataforma funcional com redesign aplicado, aguardando resolução de gaps antes de go-live público.
-**Atualização junho/2026:** Stripe foi removido do runtime; InfinitePay é o fluxo ativo de apoio.
+Plano estrategico de retomada para estabilizar o MVP real identificado: busca civica, perfil politico, acompanhamento e feed civico. O plano tambem inclui automacao de ETL e saneamento operacional das fraturas expostas pela macro auditoria v4.0.
 
----
+## Norte de Produto
 
-## Contexto estratégico
+O produto nao deve tentar parecer uma plataforma completa antes de fechar o core loop. A retomada deve priorizar:
 
-O redesign-2026 entregou:
-- Nova identidade visual (header, footer, home)
-- Módulos de estado (`/estado/[sigla]`) e assembleias estaduais
-- Candidatos 2026 (`/candidatos-2026`) com integração TSE
-- ETL de proposições (57k) e emendas (16.6k)
-- Schema v2.12 com ALE, resumos IA, partidos e estados
+1. Usuario encontra politico.
+2. Usuario entende o perfil com dados rastreaveis.
+3. Usuario acompanha o politico.
+4. Sistema entrega feed/alertas civicos baseados em eventos reais.
+5. Admin consegue manter dados atualizados sem execucao manual obscura.
 
-O que **falta para o go-live** está detalhado em `docs/TODO_PRODUCTION.md`. Este documento trata do que vem **depois** do lançamento.
+## Quick Wins - 1 a 3 dias
 
-> modernizacao aprovada. O plano operacional esta em
-> `docs/auth/AUTH_MIGRATION_LOGTO.md`; a decisao arquitetural esta em
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+| ID | Acao | Impacto | Pre-requisito |
+|---|---|---|---|
+| QW-01 | Revogar chave Resend exposta e substituir valor em doc legado por placeholder | Remove risco P0 imediato | Acesso ao painel Resend |
+| QW-02 | Ajustar UI de apoio/confirmacao para nao prometer confirmacao financeira persistida | Reduz risco juridico/UX | Nenhum |
+| QW-03 | Rebaixar visualmente botao "rodar ETL" para "registrar solicitacao" ate existir runner | Evita falsa operacao | Nenhum |
+| QW-04 | Normalizar parametros `limite`/`porPagina` na API de busca ou nos consumidores | Corrige friccao admin/comparar | Pequena alteracao API/UI |
+| QW-05 | Criar helper `requireAdmin()` e `requireUser()` se ainda nao consolidado no runtime | Reduz erro de seguranca em endpoints futuros | Revisao de `current-user.ts` |
+| QW-06 | Rodar build com env segura e registrar resultado | Descobre quebras reais | Env local/dev confirmada |
+| QW-07 | Criar lista de rotas core para QA manual | Acelera estabilizacao | Inventario de rotas pronto |
 
----
+## Sprint 1 - Estabilizacao P0/P1 do MVP Real
 
-## Fase 0 — Prontidão para Lançamento
+Duracao sugerida: 5 a 8 dias uteis.
 
-**Objetivo:** resolver todos os gaps P0 e P1 bloqueantes antes do go-live público.
-**Duração estimada:** 1–2 semanas
-**Branch:** `feat/redesign-2026` → merge em `main`
+### Objetivo
 
-### Sprint 0A — Dados e infraestrutura (3–5 dias)
+Remover bloqueios absolutos, validar runtime e fechar o minimo confiavel do core loop.
 
-| Tarefa | Gap | Esforço |
+### Escopo
+
+| Epico | Tarefas | Resultado |
 |---|---|---|
-| Atualizar `.env.example` com 30+ variáveis | G-01 | 30 min |
-| Criar tabela `doacoes` + migration | G-02/G-03 pré-req | 1h |
-| Implementar INSERT no webhook InfinitePay | G-03 | 1h |
-| Re-rodar ETL senadores (mandato_inicio) | G-08 | 2h |
-| Executar populate_siafi.py | G-09 | 1h |
-| Gastos Câmara 2026 | G-07 | 1 dia |
-| Corrigir `href="#"` no candidatos-2026 | G-05 | 2h |
+| Seguranca P0 | Revogar Resend, remover valor real atual, decidir historico Git, repetir varredura | Incidente encerrado ou risco residual formalmente aceito |
+| Pagamentos | Criar/confirmar `doacoes`, persistir webhook InfinitePay, implementar idempotencia, definir autenticidade | Apoio financeiro nao perde confirmacao |
+| Infra/build | Pre-flight seguro DB, `npm run build`, validar Vercel envs | Deploy tecnicamente validado |
+| Auth | Testar login/cadastro/reset/callback/logout; validar usuario novo e legado | Logto operacional ponta a ponta |
+| Core loop | Testar busca, perfil, acompanhar, painel; corrigir estados quebrados | MVP real navegavel |
+| Contratos API | Normalizar busca e erros basicos | Menos divergencia UI/backend |
 
-### Sprint 0B — Automação e observabilidade (2–3 dias)
+### Entregaveis
 
-| Tarefa | Gap | Esforço |
+| Entregavel | Criterio de aceite |
+|---|---|
+| Relatorio de rotacao Resend | Data/hora, chave antiga revogada, nova chave fora do repo |
+| Webhook InfinitePay persistente | Evento pago cria/atualiza registro idempotente |
+| Build validado | `npm run build` concluido ou lista de falhas corrigida |
+| Auth validado | Painel e admin bloqueiam/permitem corretamente |
+| Core loop validado | Usuario consegue buscar, abrir perfil e acompanhar |
+
+### Fora de Escopo
+
+| Item | Motivo |
+|---|---|
+| Reescrita completa do design system | Entra apos estabilizacao |
+| Automacao completa de todos os ETLs | Sprint 2 |
+| IA avancada/candidatos 2026 completos | Sprint 3 |
+
+## Sprint 2 - Automacao de ETL e Observabilidade
+
+Duracao sugerida: 8 a 12 dias uteis.
+
+### Objetivo
+
+Transformar ETL de execucao manual em rotina observavel e acionavel, sem depender de improviso via SSH.
+
+### Escopo
+
+| Epico | Tarefas | Resultado |
 |---|---|---|
-| Criar 3 GitHub Actions workflows de ETL | G-04 | 1 dia |
-| Criar CI workflow (lint + typecheck) | G-04 | 1h |
-| Instalar Sentry no Next.js | G-14 | 30 min |
-| Configurar UptimeRobot para 3 domínios | G-14 | 15 min |
-| Commitar `app/public/partidos/` | G-15 | 30 min |
-| Commitar `etl/ale/` + validar status no banco | G-13 | 1 dia |
+| Runner ETL | Definir GitHub Actions, Coolify cron ou runner externo | Local de execucao decidido |
+| Fila/status | Criar `etl_jobs` ou adaptar `coletas_log` | Admin enxerga status real |
+| Scripts | Criar `etl/requirements.txt` ou `pyproject.toml` | Ambiente Python reprodutivel |
+| Env | Unificar `POSTGRES_*` e `SUPABASE_DB_*` | Menos drift de configuracao |
+| Admin | Fazer `/api/admin/etl/run` enfileirar job real ou acionar provider | Botao deixa de ser placeholder |
+| Alertas | Alertar ETL atrasado/falho | Operacao proativa |
+| Dados | Reprocessar fontes criticas Camara/Senado/TSE/IBGE/CGU | Dados do MVP atualizados |
 
-### Sprint 0C — Segurança e go-live (1–2 dias)
+### Ordem Logica dos ETLs
 
-| Tarefa | Gap | Esforço |
+| Ordem | Familia | Motivo |
+|---:|---|---|
+| 1 | IBGE/estados/municipios | Base geografica |
+| 2 | Partidos | Base relacional |
+| 3 | Politicos Camara/Senado/TSE | Entidades centrais |
+| 4 | Gastos/votacoes/proposicoes/emendas | Eventos e metricas |
+| 5 | SIAFI/fornecedores/fundos | Enriquecimento |
+| 6 | IA/simplificacao | Depende de proposicoes e limite de custo |
+| 7 | Feed/eventos | Depende de eventos consolidados |
+
+### Entregaveis
+
+| Entregavel | Criterio de aceite |
+|---|---|
+| Runner ETL ativo | Executa uma fonte em ambiente controlado |
+| Status no admin | Mostra ultimo job, sucesso/falha e horario |
+| Alerta de falha | Uma falha simulada gera alerta |
+| Requirements Python | Instala ambiente ETL do zero |
+| Feed base | Eventos persistidos disponiveis para painel |
+
+## Sprint 3 - Produto, UI e Inteligencia Civica
+
+Duracao sugerida: 10 a 15 dias uteis.
+
+### Objetivo
+
+Converter a base estabilizada em experiencia de produto confiavel, com feed civico real, UX honesta e IA governada.
+
+### Escopo
+
+| Epico | Tarefas | Resultado |
 |---|---|---|
-| Adicionar HTTP Security Headers no next.config.ts | — | 2h |
-| Consolidar fluxo de apoio em InfinitePay | — | 1h |
-| Validar webhook InfinitePay em produção | — | 30 min |
-| Teste end-to-end: doação real R$5 → registro no banco | — | 1h |
-| Setup mínimo Vitest + 3 testes críticos | G-06 | 2h |
-| Merge `feat/redesign-2026` → `main` | — | — |
-| **Deploy e verificação em produção** | — | 2h |
+| Feed civico | Conectar `feed_eventos`/eventos a `FeedCivico` | Painel entrega valor continuo |
+| Candidatos 2026 | Revalidar dados TSE, remover `href="#"`, declarar cobertura | Modulo eleitoral honesto |
+| Design debt | Reduzir inline styles nas rotas core, substituir emojis por lucide | UI mais consistente |
+| Estados vazios | Padronizar EmptyState/erro/loading | Menos falsas promessas |
+| IA | Monitorar limite/custo, sinalizar origem e cache | IA governada |
+| Dependencias | Remover orfaos confirmados e validar peers React 19/Next 16 | Menos risco de build |
+| Licencas | Gerar relatorio/SBOM | Compliance basico |
 
----
+### Entregaveis
 
-## Fase 1 — Consolidação de Dados (Meses 1–2)
-
-**Objetivo:** garantir que todos os políticos têm dados completos e frescos. Scores saindo de `"–"` para valores reais.
-
-### Sprint 1.1 — Presença parlamentar
-
-| Tarefa | Detalhes |
+| Entregavel | Criterio de aceite |
 |---|---|
-| Criar `etl/camara/collect_presenca.py` | Coleta de sessões via `GET /deputados/{id}/eventos` (Câmara API) |
-| Calcular `presenca_pct_atual` para todos os dep. federais | Popula campo `presenca_pct_atual` em `politicos` |
-| Calcular `presenca_pct_historico` por legislatura | JSON por ano em campo JSONB |
-| Implementar score de presença em `ScoreRow.tsx` | Conforme metodologia `docs/METRICS.md` |
-| Criar ETL de presença do Senado | `senado_sessoes` + `senado_discursos` → cálculo equivalente |
+| Feed civico real | Eventos reais aparecem para politicos acompanhados |
+| QA visual core | Desktop/mobile aprovados em busca, perfil, painel, apoio, admin |
+| Dependencias saneadas | Build passa apos remocoes |
+| Relatorio de licencas | Licencas especiais identificadas |
+| Candidatos 2026 com status claro | Usuario entende cobertura e limitacoes |
 
-**Resultado esperado:** todos os 513 deputados federais e 81 senadores com `presenca_pct_atual` preenchido. ScoreRow exibindo valores reais, não `"–"`.
+## Cronograma Resumido
 
-### Sprint 1.2 — Atividade Legislativa Simplificada (LES)
-
-| Tarefa | Detalhes |
-|---|---|
-| Calcular LES para dep. federais | Fórmula em `docs/METRICS.md` — usa votações + presença + discursos |
-| Criar job de recálculo periódico | Executa após cada ETL de votações |
-| Implementar benchmark por UF/partido | LES do político vs. média do peer group |
-
-### Sprint 1.3 — Gastos e emendas completos
-
-| Tarefa | Detalhes |
-|---|---|
-| Validar gastos Câmara 2022–2026 completos | `SELECT EXTRACT(YEAR FROM data), COUNT(*) FROM gastos WHERE source_id = 'camara_ceap' GROUP BY 1` |
-| Gastos Senado 2023–2026 | `select_id = 'senado_ceaps'` — verificar lacunas |
-| Emendas — validar cruzamento SIAFI ≥ 90% | `SELECT COUNT(*) FROM emendas WHERE politico_id IS NULL` |
-
----
-
-## Fase 2 — Novos Módulos (Meses 2–4)
-
-**Objetivo:** expandir cobertura temática — partidos, alinhamento de bancada, módulo de municípios.
-
-### Sprint 2.1 — Módulo de Partidos
-
-Wireframes aprovados: `app_partidos_page.tsx` (índice geral) + `app_partidos_sigla_page.tsx` (perfil do partido).
-
-| Tarefa | Rota |
-|---|---|
-| Criar `/partidos` — listagem com filtros (ideologia, tamanho, bancada) | `(site)/partidos/page.tsx` |
-| Criar `/partidos/[sigla]` — perfil com votações por tema, composição da bancada | `(site)/partidos/[sigla]/page.tsx` |
-| Criar `/partidos/[sigla]/parlamentares` — lista de membros | `(site)/partidos/[sigla]/parlamentares/page.tsx` |
-| ETL de atualizações de filiação | `etl/tse/collect_filiados.py` |
-| Calcular score de alinhamento de bancada | Conforme `docs/METRICS.md` |
-
-> **Nota:** a ARCHITECTURE.md lista rotas `/partidos` e `/partidos/[sigla]` como "✅ Ativo (novo)" — verificar o estado real antes de criar páginas.
-
-### Sprint 2.2 — Módulo de Municípios
-
-| Tarefa | Rota |
-|---|---|
-| Página de detalhe de município | `/municipio/[ibge]` |
-| Emendas direcionadas ao município | Integração com `v_emendas_municipio` |
-| Ranking de emendas por município | Integração com `v_ranking_emendas` |
-| Prefeito e câmara municipal (quando disponível) | Fase 2b |
-
-### Sprint 2.3 — Transparência por UF — ALEs
-
-| Tarefa | Detalhes |
-|---|---|
-| Validar dados de ALESP, ALEP, ALMG, ALMT, CLDF no banco | Verificar `ale_sessoes` e `ale_presencas` |
-| Ativar exibição de presença para dep. estaduais | `v_presenca_deputado_estadual` já existe |
-| ETL das demais 22 assembleias | Pesquisar suporte SAPL ou APIs próprias |
-| Página `/estado/[sigla]/assembleia` completa | Dados de votos, gastos, presença do dep. estadual |
-
----
-
-## Fase 3 — Plataforma de IA (Meses 3–6)
-
-**Objetivo:** automação de resumos, pipeline IA robusto, cache inteligente.
-
-### Sprint 3.1 — Juridiquês → Linguagem cidadã
-
-| Tarefa | Detalhes |
-|---|---|
-| Processar `votacoes.descricao_simples` pendentes | `SELECT COUNT(*) FROM votacoes WHERE descricao_simples IS NULL AND ia_processado IS FALSE` |
-| Processar `proposicoes.ementa_simples` pendentes | ~57k proposições — processamento em batch |
-| Implementar fila de processamento | Usar `fila_ia_pendente` view + job diário |
-| Calcular custo mensal de IA | Estimativa: 57k × 300 tokens ≈ 17M tokens |
-
-### Sprint 3.2 — Resumos de candidatos 2026
-
-| Tarefa | Detalhes |
-|---|---|
-| Processar `candidatos.proposta_resumo` | Extrair 5 tópicos do PDF da proposta TSE |
-| Pipeline de coleta do PDF + extração de texto | `etl/tse/collect_propostas.py` |
-| Cache via `politico_resumos_ia` | Hash dos dados → regenera só quando muda |
-| Exibir no perfil do candidato com badge "IA" obrigatório | `docs/DESIGN.md §6.4` |
-
-### Sprint 3.3 — Resumos interpretativos de perfis
-
-| Tarefa | Detalhes |
-|---|---|
-| Implementar geração de `politico_resumos_ia.conteudo_json` | Sumariza votações, gastos e presença em linguagem cidadã |
-| Respeitar `politico_resumos_ia_cotas` | Max `IA_RESUMO_MAX_GERACOES_DIA` (default 3) por político/dia |
-| Cache com invalidação por `hash_dados` | Regenera automaticamente quando dados mudam |
-
----
-
-## Fase 4 — Suite de Inteligência (Meses 4–8)
-
-**Objetivo:** app analítico (`app.meuspoliticos.com.br`) com features avançadas para imprensa e pesquisadores.
-
-26 wireframes em `gap` apontam para este produto. Todos vivem no route group `(app)/`.
-
-### Módulos planejados
-
-| Módulo | Wireframes | Rota |
+| Semana | Foco | Marco |
 |---|---|---|
-| Busca avançada com filtros semânticos | 3 wireframes | `(app)/app-busca` (expandir) |
-| Dossier do parlamentar | 1 wireframe | `(app)/politicos/[id]/dossier` |
-| Explorador de legislação | 1 wireframe | `(app)/legislacao` |
-| Home analítica com intelligence feed | 2 wireframes | `(app)/home` (expandir) |
-| Matriz de confronto (comparar posições) | 1 wireframe | `(app)/confronto` |
-| Monitoramento de alertas | 1 wireframe | `(app)/alertas` |
-| Perfil de analista (acesso premium) | 2 wireframes | `(app)/(auth)/cadastro-analista` |
+| Semana 1 | Sprint 1 | P0 resolvidos, build/auth/core loop validados |
+| Semana 2 | Sprint 2 inicio | Runner ETL definido, requirements e fila/status criados |
+| Semana 3 | Sprint 2 fim | ETL automatizado minimo, alertas e reprocessamento critico |
+| Semana 4 | Sprint 3 inicio | Feed real e UI honesta |
+| Semana 5 | Sprint 3 fim | QA visual, dependencias, licencas e candidatos 2026 saneados |
 
-### Modelo de acesso
+## Indicadores de Sucesso
 
-| Nível | Features | Acesso |
-|---|---|---|
-| Cidadão | Site público completo | Gratuito |
-| Apoiador | App analítico básico | Doação (qualquer valor) |
-| Analista | Suite completa + exportações | Mensalidade |
-
----
-
-## Fase 5 — Escalabilidade e Observabilidade (Contínuo)
-
-### Infraestrutura
-
-| Item | Quando |
+| Indicador | Meta inicial |
 |---|---|
-| Avaliar Turborepo para orquestração de build (G-11) | Quando houver >2 packages no monorepo |
-| CDN para assets estáticos do MinIO | Quando storage crescer |
-| Read replica para queries analíticas pesadas | Quando latência de DB > 200ms |
+| Tempo desde ultima coleta critica | Visivel por fonte no admin |
+| Build Next.js | Verde em ambiente com env segura |
+| Login Logto | Fluxos principais validados |
+| Follow de politico | Persistente e refletido no painel |
+| Feed civico | Pelo menos 1 tipo de evento real por politico acompanhado |
+| Webhook InfinitePay | Persistencia idempotente comprovada |
+| Segredos no workspace | Nenhum valor real conhecido |
+| Rotas core mobile | Sem bloqueios visuais |
 
-### Testes e CI (Gap G-06)
+## Decisoes Pendentes
 
-| Sprint | Meta |
-|---|---|
-| Fase 0 (go-live) | Vitest setup + 3 testes críticos |
-| Fase 1 | Cobertura das funções de cálculo de métricas ≥ 80% |
-| Fase 2 | Testes E2E com Playwright — 5 golden paths |
-| Fase 3 | Cobertura de API routes ≥ 70% |
-| Fase 4 | CI verde obrigatório para merge em `main` |
-
-### Monitoramento (Gap G-14)
-
-| Item | Quando |
-|---|---|
-| Sentry — erros runtime | Sprint 0B (imediato) |
-| UptimeRobot | Sprint 0B (imediato) |
-| Alerta de ETL atrasado (query em `coletas_log`) | Fase 1 |
-| Performance de queries (pg_stat_statements) | Fase 2 |
-| Dashboard operacional público (`/status`) | Fase 2 |
-
----
-
-## Métricas de sucesso por fase
-
-| Fase | Métrica | Meta |
+| Decisao | Opcoes | Recomendacao |
 |---|---|---|
-| Fase 0 | Doações registradas no banco | 100% dos pagamentos |
-| Fase 0 | Uptime | ≥ 99% medido pelo UptimeRobot |
-| Fase 1 | Políticos com presença calculada | 100% (dep. federais + senadores) |
-| Fase 1 | Scores exibindo valor real (não "–") | ≥ 90% dos perfis |
-| Fase 2 | UFs com dados de dep. estaduais | ≥ 5 UFs (ALESP, ALEP, ALMG, ALMT, CLDF) |
-| Fase 3 | Votações com `descricao_simples` preenchida | ≥ 80% |
-| Fase 3 | Candidatos com `proposta_resumo` gerada | 100% dos com proposta no TSE |
-| Fase 4 | MAU no app analítico | — (definir ao lançar) |
+| Orquestrador ETL | GitHub Actions, Coolify cron, runner dedicado | Escolher o que tiver melhor acesso seguro ao banco |
+| Banco em serverless | `pg` direto vs pooler/proxy | Avaliar pooler e centralizar conexao |
+| Historico Git contaminado | Reescrever historico vs revogar e registrar risco | Depende de exposicao publica do repo |
+| Feed civico | Materializar em `feed_eventos` vs calcular on-demand | Materializar eventos para painel |
+| Cache client | Sem lib vs SWR/TanStack Query | Adotar somente onde houver dor real |
 
----
+## Veredito Estrategico
 
-## Decisões arquiteturais pendentes
-
-Estas decisões precisam ser tomadas **antes** de implementar as features relacionadas:
-
-| Decisão | Opções | Impacto |
-|---|---|---|
-| **Pagamentos ativos** | Stripe ou InfinitePay? | InfinitePay permanece ativo; Stripe foi removido |
-| **Modelo de acesso ao app analítico** | Free / donate-to-access / subscription | Define todo o fluxo de autenticação e payment do (app)/ |
-| **ETL automático: GitHub Actions vs. Coolify cron** | GH Actions (mais simples) vs. job no próprio Coolify | GitHub Actions preferível — CI/CD já na plataforma |
-| **Turborepo** | Adotar agora ou depois | Só faz sentido com ≥2 packages no workspace — adiar |
-
----
-
-*Atualizado em: 2026-05-29 · Auditoria v2.1*
+A retomada deve ser conservadora. O produto ja tem estrutura suficiente para um MVP real, mas nao deve expandir novas frentes antes de resolver: segredo exposto, webhook financeiro, validacao de banco/build/auth e ETL automatizado. Depois disso, a prioridade passa a ser feed civico real, porque ele fecha o valor recorrente do acompanhamento.

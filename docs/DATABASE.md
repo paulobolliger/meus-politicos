@@ -2,316 +2,256 @@
 file: docs/DATABASE.md
 module: Database Schema Reference
 status: Active
+related: [docs/BUSINESS_DOMAIN.md, docs/INVENTORY_DATABASE_USAGE.md, docs/GAP_ANALYSIS.md, docs/AUTH.md, supabase/001_schema.sql, supabase/migrations]
 ---
 
-# Banco de Dados — Schema v2.12
+# Database
 
-**Host produção:** `45.32.169.173` (VPS Vultr via Coolify + Docker)
-**Schema atual:** v2.12 + compat Logto — 21 migrations aplicadas (jun/2026)
+Data da consolidacao: 2026-06-02.
 
+Banco alvo identificado no codigo: PostgreSQL direto via pacote `pg`. O repositorio mantem uma estrutura Supabase (`supabase/config.toml`, migrations SQL e RLS), mas o runtime atual do app consulta Postgres diretamente por `Pool`/`pool.query`.
 
-> **Nota de legado Auth:** referencias a `auth.users`, `auth.uid()`,
-> o estado atual/legado. A arquitetura alvo aprovada e Logto + PostgreSQL VPS.
-> Ver `docs/auth/AUTH_MIGRATION_LOGTO.md` e
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+Pre-flight ativo nao executado: `app/.env.local` indicou host remoto/desconhecido. Pela regra P0, nenhuma conexao ativa foi feita.
 
----
+## Fonte De Verdade Do Schema
 
-## 1. Fonte de verdade do schema
-
-| Item | Localização | Status |
+| Fonte | Status | Observacao |
 |---|---|---|
+| `supabase/migrations/*.sql` | Fonte principal versionada | Define evolucoes incrementais |
+| `supabase/001_schema.sql` | Referencia monolitica historica/compilada | Contem schema amplo e muitas politicas |
+| `etl/partidos/collect_fundos_tse.py` | Cria tabela nao versionada | `partidos_fundos` aparece aqui, nao em migrations |
+| `docs/TODO_PRODUCTION.md` | Proposta futura | `doacoes` documentada como pendente |
+| Codigo app | Fonte de uso real | Consulta algumas tabelas nao encontradas no schema versionado |
 
----
+## Migrations Identificadas
 
-## 2. Histórico de versões (changelog das migrations)
+| Migration | Conteudo principal |
+|---|---|
+| `20260513000000_initial_schema.sql` | Schema base: politicos, partidos, votacoes, gastos, usuarios, candidatos, Senado, feed |
+| `20260513120000_v2_12_politicos_campos.sql` | Campos adicionais em `politicos` |
+| `20260514183000_politico_resumos_ia.sql` | `politico_resumos_ia`, `politico_resumos_ia_cotas` |
+| `20260515180000_restore_public_profile_select_grants.sql` | Grants publicos |
+| `20260516000000_proposicoes.sql` | `proposicoes`, `proposicao_autores` |
+| `20260517000000_glossario.sql` | `glossario` |
+| `20260520000000_emendas.sql` | `emendas`, `fornecedores` |
+| `20260520010000_emendas_fix.sql` | Ajustes em `emendas` |
+| `20260520100000_admin.sql` | `admin_logs`, `analytics_eventos`, `feature_flags`, `perfis.role` |
+| `20260521000000_estados.sql` | `estados_*` |
+| `20260522000000_public_grants.sql` | Grants publicos |
+| `20260522001000_acompanhamentos_auth_grants.sql` | Grants de `acompanhamentos`/`perfis` |
+| `20260522002000_perfis_trigger.sql` | Trigger legado de perfil |
+| `20260522003000_glossario_seed.sql` | Seed glossario |
+| `20260522004000_emendas_match_municipio.sql` | Match emendas/municipios |
+| `20260522005000_proposicao_autores_match.sql` | Match autores/proposicoes/politicos |
+| `20260522006000_glossario_dedup.sql` | Deduplicacao glossario |
+| `20260522007000_fixes.sql` | Fixes gerais |
+| `20260522_proposicao_tramitacoes.sql` | `proposicao_tramitacoes` |
+| `20260523b_ale_setup.sql` | `ale_sessoes`, `ale_presencas`, view de presenca estadual |
+| `20260601000000_logto_identity_compat.sql` | Colunas `logto_sub`, `supabase_user_id`, `auth_provider`, `migrado_logto_em` em `perfis` |
 
-| Migration | Versão | Data | Conteúdo principal |
+## ENUMs
+
+| ENUM | Valores |
+|---|---|
+| `cargo_tipo` | `presidente`, `vice_presidente`, `governador`, `vice_governador`, `senador`, `deputado_federal`, `deputado_estadual`, `prefeito`, `vice_prefeito`, `vereador` |
+| `situacao_politico` | `ativo`, `licenciado`, `suplente`, `afastado`, `inativo` |
+| `voto_tipo` | `sim`, `nao`, `abstencao`, `ausente`, `obstrucao`, `artigo_17` |
+| `impacto_nivel` | `1`, `2`, `3`, `4` |
+| `dado_estado` | `oficial`, `parcial`, `atrasado`, `em_processamento`, `indisponivel` |
+| `situacao_candidato` | `deferido`, `indeferido`, `cassado`, `pendente` |
+| `perfil_candidato` | `em_exercicio`, `ex_mandatario`, `sem_mandato` |
+| `correcao_status` | `pendente`, `aprovado`, `rejeitado`, `arquivado` |
+| `coleta_status` | `ok`, `atrasado`, `falhou`, `em_andamento` |
+| `parse_status_tipo` | `pending`, `parsed`, `error` |
+
+## Tabelas Versionadas
+
+| Tabela | Origem | Papel | Uso real |
 |---|---|---|---|
-| `20260513000000_initial_schema.sql` | v2.11 | 2026-05-13 | Schema completo — todas as tabelas base, Fase 1 (Câmara) e Fase 2 (Senado) |
-| `20260513120000_v2_12_politicos_campos.sql` | v2.12 | 2026-05-13 | Campos de gabinete e dados pessoais em `politicos` |
-| `20260514183000_politico_resumos_ia.sql` | — | 2026-05-14 | Tabelas `politico_resumos_ia` e `politico_resumos_ia_cotas` |
-| `20260515180000_restore_public_profile_select_grants.sql` | — | 2026-05-15 | Grants de SELECT restaurados para `anon` e `authenticated` |
-| `20260516000000_proposicoes.sql` | — | 2026-05-16 | Tabelas `proposicoes` e `proposicao_autores` |
-| `20260517000000_glossario.sql` | — | 2026-05-17 | Tabela `glossario` com campos semânticos |
-| `20260520000000_emendas.sql` | — | 2026-05-20 | Tabelas `emendas`, `fornecedores`, views analíticas de emendas |
-| `20260520010000_emendas_fix.sql` | — | 2026-05-20 | Correções na tabela `emendas` |
-| `20260520100000_admin.sql` | — | 2026-05-20 | Tabelas `admin_logs`, `analytics_eventos`, coluna `perfis.role` |
-| `20260521000000_estados.sql` | — | 2026-05-21 | 7 tabelas de estados + seeds de 27 estados + dados econômicos |
-| `20260522000000_public_grants.sql` | — | 2026-05-22 | Grants públicos para leitura anon |
-| `20260522001000_acompanhamentos_auth_grants.sql` | — | 2026-05-22 | Grants autenticados para acompanhamentos |
-| `20260522002000_perfis_trigger.sql` | — | 2026-05-22 | Trigger `on_auth_user_created` — cria perfil automático |
-| `20260522003000_glossario_seed.sql` | — | 2026-05-22 | Seed de 50 termos do glossário cívico |
-| `20260522004000_emendas_match_municipio.sql` | — | 2026-05-22 | Cruzamento emendas × municípios |
-| `20260522005000_proposicao_autores_match.sql` | — | 2026-05-22 | Match autores proposição × politicos |
-| `20260522006000_glossario_dedup.sql` | — | 2026-05-22 | Deduplicação do glossário |
-| `20260522007000_fixes.sql` | — | 2026-05-22 | Correções gerais |
-| `20260522_proposicao_tramitacoes.sql` | — | 2026-05-22 | Tabela `proposicao_tramitacoes` |
-| `20260523b_ale_setup.sql` | — | 2026-05-23 | ALE: `ale_sessoes`, `ale_presencas`, view `v_presenca_deputado_estadual` |
+| `municipios` | schema base | Municipios IBGE/TSE | App e ETL |
+| `partidos` | schema base | Partidos | App e ETL |
+| `temas` | schema base | Categorias tematicas | Schema/ETL potencial |
+| `politicos` | schema base | Hub central | App, API, admin, ETL |
+| `politico_partidos` | schema base | Historico de filiacao | Schema, pouco/no uso real identificado |
+| `redes_sociais` | schema base | Redes do politico | ETL Camara insere; app pouco/no uso |
+| `votacoes` | schema base | Votos nominais | App e ETL |
+| `gastos` | schema base | Gastos parlamentares | App e ETL |
+| `presenca` | schema base | Presenca parlamentar | App consulta; ETL direto pouco identificado |
+| `emendas` | schema base + migration | Emendas parlamentares | App, admin, ETL |
+| `discursos` | schema base | Discursos | Ghost no app atual |
+| `atuacao` | schema base | Agregados/atuacao | Ghost no app atual |
+| `candidatos` | schema base | Candidatos 2026 | App e ETL |
+| `candidaturas_historico` | schema base | Historico eleitoral | ETL |
+| `perfis` | schema base + admin + Logto | Perfil interno/RBAC | App/API/admin |
+| `acompanhamentos` | schema base | Follow usuario-politico | App/API |
+| `correcoes` | schema base | Correcao cidadã | Schema; rota atual nao identificada |
+| `feature_flags` | schema base/admin | Flags | Admin/API |
+| `coletas_log` | schema base | Logs ETL | Admin/ETL |
+| `politico_resumos_ia` | schema + migration | Cache IA | Server action |
+| `politico_resumos_ia_cotas` | schema + migration | Cota IA | Server action |
+| `feed_eventos` | schema base | Feed precomputado | ETL TSE; app painel nao usa atualmente |
+| `politico_ids` | schema base | Entity resolution Camara | Ghost no app atual |
+| `senadores` | schema base | Espelho Senado | ETL |
+| `senado_votacoes` | schema base | Votacoes Senado normalizadas | Ghost app; ETL pode usar via `votacoes` consolidada |
+| `senado_materias` | schema base | Materias Senado | Ghost no app atual |
+| `senado_comissoes` | schema base | Comissoes Senado | Ghost no app atual |
+| `senado_discursos` | schema base | Discursos Senado | Ghost no app atual |
+| `senado_sessoes` | schema base | Sessoes Senado | Ghost no app atual |
+| `politico_senado_ids` | schema base | Entity resolution Senado | Ghost no app atual |
+| `raw_senado` | schema base | Bronze layer Senado | Ghost no app atual |
+| `proposicoes` | migration | Proposicoes legislativas | App e ETL |
+| `proposicao_autores` | migration | Autores de proposicoes | App e ETL |
+| `fornecedores` | migration | Fornecedores de emendas | Schema/ETL potencial |
+| `glossario` | migration | Glossario civico | App/API |
+| `admin_logs` | migration | Auditoria admin | APIs admin |
+| `analytics_eventos` | migration | Analytics interno | API/admin |
+| `estados_info` | migration | Metadados UF | Schema; uso direto nao identificado |
+| `estados_economia` | migration | Indicadores UF | App/ETL |
+| `estados_governos` | migration | Governadores | App/ETL |
+| `estados_ale` | migration | Assembleia estadual | App |
+| `estados_pacto_federativo` | migration | STN/transferencias | App/ETL |
+| `estados_tribunais` | migration | Tribunais estaduais | App/ETL |
+| `estados_timeline` | migration | Timeline UF | App |
+| `proposicao_tramitacoes` | migration | Tramites Camara | App/ETL |
+| `ale_sessoes` | migration | Sessoes ALE | ETL/schema |
+| `ale_presencas` | migration | Presenca ALE | ETL/app indireto |
 
----
+## Tabelas Referenciadas Mas Nao Versionadas
 
-## 3. ENUMs
-
-| ENUM | Valores | Uso |
-|---|---|---|
-| `cargo_tipo` | `presidente`, `vice_presidente`, `governador`, `vice_governador`, `senador`, `deputado_federal`, `deputado_estadual`, `prefeito`, `vice_prefeito`, `vereador` | Cargo de políticos e candidatos |
-| `situacao_politico` | `ativo`, `licenciado`, `suplente`, `afastado`, `inativo` | Status do mandato |
-| `voto_tipo` | `sim`, `nao`, `abstencao`, `ausente`, `obstrucao`, `artigo_17` | Resultado de votação nominal |
-| `impacto_nivel` | `'1'` (baixo), `'2'` (médio), `'3'` (alto), `'4'` (crítico) | Prioridade no feed de atividades |
-| `dado_estado` | `oficial`, `parcial`, `atrasado`, `em_processamento`, `indisponivel` | Qualidade/frescor do dado |
-| `situacao_candidato` | `deferido`, `indeferido`, `cassado`, `pendente` | Status da candidatura TSE |
-| `perfil_candidato` | `em_exercicio`, `ex_mandatario`, `sem_mandato` | Tipo de perfil do candidato 2026 |
-| `correcao_status` | `pendente`, `aprovado`, `rejeitado`, `arquivado` | Fluxo de correção de dados |
-| `coleta_status` | `ok`, `atrasado`, `falhou`, `em_andamento` | Status de execução de ETL |
-| `parse_status_tipo` | `pending`, `parsed`, `error` | Ciclo de vida Bronze layer (raw_senado) |
-
----
-
-## 4. Tabelas — Mapa Completo
-
-### 4.1 Dados públicos — Estrutura política
-
-| Tabela | Linhas aprox. | Descrição |
-|---|---|---|
-| `municipios` | ~5.570 | Municípios IBGE com código TSE para cruzamento |
-| `partidos` | ~30 | Partidos políticos com cor, logo, número eleitoral |
-| `temas` | 9 | Categorias de votações/projetos — seed fixo |
-| `politicos` | ~1.680 | Hub central — dep. federais + senadores + governadores + dep. estaduais |
-| `politico_partidos` | variável | Histórico de filiações ("PSL → PL → União") |
-| `redes_sociais` | variável | Perfis em redes por político |
-
-### 4.2 Dados de atuação parlamentar
-
-| Tabela | Fonte | Linhas aprox. |
-|---|---|---|
-| `votacoes` | Câmara API v2 | ~379k |
-| `gastos` | CEAP (Câmara) + CEAPS (Senado) | ~567k |
-| `presenca` | Câmara API — eventos | ⬜ ETL pendente |
-| `emendas` | Portal da Transparência | ~16.6k |
-| `discursos` | Câmara API | — |
-| `atuacao` | Calculado (fase 2) | — |
-| `feed_eventos` | ETL múltiplas fontes | — |
-
-### 4.3 Candidatos 2026 (TSE)
-
-| Tabela | Descrição |
-|---|---|
-| `candidatos` | Candidatos registrados no TSE para 2026 |
-| `candidaturas_historico` | Histórico eleitoral desde 1994 |
-
-### 4.4 Senado Federal (Fase 2)
-
-| Tabela | Fonte | Linhas aprox. |
-|---|---|---|
-| `senadores` | API Senado (`legis.senado.leg.br`) | ~81 |
-| `senado_votacoes` | API Senado | ~13k |
-| `senado_materias` | API Senado | — |
-| `senado_comissoes` | API Senado | — |
-| `senado_discursos` | API Senado | — |
-| `senado_sessoes` | API Senado | — |
-| `politico_senado_ids` | Entity resolution (CPF âncora) | — |
-| `raw_senado` | Bronze layer — XML bruto + SHA-256 | — |
-
-### 4.5 Proposições legislativas
-
-| Tabela | Descrição |
-|---|---|
-| `proposicoes` | PLs, PECs, PLPs, PDLs, MPVs (~57k da Câmara) |
-| `proposicao_autores` | Autores de cada proposição (soft FK para `politicos`) |
-| `proposicao_tramitacoes` | Histórico de tramitação na Câmara |
-
-### 4.6 Estados e Assembleias
-
-| Tabela | Descrição |
-|---|---|
-| `estados_info` | Dados institucionais dos 27 estados (seed completo) |
-| `estados_economia` | Indicadores econômicos anuais por estado (IBGE 2022/2023) |
-| `estados_governos` | Histórico de governadores |
-| `estados_ale` | Dados da Assembleia Legislativa por legislatura |
-| `estados_pacto_federativo` | Transferências intergovernamentais (STN 2023) |
-| `estados_tribunais` | TCE, TJ, MP, Defensoria por estado |
-| `estados_timeline` | Eventos históricos e políticos por estado |
-| `ale_sessoes` | Sessões plenárias/comissões das ALEs |
-| `ale_presencas` | Presença individual de dep. estaduais por sessão |
-
-### 4.7 Usuários e plataforma
-
-| Tabela | RLS | Descrição |
-|---|---|---|
-| `acompanhamentos` | `auth.uid() = usuario_id` | Políticos seguidos por usuário |
-| `correcoes` | INSERT público / ALL admin | Fluxo de correção de dados públicos |
-| `feature_flags` | Admin only | Flags de features gerenciadas sem deploy |
-| `admin_logs` | Admin only | Log de ações administrativas |
-| `analytics_eventos` | Admin only | Eventos de analytics da plataforma |
-
-### 4.8 IA e glossário
-
-| Tabela | Descrição |
-|---|---|
-| `politico_resumos_ia` | Cache de resumos interpretativos gerados por IA |
-| `politico_resumos_ia_cotas` | Controle de cota diária de geração por político |
-| `glossario` | 50 termos cívicos com definição simples e técnica |
-| `coletas_log` | Log de execução de todos os ETLs |
-
-### 4.9 Entity resolution
-
-| Tabela | Propósito |
-|---|---|
-| `politico_ids` | Câmara API v1 (`ideCadastro`) ↔ v2 (`id`) |
-| `politico_senado_ids` | Câmara ↔ Senado (CPF como âncora no ETL — nunca persistido) |
-
----
-
-## 5. Tabela `politicos` — campos completos
-
-A tabela central do sistema. Todos os outros dados se relacionam via `politicos.id`.
-
-```
-id             uuid PK
-nome           text
-nome_civil     text
-nome_eleitoral text                    — nome na urna (Câmara API)
-slug           text UNIQUE             — URL: 'nikolas-ferreira-dep-federal-mg'
-partido_id     uuid → partidos.id
-uf             text
-cargo          cargo_tipo
-situacao       situacao_politico
-mandato_inicio date
-mandato_fim    date
-numero_mandato integer
-foto_url       text
-foto_fonte     text                    — 'camara.leg.br' | 'senado.leg.br' | 'tse.jus.br'
-email          text
-data_nascimento date
-naturalidade   text
-escolaridade   text
-ocupacao       text
-sexo           text                    — 'M' | 'F' (v2.12)
-uf_nascimento  char(2)                 — (v2.12)
-data_falecimento date                  — null se vivo (v2.12)
-gabinete_nome  text                    — (v2.12)
-gabinete_telefone text                 — (v2.12)
-gabinete_email text                    — (v2.12)
-id_camara      integer UNIQUE          — ID Câmara API v2
-id_senado      integer UNIQUE          — ID Senado API
-id_tse         text
-id_ale         text                    — ID na ALE (20260523b)
-codigo_siafi   text UNIQUE             — CGU/SIAFI — código do autor em emendas
-municipio_id   uuid → municipios.id
-presenca_pct_atual  numeric(5,2)       — cache calculado diariamente
-gasto_total_ano     numeric(14,2)      — cache calculado diariamente
-total_votacoes      integer            — cache calculado diariamente
-total_emendas_ano   numeric(15,2)      — (20260520)
-total_emendas_historico numeric(15,2)  — (20260520)
-source_id      text                    — lineage: 'camara_deputados' | 'senado' | 'tse'
-source_record_id text
-collected_at   timestamptz
-dado_estado    dado_estado
-removido_em    timestamptz             — soft delete
-criado_em      timestamptz
-atualizado_em  timestamptz
-```
-
----
-
-## 6. Views
-
-| View | Propósito |
-|---|---|
-| `feed_usuario` | Feed unificado (votações + gastos + discursos + feed_eventos) para políticos acompanhados pelo usuário |
-| `resumo_politico` | Agregado por político: presença, gastos, votações, seguidores |
-| `fila_ia_pendente` | Itens aguardando processamento por IA (`ia_processado = false`) |
-| `ultima_coleta_por_fonte` | Último status de coleta por fonte/tipo — exibido em `/admin` e `/status` |
-| `v_ranking_emendas` | Ranking de parlamentares por total de emendas pagas |
-| `v_emendas_municipio` | Emendas agregadas por município com per capita |
-| `v_fornecedores_comuns` | Fornecedores comuns entre gabinetes (análise de concentração) |
-| `v_presenca_deputado_estadual` | Percentual de presença de dep. estaduais em ALEs |
-
----
-
-## 7. Row Level Security (RLS)
-
-RLS ativo em todas as tabelas. Modelo de acesso:
-
-| Política | Tabelas |
-|---|---|
-| `FOR SELECT USING (true)` — qualquer um lê | Todas as tabelas de dados públicos: `municipios`, `partidos`, `temas`, `politicos`, `votacoes`, `gastos`, `presenca`, `emendas`, `candidatos`, `proposicoes`, `estados_*`, `ale_*`, `glossario` |
-| `FOR ALL USING (auth.uid() = id)` | `perfis` — usuário acessa apenas seu próprio perfil |
-| `FOR ALL USING (auth.uid() = usuario_id)` | `acompanhamentos` — usuário acessa apenas seus |
-| `FOR INSERT WITH CHECK (true)` | `correcoes` — qualquer um pode submeter |
-| `FOR ALL USING (auth.jwt() ->> 'role' = 'admin')` | `coletas_log`, `raw_senado`, `admin_logs`, `feature_flags`, `analytics_eventos` |
-| `FOR ALL USING (EXISTS (SELECT 1 FROM perfis WHERE id = auth.uid() AND role = 'admin'))` | Alternativa admin usada em algumas tabelas |
-| `FOR ALL USING (auth.jwt() ->> 'role' = 'admin')` | `politico_resumos_ia`, `politico_resumos_ia_cotas` |
-
----
-
-## 8. Triggers
-
-Todas as tabelas com `atualizado_em` têm trigger `BEFORE UPDATE` chamando `set_atualizado_em()`.
-
-Trigger especial de negócio:
-
-| Trigger | Tabela | Função |
-|---|---|---|
-| `on_auth_user_created` | `auth.users` | Cria registro em `perfis` automaticamente após cadastro |
-
-A função `handle_new_user()` extrai `full_name` / `name` / `given_name` do `raw_user_meta_data` (OAuth) ou usa a parte local do e-mail como fallback. Não sobrescreve nome já preenchido pelo usuário.
-
----
-
-## 9. Padrão de lineage (rastreabilidade)
-
-Todas as tabelas ETL incluem os campos:
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `source_id` | text | Identificador da fonte: `'camara_deputados'`, `'senado_legis'`, `'tse'`, `'portal_transparencia'` |
-| `source_record_id` | text | ID do registro na fonte original |
-| `collected_at` | timestamptz | Timestamp da coleta |
-
----
-
-## 10. Bronze layer (raw_senado)
-
-A tabela `raw_senado` armazena o XML bruto da API do Senado para reprocessamento sem re-fetch.
-
-- Deduplicação por SHA-256 do conteúdo (`checksum UNIQUE`)
-- Ciclo: `pending` → `parsed` (Silver layer atualizado) ou `error` (re-processar)
-- RLS: admin-only — o XML pode conter dados sensíveis de formatação
-
----
-
-## 11. Acesso ao banco (desenvolvimento)
-
-```
-```
-
-**Via SSH tunnel (ETL local):**
-```bash
-ssh -L 5433:10.0.2.2:5432 root@45.32.169.173 -N -o ServerAliveInterval=30
-# Banco disponível em localhost:5433
-```
-
-**Credenciais:** ver `app/.env.local` — variáveis `POSTGRES_*`. Nunca commitar.
-
----
-
-## 12. Status dos dados coletados
-
-Ver `app/CLAUDE.md` para tabela atualizada. Resumo atual (mai/2026):
-
-| Tabela | Fonte | Registros | Período |
+| Tabela | Referencia | Status | Risco |
 |---|---|---|---|
-| `gastos` | `camara_ceap` | ~527k | 2022–2025 |
-| `gastos` | `senado_ceaps` | ~40k | 2023–2026 |
-| `votacoes` | `camara_votos_bulk` | ~379k | 2023–2025 |
-| `votacoes` | `senado_legis` | ~13k | até mai/2026 |
-| `emendas` | `portal_transparencia` | ~16.6k | 2024–2025 |
-| `proposicoes` | `camara_dadosabertos` | ~57k | até mai/2026 |
-| `politicos` | `camara_deputados` | 513 dep. federais | — |
-| `politicos` | `senado_legis` | 81 senadores | — |
+| `doacoes` | `docs/TODO_PRODUCTION.md`, webhook comentado | Nao encontrada em migrations | Pagamentos sem persistencia |
+| `partidos_fundos` | `etl/partidos/collect_fundos_tse.py`, `(site)/partidos/page.tsx` | Criada por script ETL, nao por migration | Deploy limpo pode quebrar pagina de partidos |
+| `candidatos_bens` | `(site)/candidatos-2026/[slug]/page.tsx` | Nao encontrada em migrations; codigo faz `catch` | Bens patrimoniais podem nunca aparecer |
 
----
+## Relacionamentos Estruturais
 
-*Atualizado em: 2026-05-29 · Schema v2.12 · Auditoria v2.1*
+| Origem | Destino | Tipo | Observacao |
+|---|---|---|---|
+| `politicos.partido_id` | `partidos.id` | N:1 | Join central em busca/perfil |
+| `politicos.municipio_id` | `municipios.id` | N:1 | Naturalidade/domicilio |
+| `politico_partidos.politico_id` | `politicos.id` | N:1 | Historico |
+| `politico_partidos.partido_id` | `partidos.id` | N:1 | Historico |
+| `redes_sociais.politico_id` | `politicos.id` | N:1 | Redes |
+| `votacoes.politico_id` | `politicos.id` | N:1 | Votos |
+| `votacoes.tema_id` | `temas.id` | N:1 | Tema |
+| `gastos.politico_id` | `politicos.id` | N:1 | Gastos |
+| `presenca.politico_id` | `politicos.id` | N:1 | Presenca |
+| `emendas.politico_id` | `politicos.id` | N:1 | Emendas |
+| `discursos.politico_id` | `politicos.id` | N:1 | Discursos |
+| `discursos.tema_id` | `temas.id` | N:1 | Tema |
+| `atuacao.politico_id` | `politicos.id` | N:1 | Agregado |
+| `candidatos.politico_id` | `politicos.id` | N:1 nullable | Candidato com mandato |
+| `candidatos.partido_id` | `partidos.id` | N:1 | Partido |
+| `candidatos.municipio_id` | `municipios.id` | N:1 | Municipio |
+| `candidaturas_historico.politico_id` | `politicos.id` | N:1 nullable | Historico |
+| `candidaturas_historico.candidato_id` | `candidatos.id` | N:1 nullable | Historico |
+| `acompanhamentos.usuario_id` | `perfis.id` | N:1 | Usuario interno |
+| `acompanhamentos.politico_id` | `politicos.id` | N:1 | Politico seguido |
+| `correcoes.politico_id` | `politicos.id` | N:1 nullable | Correcao |
+| `feed_eventos.politico_id` | `politicos.id` | N:1 | Feed precomputado |
+| `senadores.politico_id` | `politicos.id` | N:1 | Senado |
+| `senadores.partido_id` | `partidos.id` | N:1 | Senado |
+| `senado_votacoes.senador_id` | `senadores.id` | N:1 | Senado |
+| `senado_votacoes.tema_id` | `temas.id` | N:1 | Tema |
+| `politico_senado_ids.politico_id` | `politicos.id` | N:1 | Entity resolution |
+| `proposicao_autores.proposicao_id` | `proposicoes.id` | N:1 | Autoria |
+| `proposicao_autores.politico_id` | `politicos.id` | N:1 nullable | Autoria reconhecida |
+| `ale_presencas.politico_id` | `politicos.id` | N:1 | ALE |
+| `ale_presencas.sessao_id` | `ale_sessoes.id` | N:1 nullable | ALE |
+
+## Tabelas Centrais: Estrutura Operacional
+
+### `politicos`
+
+Tabela hub. Campos-chave identificados no schema/codigo:
+
+| Campo | Papel |
+|---|---|
+| `id` | UUID primario |
+| `slug` | Rota publica |
+| `nome`, `nome_civil`, `nome_eleitoral` | Identidade |
+| `cargo`, `uf`, `situacao` | Mandato |
+| `partido_id` | Partido atual |
+| `id_camara`, `id_senado`, `id_tse`, `id_ale`, `codigo_siafi` | Entity resolution |
+| `presenca_pct_atual`, `gasto_total_ano`, `total_votacoes` | Agregados usados na UI |
+| `dado_estado`, `source_id`, `source_record_id`, `collected_at` | Qualidade/lineage |
+| `logicamente removido` | `removido_em` |
+
+### `perfis`
+
+Tabela de usuario interno.
+
+| Campo | Papel |
+|---|---|
+| `id` | UUID interno, historicamente ligado a `auth.users` |
+| `nome` | Nome exibido |
+| `role` | RBAC admin/user |
+| `logto_sub` | Subject externo Logto |
+| `supabase_user_id` | Compat legado |
+| `auth_provider` | `supabase` ou `logto` |
+| `migrado_logto_em` | Timestamp de migracao |
+
+### `acompanhamentos`
+
+Tabela do core loop autenticado.
+
+| Campo | Papel |
+|---|---|
+| `usuario_id` | Perfil interno |
+| `politico_id` | Politico seguido |
+| Unique esperado | Par usuario/politico para evitar duplicidade |
+
+### `votacoes`, `gastos`, `presenca`, `emendas`
+
+Conjunto de atuacao parlamentar. Todas usam `politico_id` e alimentam perfil/painel. `votacoes` tambem se conecta a `proposicao_id` em usos recentes do app, embora o schema inicial tenha evoluido por migrations.
+
+## Views Citadas/Usadas
+
+| View | Uso identificado |
+|---|---|
+| `v_emendas_municipio` | `(site)/cidades/page.tsx` |
+| `v_presenca_deputado_estadual` | Criada na migration ALE; uso direto no app nao identificado |
+| `feed_usuario`, `resumo_politico`, `fila_ia_pendente`, `ultima_coleta_por_fonte`, `v_ranking_emendas`, `v_fornecedores_comuns` | Citadas na documentacao/schema legado; uso app atual nao confirmado |
+
+## RLS E Acesso
+
+RLS aparece habilitado para as tabelas principais no schema/migrations. O modelo legado ainda usa `auth.uid()`/`auth.jwt()` em politicas, enquanto o runtime app atual usa Logto e consultas diretas por `pg`.
+
+Risco: se o app usa credencial Postgres direta com permissao ampla, RLS pode nao proteger como esperado dependendo do role de conexao. Isso precisa de validacao em ambiente real.
+
+| Grupo | Politica observada |
+|---|---|
+| Dados publicos | `FOR SELECT USING (true)` |
+| `perfis` | Acesso proprio via `auth.uid()` no modelo legado |
+| `acompanhamentos` | Acesso proprio via `auth.uid()` no modelo legado |
+| Admin | `auth.jwt()->>'role' = 'admin'` ou existencia em `perfis` |
+| `raw_senado`/logs | Admin-only |
+
+## Lineage E ETL
+
+Padrao recorrente nas tabelas de dados:
+
+| Campo | Papel |
+|---|---|
+| `source_id` | Fonte do dado |
+| `source_record_id` | ID original |
+| `collected_at` | Momento da coleta |
+| `dado_estado` | Qualidade/frescor |
+
+ETLs usam `ON CONFLICT ... DO UPDATE` para idempotencia em varias tabelas. `coletas_log` registra execucoes.
+
+## Gaps De Schema
+
+| Gap | Evidencia | Severidade |
+|---|---|---|
+| `doacoes` ausente | Somente docs/TODO e pseudo-codigo comentado | P0/P1 |
+| `partidos_fundos` fora das migrations | Criada dentro de script ETL | P1/P2 |
+| `candidatos_bens` ausente | Codigo tenta consultar e captura erro | P2 |
+| Politicas RLS legadas com Logto | `auth.uid()`/`auth.jwt()` no SQL, Logto no runtime | P1 |
+| Muitos `new Pool()` | Conexao duplicada no app | P2 |
+
+## Conclusao
+
+O schema e amplo e sustenta boa parte do produto real. O ponto critico e a diferenca entre schema versionado, tabelas criadas por scripts e tabelas que o codigo espera mas nao existem nas migrations. Antes de producao, `doacoes`, `partidos_fundos` e `candidatos_bens` precisam ser resolvidas explicitamente, e o modelo RLS/Auth precisa ser validado contra o runtime Logto + Postgres direto.
+

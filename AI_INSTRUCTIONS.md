@@ -1,352 +1,180 @@
-# AI_INSTRUCTIONS — Meus Políticos
-
-Guia de referência rápida para agentes IA trabalhando neste repositório.
-Leia antes de editar qualquer arquivo. Este documento complementa `app/CLAUDE.md` e `app/AGENTS.md` (carregados automaticamente).
-
+---
+file: AI_INSTRUCTIONS.md
+module: AI Agent Governance
+status: Active
+related: [.agent-instructions.md, README.md, docs/TODO_PRODUCTION.md, docs/MODERNIZATION_ROADMAP.md, docs/PRODUCAO_READINESS.md]
 ---
 
-## 1. Contexto do projeto
+# AI Instructions
 
-**Meus Políticos** é uma plataforma brasileira de transparência política.
-Empresa: NORO GURU LTDA · CNPJ 63.429.497/0001-88
+Guia obrigatorio para futuros agentes de IA que atuarem neste repositorio. O objetivo e impedir regressao documental, evitar a reintroducao de informacao legada falsa e manter a base de conhecimento incremental gerada pela macro auditoria funcional e tecnica v4.0 de 2026-06-02.
 
-**Produtos (mesmo deploy Next.js 16, diferenciados por subdomínio):**
+## Regra Zero
 
-| Produto | Host dev | Host produção |
-|---|---|---|
-| Site público | `localhost:3000` | `meuspoliticos.com.br` |
-| App analítico | `app.localhost:3000` | `app.meuspoliticos.com.br` |
-| Painel do usuário | `painel.localhost:3000` | `painel.meuspoliticos.com.br` |
-| Admin interno | `localhost:3000/admin` | `meuspoliticos.com.br/admin` |
+O codigo atual e a fonte primaria. A documentacao consolidada dos lotes v4.0 e a fonte secundaria. Documentos legados, especialmente `docs/meuspoliticos_master.md`, podem conter informacao historica, segredo exposto e stack obsoleta.
 
-**Stack:** Next.js 16 · React 19 · Supabase self-hosted (PostgreSQL 15) · Tailwind v4 · TypeScript 5
+Nunca trate mencoes antigas a Supabase Auth ou Stripe como runtime ativo sem confirmar no codigo. O runtime mapeado e:
 
----
-
-## 2. Regras inegociáveis (P0)
-
-### 2.1 Nunca conectar ao banco de produção via código
-
-```
-PROIBIDO: qualquer chamada direta a SUPABASE_DB_HOST=45.32.169.173 em runtime de desenvolvimento.
-PROIBIDO: executar scripts ETL apontando para o VPS de produção sem instrução explícita do usuário.
-PERMITIDO: `createClient()` / `createAdminClient()` via Supabase API (PostgREST) — usa RLS.
-PERMITIDO: conexão `pg` via POSTGRES_HOST=localhost com SSH tunnel ativo.
-```
-
-### 2.2 Nunca expor segredos
-
-- Nunca incluir valores reais de chaves em código, comentários ou documentação
-- `SUPABASE_SERVICE_ROLE_KEY` nunca vai para o cliente (apenas server-side)
-- `STRIPE_SECRET_KEY` nunca vai para o cliente
-- `OPENAI_API_KEY` nunca vai para o cliente
-- `'use client'` + qualquer variável sem `NEXT_PUBLIC_` = bug de segurança
-
-### 2.3 Seleção obrigatória do cliente Supabase correto
-
-```typescript
-// Client Component ('use client') ou route do browser
-import { createClient } from '@/lib/supabase/client'
-// → usa ANON_KEY · respeita RLS · para operações do usuário autenticado
-
-// Server Component, API Route, Server Action
-import { createClient } from '@/lib/supabase/server'
-// → usa ANON_KEY · respeita RLS · requer cookies() ativo
-
-// Admin: painel /admin, webhooks, operações que precisam bypassar RLS
-import { createAdminClient } from '@/lib/supabase/server'
-// → usa SERVICE_ROLE_KEY · bypassa RLS · NUNCA em Client Component
-```
-
-**Regra crítica:** nunca usar `createAdminClient()` fora de:
-- Server Components em `(admin)/`
-- API routes que já verificaram `perfis.role = 'admin'`
-- Webhook handlers (sem sessão de usuário)
-
----
-
-## 3. Arquitetura e roteamento
-
-### 3.1 Route groups e subdomínios
-
-O roteamento por subdomínio é feito em `app/src/proxy.ts` (middleware Next.js).
-
-| Route group | Subdomínio | Exige auth? |
-|---|---|---|
-| `(site)/` | `meuspoliticos.*` | Não (público) |
-| `(app)/` | `app.meuspoliticos.*` | Não (público) |
-| `(painel)/` | `painel.meuspoliticos.*` | Sim (redirect `/login`) |
-| `(admin)/` | qualquer host `/admin` | Sim + `role = 'admin'` |
-| `(checkout)/` | qualquer host `/apoio` | Não |
-| `(auth)/` | qualquer host `/auth` | Não |
-
-### 3.2 Componentes — onde criar
-
-| Tipo | Diretório |
+| Dominio | Estado atual |
 |---|---|
-| Componentes cívicos (domínio político) | `app/src/components/civic/` |
-| Componentes do site público | `app/src/components/site/` |
-| Componentes UI genéricos (shadcn) | `app/src/components/ui/` |
-| Utilitários/helpers | `app/src/lib/` |
+| Frontend/backend | Next.js 16.2.6, React 19.2.4, TypeScript |
+| Auth | Logto via `@logto/next` |
+| RBAC | `perfis.role` via PostgreSQL |
+| Banco | PostgreSQL/Supabase acessado diretamente por `pg` |
+| Pagamentos | InfinitePay |
+| IA | OpenAI server-side/ETL |
+| ETL | Scripts Python em `etl/**`, sem orquestracao real no admin |
 
-**Sempre verificar `app/src/components/civic/` antes de criar novo componente de domínio.**
+## Os 6 Pilares Obrigatorios
 
-### 3.3 Variáveis de ambiente
+Todo agente deve operar dentro destes seis pilares. Se uma tarefa violar qualquer pilar, pare e explicite o risco antes de continuar.
 
-O `app/next.config.ts` usa `loadEnvConfig(path.resolve(__dirname, '..'))` — carrega `.env.local` do diretório pai (`app/`). O arquivo vive em `app/.env.local`, não na raiz do monorepo.
+## Pilar 1 - Verdade de Codigo e Inventario Incremental
 
----
+1. Leia o codigo antes de concluir qualquer afirmacao operacional.
+2. Use `rg`/`rg --files` para mapear arquivos e usos reais.
+3. Ao alterar documentacao, mantenha referencias a arquivos e rotas reais.
+4. Nao apague documentos legados sem confirmacao humana.
+5. Nao reescreva narrativa historica como se fosse runtime atual.
+6. Sempre que descobrir novo fato relevante, atualize o documento canonico correspondente.
 
-## 4. Banco de dados
+Mapa canonico:
 
-### 4.1 Schema
-
-**Schema atual: v2.12** — 20 migrations em `supabase/migrations/`.
-
-Tabelas principais:
-
-| Tabela | Descrição |
+| Tema | Documento |
 |---|---|
-| `politicos` | 513 dep. federais + 81 senadores + 27 governadores + dep. estaduais |
-| `votacoes` | 379k+ votos registrados (2023–2025) |
-| `gastos` | 527k gastos CEAP Câmara + 40k Senado |
-| `emendas` | 16.6k emendas parlamentares |
-| `proposicoes` | 57k proposições da Câmara |
-| `candidatos` | Candidatos TSE 2026 |
-| `perfis` | Usuários cadastrados (espelha `auth.users`) |
-| `feature_flags` | Feature flags gerenciadas via `/admin/flags` |
-| `coletas_log` | Log de execuções de ETL |
-
-Para schema completo: `docs/DATABASE.md`.
-
-### 4.2 RLS — todas as tabelas têm RLS ativo
-
-- Dados políticos: leitura pública (`FOR SELECT USING (true)`)
-- Dados do usuário: `auth.uid() = usuario_id`
-- Tabelas admin: `EXISTS (SELECT 1 FROM perfis WHERE id = auth.uid() AND role = 'admin')`
-
-**Nunca desativar RLS.** Se a query não retornar dados esperados, usar `createAdminClient()` com a justificativa correta — não desabilitar a política.
-
-### 4.3 Queries SQL
-
-- Sempre usar queries parametrizadas (nunca interpolação de string com input do usuário)
-- Supabase client: `.eq()`, `.ilike()`, `.filter()` — safe por padrão
-- `pg` direto: usar `$1, $2` com array de params — nunca `${variavel}` em SQL string
-
----
-
-## 5. Métricas e scores
-
-**LEITURA OBRIGATÓRIA antes de criar qualquer componente que exiba métricas:**
-
-→ `docs/METRICS.md` — fórmulas, cores, benchmarks, disclaimers obrigatórios
-
-Regras resumidas:
-- Dados indisponíveis → exibir `"–"` com tooltip `"Dados sendo coletados"`
-- Nunca exibir score sem comparativo com peers (mesma UF/partido)
-- Disclaimer obrigatório em páginas com scores
-- Cores: `verde ≥ +10%` da média · `âmbar ±10%` · `vermelho ≤ -10%` · `cinza` sem dados
-
-Para fallback e exibição de dados cadastrais: `docs/BACKOFFICE_DATA_CONTRACT.md`
-
----
-
-## 6. Exibição de conteúdo — regras de design
-
-### 6.1 Obrigatório em todo conteúdo IA
-
-Todo resumo, ementa simplificada ou descrição gerada por OpenAI **deve**:
-1. Exibir badge "Gerado por IA" visível
-2. Incluir link para a fonte original (Câmara, TSE, Senado)
-
-Nunca omitir o badge mesmo que o conteúdo pareça factual.
-
-### 6.2 Nota de neutralidade em candidatos 2026
-
-A aba Proposta do candidato **deve** exibir banner âmbar:
-
-> "O resumo foi gerado por IA a partir da proposta oficial do TSE. A plataforma não avalia, ranqueia ou recomenda candidatos. Todos os dados são de fontes oficiais."
-
-Candidatos em listagens: **sempre em ordem alfabética** — nunca por relevância ou score.
-
-### 6.3 "Em breve" — nunca 404 silencioso
-
-Features não implementadas: exibir card/badge "Em breve" desabilitado.
-Não remover o card — comunica o roadmap sem frustrar o usuário.
-
-### 6.4 Badges de cargo — cores fixas
-
-| Cargo | Fundo | Texto |
-|---|---|---|
-| Dep. Federal | `#e8eefb` | `#1a2b5e` |
-| Senador | `#e8f5ee` | `#085041` |
-| Governador | `#fff0e8` | `#7a3000` |
-| Prefeito | `#f0e8ff` | `#3c1489` |
-| Dep. Estadual | `#fef9e8` | `#7a6000` |
-| Vereador | `#fce8f0` | `#7a0040` |
-
-### 6.5 Cores de presença
-
-`≥ 80%` → verde · `60–79%` → âmbar · `< 60%` → vermelho · sem dado → cinza + `"–"`
-
----
-
-## 7. ETL — regras de operação
-
-Os scripts Python em `etl/` são o único mecanismo de coleta de dados. O Next.js **nunca** chama APIs externas de dados políticos em runtime.
-
-### 7.1 Status dos dados (mai/2026)
-
-| Tabela | Fonte | Registros | Status |
-|---|---|---|---|
-| `gastos` | `camara_ceap` | ~527k | 2022–2025 ok · 2026 pendente (G-07) |
-| `gastos` | `senado_ceaps` | ~40k | 2023–2026 ok |
-| `votacoes` | `camara_votos_bulk` | ~379k | 2023–2025 ok |
-| `emendas` | `portal_transparencia` | ~16.6k | 2024–2025 ok |
-| `proposicoes` | `camara_dadosabertos` | ~57k | ok |
-| `politicos` | `camara_deputados` | 513 | ok |
-| `politicos` | `senado_legis` | 81 | mandato_inicio pendente (G-08) |
-
-### 7.2 Antes de sugerir rodar ETL
-
-Consultar banco para verificar o estado atual:
-```sql
-SELECT source_id, COUNT(*) as registros, MIN(data) as inicio, MAX(data) as fim
-FROM gastos GROUP BY source_id;
-
-SELECT fonte, MAX(iniciado_em) as ultima_coleta, status
-FROM coletas_log GROUP BY fonte, status;
-```
-
-### 7.3 ETLs pendentes de execução
-
-- `collect_camara_gastos.py --ano 2026` → gastos Câmara 2026 faltando
-- `collect_senadores.py` → re-rodar para preencher `mandato_inicio`
-- `populate_siafi.py` → após re-rodar senadores
-
----
-
-## 8. Pagamentos
-
-### 8.1 Estado atual
-
-- Stripe: modo **teste** (`sk_test_*`) — não processa pagamentos reais
-- Ambos os webhooks têm TODO de persistência no banco (G-02, G-03)
-- Tabela `doacoes` precisa ser criada antes de implementar a persistência
-
-### 8.2 Webhook Stripe — ler raw body antes de qualquer parse
-
-```typescript
-const body = await req.text()  // ← OBRIGATÓRIO — não usar req.json()
-const event = stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)
-```
-
-Usar `req.json()` quebra a verificação de assinatura.
-
-### 8.3 InfinitePay — sem HMAC (gap de segurança P2)
-
-O webhook InfinitePay não tem verificação de assinatura. Não implementar lógica financeira irreversível baseada somente no payload recebido até que HMAC seja adicionado.
-
----
-
-## 9. Padrões de código
-
-### 9.1 Formulários
-
-Padrão obrigatório: `useForm` + `zodResolver` + schema Zod.
-
-```typescript
-const schema = z.object({ email: z.email(), valor: z.number().min(5) })
-const { register, handleSubmit } = useForm({ resolver: zodResolver(schema) })
-```
-
-Validação client-side + server-side nas API routes.
-
-### 9.2 Tratamento de erros nas API routes
-
-```typescript
-// Padrão de resposta
-return NextResponse.json({ error: 'Mensagem clara' }, { status: 400 })
-return NextResponse.json({ ok: true })
-
-// Nunca expor stack trace ou mensagem interna no response
-```
-
-### 9.3 Analytics — best-effort
-
-```typescript
-// Chamar sem await e sem capturar o retorno
-fetch('/api/analytics', { method: 'POST', body: JSON.stringify({ tipo, payload }) })
-// Nunca bloquear o fluxo principal esperando o analytics
-```
-
-### 9.4 Comentários
-
-Por padrão: zero comentários. Apenas quando o WHY é não óbvio (restrição oculta, invariante sutil, workaround de bug específico). Nunca comentar o WHAT — o código já diz.
-
----
-
-## 10. Testes
-
-**Estado atual:** zero cobertura de testes (Gap G-06). Não há jest, vitest, playwright ou cypress configurados.
-
-Para estratégia completa de implementação: `docs/TESTING.md`
-
-Ao adicionar código novo de alto risco (funções de cálculo de métricas, validações financeiras), mencionar que testes devem ser escritos conforme `docs/TESTING.md §3`.
-
----
-
-## 11. Segurança — checklist antes de fazer PR
-
-- [ ] Nenhuma variável de ambiente sem `NEXT_PUBLIC_` em Client Component
-- [ ] Nenhum SQL com interpolação de string a partir de input do usuário
-- [ ] Nenhum `createAdminClient()` em Client Component ou route sem verificação de admin
-- [ ] Nenhum `href="#"` em produção (Gap G-05)
-- [ ] Conteúdo IA sempre com badge "Gerado por IA"
-- [ ] Candidatos 2026 com nota de neutralidade obrigatória
-- [ ] `req.text()` (não `req.json()`) em handlers de webhook Stripe
-
-Para referência completa: `docs/SECURITY.md`
-
----
-
-## 12. Documentação do projeto
-
-| Documento | Quando consultar |
+| Visao geral | `README.md` |
+| MVP real | `docs/MVP_REAL_IDENTIFICADO.md` |
+| Readiness | `docs/PRODUCAO_READINESS.md` |
+| Rotas | `docs/INVENTORY_ROUTES.md` |
+| Features | `docs/INVENTORY_FEATURES.md` |
+| Placeholders | `docs/PLACEHOLDER_REPORT.md` |
+| Gaps | `docs/GAP_ANALYSIS.md` |
+| Dominio | `docs/BUSINESS_DOMAIN.md` |
+| Banco | `docs/DATABASE.md`, `docs/INVENTORY_DATABASE_USAGE.md` |
+| Auth | `docs/AUTH.md` |
+| API | `docs/API.md`, `docs/INVENTORY_API_CONSUMPTION.md` |
+| Arquitetura | `docs/ARCHITECTURE.md` |
+| Ambiente | `docs/ENVIRONMENT.md` |
+| Integracoes | `docs/INTEGRATIONS.md` |
+| Deploy | `docs/DEPLOYMENT.md` |
+| Seguranca | `docs/SECURITY.md` |
+| Design | `docs/DESIGN.md` |
+| Dependencias | `docs/DEPENDENCIES.md` |
+| Pendencias | `docs/TODO_PRODUCTION.md` |
+| Roadmap | `docs/MODERNIZATION_ROADMAP.md` |
+
+## Pilar 2 - Seguranca, Segredos e Banco
+
+1. Nunca imprima valores reais de segredos.
+2. Nunca reproduza o valor de `RESEND_API_KEY` exposto em `docs/meuspoliticos_master.md`.
+3. Se encontrar segredo real, registre local, tipo e severidade sem copiar o valor.
+4. Antes de qualquer conexao ativa ao banco, classifique o host. Se for remoto/desconhecido, aborte sem confirmacao humana explicita.
+5. Toda tentativa de pre-flight DB deve ter timeout maximo de 5 segundos.
+6. Nunca execute ETL contra banco remoto/producao sem autorizacao clara do usuario.
+7. Nao use `POSTGRES_USER=postgres` como recomendacao de producao; recomende menor privilegio.
+8. Trate historico Git contaminado por segredo como risco mesmo apos remover o valor atual.
+
+Bloqueios P0 conhecidos:
+
+| Bloqueio | Documento |
 |---|---|
-| `docs/ARCHITECTURE.md` | Estrutura geral, route groups, diagrama de fluxo |
-| `docs/DATABASE.md` | Schema, tabelas, migrations, RLS, views |
-| `docs/AUTH.md` | Fluxo de autenticação, cookies, OAuth |
-| `docs/API.md` | Todos os route handlers com request/response |
-| `docs/INTEGRATIONS.md` | Stripe, InfinitePay, OpenAI, APIs externas |
-| `docs/ENVIRONMENT.md` | Todas as variáveis de ambiente |
-| `docs/DEPLOYMENT.md` | Vercel, VPS, SSH, migrations |
-| `docs/SECURITY.md` | RLS, webhooks, checklist de segurança |
-| `docs/METRICS.md` | Fórmulas de score — LEITURA OBRIGATÓRIA |
-| `docs/BACKOFFICE_DATA_CONTRACT.md` | Fallback de dados cadastrais |
-| `docs/BUSINESS_DOMAIN.md` | Entidades, temas, glossário, fluxos de negócio |
-| `docs/DESIGN.md` | Design system, wireframes, logos |
-| `docs/TESTING.md` | Estratégia de testes e setup |
-| `docs/GAP_ANALYSIS.md` | 19 gaps catalogados — estado atual |
-| `docs/TODO_PRODUCTION.md` | Checklist de go-live |
-| `docs/MODERNIZATION_ROADMAP.md` | Roadmap por fase |
+| Chave Resend aparente em doc legado | `docs/SECURITY.md`, `docs/TODO_PRODUCTION.md` |
+| Webhook InfinitePay sem persistencia | `docs/API.md`, `docs/GAP_ANALYSIS.md` |
+| Banco remoto/desconhecido sem pre-flight ativo | `docs/PRODUCAO_READINESS.md` |
 
----
+## Pilar 3 - Produto, Core Loop e Honestidade de Estado
 
-## 13. Feature flags
+O MVP real e o core loop:
 
-Features controladas sem deploy via `/admin/flags`:
+```text
+buscar politico -> abrir perfil -> acompanhar -> painel/feed civico
+```
 
-| Slug | Default | Controla |
-|---|---|---|
-| `candidatos_2026` | `true` | Módulo de candidatos |
-| `resumo_ia` | `true` | Resumos OpenAI |
-| `comparador` | `false` | Ferramenta de comparação |
-| `mapa_interativo` | `true` | Mapa SVG do Brasil |
-| `modo_manutencao` | `false` | Exibe banner de manutenção |
+Regras:
 
-Para lista completa e rollout_pct: `docs/BUSINESS_DOMAIN.md §10`
+1. Nao priorize features perifericas antes de estabilizar esse loop.
+2. Nao apresente feed civico como produtivo enquanto `FeedCivico` nao estiver conectado a eventos reais.
+3. Nao apresente candidatos 2026 como completo sem validar ETL/dados.
+4. Nao permita que a UI de apoio sugira confirmacao financeira se o webhook nao persistir pagamento.
+5. Use estados vazios honestos em vez de mock silencioso.
+6. Todo texto de IA deve sinalizar origem quando aplicavel.
 
----
+Fraturas do produto:
 
-*Versão: 2026-05-29 · Auditoria v2.1*
+| Fratura | Fonte |
+|---|---|
+| Feed civico incompleto | `docs/ARCHITECTURE.md`, `docs/DESIGN.md` |
+| Candidatos 2026 incompleto | `docs/PLACEHOLDER_REPORT.md`, `docs/DESIGN.md` |
+| API de verificacao InfinitePay sem UI consumidora | `docs/INVENTORY_API_CONSUMPTION.md` |
+| Admin ETL nao dispara job | `docs/API.md`, `docs/DEPLOYMENT.md` |
+
+## Pilar 4 - Arquitetura, Integracoes e Operacao
+
+1. A aplicacao web roda em Next.js App Router.
+2. O deploy alvo documentado e Vercel via `vercel.json`.
+3. O banco e acessado por `pg`, nao por Prisma/Drizzle no runtime mapeado.
+4. Logto e o provedor de identidade ativo; `auth.users` e fallback legado de reconciliacao.
+5. InfinitePay e o pagamento ativo; Stripe e historico/legado.
+6. OpenAI deve permanecer server-side/ETL.
+7. ETL Python nao faz parte do build Vercel e precisa runner externo.
+8. Antes de mudar dependencias, avaliar React 19/Next.js 16 e rodar build.
+
+Arquivos-chave:
+
+| Area | Arquivos |
+|---|---|
+| Proxy/auth host | `app/src/proxy.ts` |
+| Logto | `app/src/lib/logto/*`, `app/src/app/api/auth/logto/*` |
+| Current user/RBAC | `app/src/lib/auth/current-user.ts`, `profile-linking.ts` |
+| InfinitePay | `app/src/app/api/apoio/*`, `app/src/app/api/webhooks/infinitepay/route.ts` |
+| OpenAI | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` |
+| ETL | `etl/**` |
+| Build | `package.json`, `app/package.json`, `vercel.json` |
+
+## Pilar 5 - Design, Acessibilidade e UX Operacional
+
+1. Use os tokens de `app/src/app/globals.css`.
+2. Prefira `app/src/components/ui` para botoes, badges, tabs, dialogs, sheets, inputs, avatars, separators e skeletons.
+3. Use `lucide-react` para icones funcionais.
+4. Evite emojis como icones de navegacao/admin.
+5. Reduza inline styles em novas implementacoes.
+6. Diferencie visualmente: dado real, dado ausente, mock, "em breve" e erro.
+7. Em telas admin/SaaS-like, priorize densidade, scan e clareza operacional.
+8. Em alteracoes frontend significativas, valide desktop/mobile quando houver servidor disponivel.
+
+Rotas criticas de QA:
+
+| Rota | Motivo |
+|---|---|
+| `/busca` e `/app-busca` | Entrada do core loop |
+| `/politicos/[id]` | Perfil e acompanhamento |
+| `/painel` | Fechamento do loop |
+| `/apoio` e `/apoio/confirmacao` | Risco financeiro/UX |
+| `/admin/etl` | Risco de falsa automacao |
+| `/candidatos-2026` | Risco de completude falsa |
+
+## Pilar 6 - Fluxo de Trabalho, Documentacao e Fechamento
+
+1. Trabalhe em lotes pequenos quando a mudanca for documental ampla.
+2. Antes de editar arquivo existente, entenda se ele e legado ou canonico.
+3. Preserve alteracoes do usuario; nunca reverta sem pedido explicito.
+4. Ao final de qualquer mudanca tecnica, atualize docs impactados.
+5. Ao final de qualquer mudanca documental macro, atualize `CHANGELOG.md`.
+6. Use `docs/TODO_PRODUCTION.md` como fila consolidada de P0-P3.
+7. Use `docs/MODERNIZATION_ROADMAP.md` para priorizacao estrategica.
+8. Se fizer commit, mantenha escopo claro e nao inclua segredos.
+
+Checklist antes de responder "pronto":
+
+| Checagem | Obrigatoria? |
+|---|---|
+| Arquivos alterados pertencem ao escopo pedido | Sim |
+| YAML/front matter preservado em docs canonicos | Sim |
+| Nenhum valor real de segredo foi impresso | Sim |
+| `git status --short` conferido quando houve escrita | Sim |
+| Build/test informados como executados ou nao executados | Sim |
+| Proximo passo humano indicado quando houver bloqueio | Sim |
+
+## Estado Final da Auditoria v4.0
+
+Veredito tecnico: o projeto tem um MVP real identificavel e uma base arquitetural aproveitavel, mas nao esta pronto para producao plena enquanto P0/P1 de seguranca, pagamentos, banco, ETL e feed civico permanecerem abertos.

@@ -2,322 +2,512 @@
 file: docs/API.md
 module: Internal API Reference
 status: Active
-related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/INTEGRATIONS.md, docs/SECURITY.md]
+related: [docs/AUTH.md, docs/INVENTORY_API_CONSUMPTION.md, docs/DATABASE.md, docs/INTEGRATIONS.md, docs/SECURITY.md]
 ---
 
-# API Routes — Referência Interna
+# API
 
-Todos os endpoints são implementados como Next.js Route Handlers em `app/src/app/api/`.
+Data da consolidacao: 2026-06-02.
 
----
+Todos os endpoints abaixo sao Next.js Route Handlers em `app/src/app/api`. Foram identificados **18 handlers HTTP** ativos no codigo.
 
-## Convenções
+## Convencoes
 
-| Aspecto | Padrão |
+| Item | Padrao real |
 |---|---|
-| Admin | Verificação de `perfis.role = 'admin'` via `createAdminClient()` |
-| Erros | `NextResponse.json({ error: '...' }, { status: N })` |
-| Sucesso | `NextResponse.json({ ok: true })` ou payload específico |
-| Analytics | Não bloqueia — `POST /api/analytics` retorna 202 sempre |
+| Runtime | Next.js App Router route handlers |
+| Banco | PostgreSQL via `pg` em handlers que consultam dados |
+| Auth usuario | `getCurrentUser()` |
+| Auth admin | `getCurrentUser()` + `currentUser.role === 'admin'` |
+| Erro comum admin | `401`, `403`, `400`, `500 { error, code? }` |
+| Risco | Alguns handlers retornam `pgError.message` e `pgError.code` |
 
----
+## Indice Dos 18 Endpoints
 
-## 1. Busca de políticos
+| # | Endpoint | Metodo | Auth | Status |
+|---:|---|---|---|---|
+| 1 | `/api/busca` | GET | Publica | Funcional em codigo |
+| 2 | `/api/glossario/[slug]` | GET | Publica | Funcional em codigo |
+| 3 | `/api/analytics` | POST | Publica/best effort | Funcional parcial |
+| 4 | `/api/acompanhamentos` | GET | Opcional | Funcional em codigo |
+| 5 | `/api/acompanhamentos` | POST | Usuario | Funcional em codigo |
+| 6 | `/api/acompanhamentos/[politicoId]` | DELETE | Usuario | Funcional em codigo |
+| 7 | `/api/apoio/criar-link` | POST | Publica | Funcional parcial |
+| 8 | `/api/apoio/verificar-pagamento` | POST | Publica | API fantasma/nao consumida |
+| 9 | `/api/webhooks/infinitepay` | POST | Webhook externo | Incompleto |
+| 10 | `/api/auth/logto/sign-in` | GET | Publica | Redireciona Logto |
+| 11 | `/api/auth/logto/sign-up` | GET | Publica | Redireciona Logto |
+| 12 | `/api/auth/logto/reset-password` | GET | Publica | Redireciona Logto |
+| 13 | `/api/auth/logto/callback` | GET | Logto callback | Funcional em codigo |
+| 14 | `/api/auth/logto/sign-out` | GET | Sessao | Funcional em codigo |
+| 15 | `/api/admin/flags` | PATCH | Admin | Funcional em codigo |
+| 16 | `/api/admin/politicos/[id]` | PATCH | Admin | Funcional em codigo |
+| 17 | `/api/admin/emendas/match` | PATCH | Admin | Funcional parcial |
+| 18 | `/api/admin/etl/run` | POST | Admin | Incompleto como trigger |
 
-### `GET /api/busca`
+## 1. `GET /api/busca`
 
-Busca paginada de políticos com filtros. Pública.
+Arquivo: `app/src/app/api/busca/route.ts`.
 
-**Query params:**
+Objetivo: busca paginada de politicos.
 
-| Param | Tipo | Default | Descrição |
+Auth: publica.
+
+Query params:
+
+| Param | Tipo | Default | Regra |
 |---|---|---|---|
-| `q` | string | — | Busca por `nome_eleitoral` ou `nome` (ILIKE) |
-| `cargo` | string | — | Filtro por cargo — deve ser um `cargo_tipo` válido |
-| `uf` | string | — | Filtro por UF — sigla 2 letras |
-| `partido` | string | — | Filtro por sigla do partido |
-| `ordem` | `'relevancia' \| 'presenca' \| 'gastos' \| 'votacoes'` | `'relevancia'` | Ordenação |
-| `pagina` | integer | 1 | Página — 20 itens por página |
+| `q` | string | `''` | `ILIKE` em `nome_eleitoral` ou `nome` |
+| `cargo` | string | `''` | Deve estar em `CARGOS_VALIDOS` |
+| `uf` | string | `''` | Uppercase |
+| `partido` | string | `''` | Uppercase |
+| `ordem` | string | `relevancia` | `presenca`, `gastos`, `votacoes` alteram order |
+| `pagina` | int | `1` | Minimo 1 |
 
-**Resposta 200:**
+Resposta 200:
 
 ```json
 {
-  "items": [
-    {
-      "id": "uuid",
-      "slug": "nikolas-ferreira-dep-federal-mg",
-      "nome": "NIKOLAS FERREIRA",
-      "nome_eleitoral": "NIKOLAS",
-      "foto_url": "https://...",
-      "cargo": "deputado_federal",
-      "uf": "MG",
-      "presenca_pct_atual": 92.3,
-      "gasto_total_ano": 145000.50,
-      "total_votacoes": 312,
-      "mandato_inicio": "2023-02-01",
-      "partidos": { "sigla": "PL" }
-    }
-  ],
-  "total": 1680,
-  "totalPaginas": 84,
+  "items": [],
+  "total": 0,
+  "totalPaginas": 1,
   "pagina": 1,
   "porPagina": 20,
-  "elapsedMs": 45,
-  "totalIndexados": 1680,
+  "elapsedMs": 12,
+  "totalIndexados": 0,
   "chips": {
-    "cargos": [{ "id": "", "label": "Todos" }, ...],
-    "ufs": ["AC", "AL", ...],
-    "partidos": ["PL", "PT", ...]
+    "cargos": [{ "id": "", "label": "Todos", "total": null }],
+    "ufs": ["AC", "AL"],
+    "partidos": ["PL", "PT"]
   }
 }
 ```
 
+Banco: `politicos`, `partidos`.
 
----
+Erros: nao ha `try/catch` externo; erro de banco deve virar erro runtime/500 do Next.
 
-## 2. Acompanhamentos
+## 2. `GET /api/glossario/[slug]`
 
-### `GET /api/acompanhamentos`
+Arquivo: `app/src/app/api/glossario/[slug]/route.ts`.
 
-Lista os IDs de políticos seguidos pelo usuário autenticado.
+Auth: publica.
 
-**Auth:** obrigatória. Retorna `{ ids: [] }` (sem erro) se não autenticado.
+Path param:
 
-**Resposta 200:**
+| Param | Tipo |
+|---|---|
+| `slug` | string |
+
+Resposta 200:
+
 ```json
-{ "ids": ["uuid1", "uuid2"] }
+{
+  "slug": "pec",
+  "termo": "PEC",
+  "definicao_simples": "...",
+  "categoria": "legislativo"
+}
 ```
 
----
+Resposta 404:
 
-### `POST /api/acompanhamentos`
+```json
+{ "error": "not_found" }
+```
 
-Seguir um político.
+Cache header: `public, s-maxage=3600, stale-while-revalidate=86400`.
 
-**Auth:** obrigatória. Retorna 401 se não autenticado.
+Banco: `glossario`.
 
-**Body:**
+## 3. `POST /api/analytics`
+
+Arquivo: `app/src/app/api/analytics/route.ts`.
+
+Auth: publica; associa `usuario_id` se `getCurrentUser()` funcionar.
+
+Body:
+
+```json
+{
+  "tipo": "perfil_view",
+  "payload": { "slug": "exemplo" }
+}
+```
+
+Validacao:
+
+| Condicao | Resposta |
+|---|---|
+| `tipo` ausente, nao-string ou >64 chars | `400 { "ok": false }` |
+| Erro de auth/banco | Absorvido silenciosamente |
+| Sucesso ou erro absorvido | `202 { "ok": true }` |
+
+Banco: `analytics_eventos`.
+
+## 4. `GET /api/acompanhamentos`
+
+Arquivo: `app/src/app/api/acompanhamentos/route.ts`.
+
+Auth: opcional.
+
+Comportamento:
+
+| Condicao | Resposta |
+|---|---|
+| Sem usuario | `200 { "ids": [] }` |
+| Usuario autenticado | `200 { "ids": ["uuid"] }` |
+| Erro Postgres | `500 { "error": "...", "code": "...", "ids": [] }` |
+
+Banco: `acompanhamentos`.
+
+## 5. `POST /api/acompanhamentos`
+
+Arquivo: `app/src/app/api/acompanhamentos/route.ts`.
+
+Auth: usuario Logto reconciliado.
+
+Body:
+
 ```json
 { "politico_id": "uuid" }
 ```
 
-**Resposta 200:** `{ "ok": true }`
+Respostas:
 
-**Nota:** conflito de unique key (já seguia) é silenciado — retorna `{ ok: true }` sem erro.
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autenticado" }` |
+| JSON invalido | 400 | `{ "error": "Body inválido" }` |
+| `politico_id` ausente | 400 | `{ "error": "politico_id é obrigatório" }` |
+| Duplicado `23505` | 200 | `{ "ok": true }` |
+| FK invalida `23503` | 400 | `{ "error": "politico_id inválido." }` |
+| Erro Postgres | 500 | `{ "error": "...", "code": "..." }` |
+| Sucesso | 200 | `{ "ok": true }` |
 
----
+Banco: `acompanhamentos`.
 
-### `DELETE /api/acompanhamentos/[politicoId]`
+## 6. `DELETE /api/acompanhamentos/[politicoId]`
 
-Deixar de seguir um político.
+Arquivo: `app/src/app/api/acompanhamentos/[politicoId]/route.ts`.
 
-**Auth:** obrigatória.
+Auth: usuario.
 
-**Resposta 200:** `{ "ok": true }`
+Path param:
 
----
-
-## 3. Glossário
-
-### `GET /api/glossario/[slug]`
-
-Retorna um termo do glossário pelo slug.
-
-**Auth:** pública.
-
-**Resposta 200:** objeto com campos do glossário (`slug`, `termo`, `definicao_simples`, `definicao_tecnica`, `categoria`, `exemplo`, `termos_relacionados`).
-
----
-
-## 4. Analytics
-
-### `POST /api/analytics`
-
-Registra evento de uso. Sem PII — sem e-mail, sem IP armazenado. Retorna 202 sempre (best-effort, nunca bloqueia o cliente).
-
-**Auth:** pública. Associa ao `usuario_id` se autenticado.
-
-**Body:**
-```json
-{
-  "tipo": "perfil_view",
-  "payload": { "slug": "nikolas-ferreira-dep-federal-mg", "cargo": "deputado_federal", "uf": "MG" }
-}
-```
-
-**Tipos documentados:**
-
-| Tipo | Payload |
+| Param | Tipo |
 |---|---|
-| `busca` | `{ q, cargo, uf, partido }` |
-| `perfil_view` | `{ slug, cargo, uf }` |
-| `emenda_view` | `{ slug }` |
-| `glossario_view` | `{ slug }` |
-| `comparar` | `{ slugs: string[] }` |
+| `politicoId` | string |
 
-**Resposta 202:** `{ "ok": true }`
+Respostas:
 
----
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autenticado" }` |
+| Erro Postgres | 500 | `{ "error": "...", "code": "..." }` |
+| Sucesso | 200 | `{ "ok": true }` |
 
-## 5. Pagamentos — Apoio (doações)
+Banco: `acompanhamentos`.
 
-### `POST /api/apoio/criar-intent`
+## 7. `POST /api/apoio/criar-link`
 
-Rota histórica do Stripe. Foi removida do runtime e mantida apenas para auditoria documental.
+Arquivo: `app/src/app/api/apoio/criar-link/route.ts`.
 
-**Auth:** pública.
+Auth: publica.
 
-**Body:**
+Body:
+
 ```json
 {
-  "nome": "João Silva",
-  "email": "joao@exemplo.com",
-  "tipo": "mensal",
-  "valor": 15.00
-}
-```
-
-**Validação:** `valor` mínimo de R$5. `tipo`: `'mensal'` | `'unica'`.
-
-**Resposta 200:**
-```json
-{ "clientSecret": "pi_xxx_secret_yyy" }
-```
-
-**Implementação histórica:** criava ou recuperava o customer Stripe pelo e-mail antes de criar o PaymentIntent. Essa integração não está mais ativa.
-
----
-
-### `POST /api/apoio/criar-link`
-
-Cria um link de pagamento InfinitePay (fluxo ativo).
-
-**Auth:** pública.
-
-**Body:**
-```json
-{
-  "nome": "João Silva",
-  "email": "joao@exemplo.com",
+  "nome": "Joao Silva",
+  "email": "joao@example.com",
   "tipo": "unica",
-  "valor": 10.00
+  "valor": 50
 }
 ```
 
-**Resposta 200:**
+Regras:
+
+| Campo | Regra |
+|---|---|
+| `nome` | Obrigatorio |
+| `email` | Obrigatorio |
+| `valor` | Obrigatorio; valor em reais |
+| `tipo` | Usado para descricao e parse de `order_nsu`; esperado `mensal` ou `unica` |
+| `INFINITEPAY_HANDLE` | Obrigatorio |
+
+Payload enviado a InfinitePay:
+
 ```json
-{ "url": "https://checkout.infinitepay.io/...", "order_nsu": "apoio-unica-1716987654321-a1b2c3d4" }
+{
+  "handle": "meus-politicos",
+  "order_nsu": "apoio-unica-...",
+  "items": [{ "description": "Apoio Cívico", "quantity": 1, "price": 5000 }],
+  "redirect_url": "https://.../apoio/confirmacao",
+  "webhook_url": "https://.../api/webhooks/infinitepay",
+  "customer": { "name": "...", "email": "..." }
+}
 ```
 
-**Implementação:** chama `https://api.checkout.infinitepay.io/links`. Gera `order_nsu` com formato `apoio-{tipo}-{timestamp}-{uuid8}` para identificar o tipo de doação no webhook.
+Respostas:
 
----
+| Condicao | Status | Payload |
+|---|---:|---|
+| Campos ausentes | 400 | `{ "error": "Campos obrigatórios ausentes." }` |
+| Handle ausente | 500 | `{ "error": "Configuração de pagamento indisponível." }` |
+| InfinitePay erro | 502 | `{ "error": "Falha ao gerar link de pagamento." }` |
+| Resposta sem URL | 502 | `{ "error": "URL de pagamento não retornada." }` |
+| Erro interno | 500 | `{ "error": "Erro interno do servidor." }` |
+| Sucesso | 200 | `{ "url": "...", "order_nsu": "..." }` |
 
-### `POST /api/apoio/verificar-pagamento`
+Banco: nenhum. Risco: pedido de pagamento nao e pre-persistido.
 
-Verifica o status de um pagamento InfinitePay após redirect da confirmação.
+## 8. `POST /api/apoio/verificar-pagamento`
 
-**Auth:** pública.
+Arquivo: `app/src/app/api/apoio/verificar-pagamento/route.ts`.
 
-**Body:**
+Auth: publica.
+
+Body:
+
 ```json
-{ "order_nsu": "...", "transaction_nsu": "...", "slug": "..." }
+{
+  "order_nsu": "...",
+  "transaction_nsu": "...",
+  "slug": "..."
+}
 ```
 
-**Resposta 200:** payload direto da InfinitePay — inclui `paid`, `amount`, `paid_amount`, `capture_method`.
+Respostas:
 
----
+| Condicao | Status | Payload |
+|---|---:|---|
+| Parametros ausentes | 400 | `{ "error": "Parâmetros insuficientes." }` |
+| InfinitePay erro | 502 | `{ "paid": false, "error": "Não foi possível verificar o pagamento." }` |
+| Erro interno | 500 | `{ "paid": false, "error": "Erro interno." }` |
+| Sucesso | 200 | Payload direto da InfinitePay |
 
-## 6. Webhooks
+Consumo UI: nao identificado. Classificacao: API fantasma no frontend atual.
 
-### `POST /api/webhooks/stripe`
+## 9. `POST /api/webhooks/infinitepay`
 
-Rota histórica do Stripe. Removida do runtime.
+Arquivo: `app/src/app/api/webhooks/infinitepay/route.ts`.
 
-**Auth:** assinatura Stripe (histórico) — sem auth de usuário.
+Auth: externa; nao ha assinatura/HMAC implementada.
 
-**Eventos tratados:**
-- `payment_intent.succeeded` → loga confirmação (**⚠️ TODO G-02:** persistir em `doacoes`)
-- `payment_intent.payment_failed` → loga falha
+Payload esperado:
 
-**Resposta 200:** `{ "received": true }`
-**Resposta 400:** assinatura inválida.
-
----
-
-### `POST /api/webhooks/infinitepay`
-
-Recebe eventos InfinitePay. **Sem verificação de assinatura** (Gap de segurança P2).
-
-**Auth:** validação mínima de `order_nsu` e `transaction_nsu` no payload.
-
-**Resposta 200:** `{ "ok": true }` — InfinitePay não retenta se receber 200.
-**Resposta 400:** payload inválido — InfinitePay **retenta** a entrega.
-
-**⚠️ TODO G-03:** persistir doação em `doacoes`.
-
----
-
-## 7. Admin — endpoints protegidos
-
-Todos exigem `perfis.role = 'admin'`. Retornam 401 sem auth, 403 sem role admin.
-
-### `POST /api/admin/etl/run`
-
-Registra solicitação de disparo de ETL em `admin_logs`. **Não dispara ETL real** — instrui execução manual via SSH.
-
-**Body:** `{ "fonte": "camara_deputados" }`
-
-**Resposta 200:**
 ```json
-{ "message": "Ação registrada para ETL \"camara_deputados\". Trigger manual via SSH em breve." }
+{
+  "invoice_slug": "...",
+  "amount": 5000,
+  "paid_amount": 5000,
+  "capture_method": "pix",
+  "transaction_nsu": "...",
+  "order_nsu": "apoio-unica-...",
+  "receipt_url": "...",
+  "items": []
+}
 ```
 
----
+Validacao real:
 
-### `PATCH /api/admin/flags`
+| Condicao | Resposta |
+|---|---|
+| Sem `order_nsu` ou sem `transaction_nsu` | `400 { "ok": false }` |
+| Erro no handler | `400 { "ok": false }` |
+| Demais casos | `200 { "ok": true }` |
 
-Atualiza uma feature flag.
+Comportamento real:
 
-**Body:**
+- extrai `tipo` de `order_nsu.startsWith('apoio-mensal')`;
+- nao grava em banco;
+- loga `Pagamento confirmado` no console;
+- possui TODO para `doacoes`.
+
+Status: incompleto/P0-P1.
+
+## 10. `GET /api/auth/logto/sign-in`
+
+Auth: publica.
+
+Query:
+
+| Param | Uso |
+|---|---|
+| `redirectTo` | Caminho relativo pos-login; fallback `/painel` |
+
+Redireciona para Logto com:
+
+| Campo | Valor |
+|---|---|
+| scopes | `openid`, `profile`, `email` |
+| interactionMode | `signIn` |
+| redirectUri | `/api/auth/logto/callback` |
+
+Nao retorna JSON.
+
+## 11. `GET /api/auth/logto/sign-up`
+
+Igual a sign-in, mas:
+
+| Campo | Valor |
+|---|---|
+| `interactionMode` | `signUp` |
+| fallback `redirectTo` | `/meus-politicos` |
+
+## 12. `GET /api/auth/logto/reset-password`
+
+Query:
+
+| Param | Uso |
+|---|---|
+| `email` | `loginHint` opcional |
+
+Config:
+
+| Campo | Valor |
+|---|---|
+| `firstScreen` | `reset_password` |
+| `identifiers` | `['email']` |
+| `postRedirectUri` | `/login` |
+
+## 13. `GET /api/auth/logto/callback`
+
+Executa `handleSignIn(config, callbackUrl)` e redireciona.
+
+Redirecionamento:
+
+| Host | Base |
+|---|---|
+| `localhost:3000`, `127.0.0.1:3000`, `painel.localhost*`, `app.localhost*` | `request.url` |
+| Producao/outros | `NEXT_PUBLIC_PAINEL_URL` |
+
+## 14. `GET /api/auth/logto/sign-out`
+
+Chama `signOut(getLogtoConfig(), '/')`.
+
+Nao retorna JSON.
+
+## 15. `PATCH /api/admin/flags`
+
+Auth: admin.
+
+Body:
+
 ```json
-{ "slug": "candidatos_2026", "ativo": true, "rollout_pct": 100 }
+{
+  "id": "uuid",
+  "slug": "candidatos_2026",
+  "ativo": true,
+  "rollout_pct": 100
+}
 ```
 
-Aceita `id` ou `slug` como identificador. Campos atualizáveis: `ativo`, `rollout_pct`.
+Regras:
 
-**Resposta 200:** `{ "ok": true }` + INSERT em `admin_logs`.
+| Campo | Regra |
+|---|---|
+| `id` ou `slug` | Um dos dois obrigatorio |
+| `ativo` | Atualiza se boolean |
+| `rollout_pct` | Atualiza se number |
 
----
+Respostas:
 
-### `PATCH /api/admin/politicos/[id]`
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autorizado" }` |
+| Nao admin | 403 | `{ "error": "Acesso negado" }` |
+| Sem id/slug | 400 | `{ "error": "id ou slug obrigatório" }` |
+| Erro Postgres | 500 | `{ "error": "...", "code": "..." }` |
+| Sucesso | 200 | `{ "ok": true }` |
 
-Edita campos específicos de um político.
+Banco: `feature_flags`, `admin_logs`.
 
-**Campos permitidos:** `foto_url`, `nome_eleitoral`, `codigo_siafi`, `email`.
+## 16. `PATCH /api/admin/politicos/[id]`
 
-**Body:** qualquer subconjunto dos campos permitidos.
+Auth: admin.
 
-**Resposta 200:** `{ "ok": true }` + INSERT em `admin_logs`.
+Campos permitidos:
 
----
+| Campo |
+|---|
+| `foto_url` |
+| `nome_eleitoral` |
+| `codigo_siafi` |
+| `email` |
 
-### `POST /api/admin/emendas/match`
+Body: qualquer subconjunto dos campos permitidos.
 
-Match manual de emendas com políticos (via `codigo_siafi`). Detalhes de implementação a verificar em `app/src/app/api/admin/emendas/match/route.ts`.
+Respostas:
 
----
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autorizado" }` |
+| Nao admin | 403 | `{ "error": "Acesso negado" }` |
+| Nenhum campo valido | 400 | `{ "error": "Nenhum campo válido" }` |
+| Erro Postgres | 500 | `{ "error": "...", "code": "..." }` |
+| Sucesso | 200 | `{ "ok": true }` |
 
-## 8. Auth
+Banco: `politicos`, `admin_logs`.
 
-### `GET /auth/callback`
+## 17. `PATCH /api/admin/emendas/match`
 
+Auth: admin.
 
-**Implementado em:** `app/src/app/(auth)/auth/callback/route.ts`
+Body:
 
-Ver `docs/AUTH.md §5` para fluxo completo.
+```json
+{
+  "nome_parlamentar": "NOME",
+  "politico_id": "uuid"
+}
+```
 
----
+Comportamento:
 
-*Atualizado em: 2026-05-29 · Auditoria v2.1*
+1. Busca `politicos.id/codigo_siafi` por `politico_id`.
+2. Atualiza `emendas` onde `politico_id IS NULL` e `nome_parlamentar ILIKE $nome`.
+3. Insere log em `admin_logs`.
+
+Respostas:
+
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autorizado" }` |
+| Nao admin | 403 | `{ "error": "Acesso negado" }` |
+| Body incompleto | 400 | `{ "error": "nome_parlamentar e politico_id são obrigatórios" }` |
+| Erro Postgres | 500 | `{ "error": "...", "code": "..." }` |
+| Sucesso | 200 | `{ "ok": true, "emendas_atualizadas": 0 }` |
+
+Banco: `politicos`, `emendas`, `admin_logs`.
+
+## 18. `POST /api/admin/etl/run`
+
+Auth: admin.
+
+Body:
+
+```json
+{ "fonte": "camara_deputados" }
+```
+
+Comportamento real:
+
+- insere log em `admin_logs`;
+- nao executa script Python;
+- retorna mensagem de trigger manual via SSH.
+
+Respostas:
+
+| Condicao | Status | Payload |
+|---|---:|---|
+| Sem usuario | 401 | `{ "error": "Não autorizado" }` |
+| Nao admin | 403 | `{ "error": "Acesso negado" }` |
+| `fonte` ausente | 400 | `{ "error": "Parâmetro fonte obrigatório" }` |
+| Sucesso | 200 | `{ "message": "Ação registrada para ETL \"...\". Trigger manual via SSH em breve." }` |
+
+Banco: `admin_logs`.
+
+Status: incompleto como acionador operacional.
+

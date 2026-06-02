@@ -1,151 +1,481 @@
 ---
 file: docs/GAP_ANALYSIS.md
-module: Gap Analysis & Technical Backlog
+module: Gap Analysis
 status: Active
-related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.md, docs/ARCHITECTURE.md, docs/auth/AUTH_MIGRATION_LOGTO.md, docs/adr/ADR-001-logto-as-identity-provider.md]
+related: [docs/PLACEHOLDER_REPORT.md, docs/MVP_REAL_IDENTIFICADO.md, docs/PRODUCAO_READINESS.md, docs/TODO_PRODUCTION.md, docs/SECURITY.md, docs/INVENTORY_ROUTES.md, docs/INVENTORY_FEATURES.md]
 ---
 
-# GAP_ANALYSIS — Raio-X de Retomada
+# Gap Analysis
 
-**Auditoria realizada em:** 2026-05-29
-**Branch auditada:** `feat/redesign-2026`
-**Análise baseada em:** arquivos estáticos locais — banco de produção NÃO consultado (Regra P0)
-**Schema identificado:** v2.12 (migration mais recente: `20260523b_ale_setup.sql`)
+Data da consolidacao: 2026-06-02.
 
-> arquitetural conhecido. A decisao aprovada e migrar para Logto. Ver
-> `docs/auth/AUTH_MIGRATION_LOGTO.md` e
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
->
-> Atualização junho/2026: Stripe foi removido do runtime. O gap G-02 passou a
-> ser histórico; o fluxo ativo de apoio usa InfinitePay.
+Branch auditada: `feat/acompanhamentos-logto`.
 
----
+Base de analise: inventario estatico local, sem conexao ativa ao banco remoto/desconhecido. A conexao definida em `app/.env.local` foi classificada como host remoto/desconhecido e o pre-flight foi abortado por seguranca.
 
-## Tabela Oficial de Backlog
+Este documento preserva gaps historicos relevantes do `GAP_ANALYSIS.md` anterior, mas atualiza o veredito para o runtime atual: Next.js 16, Logto como identidade ativa em codigo, PostgreSQL direto via `pg` e InfinitePay como fluxo de apoio ativo. Problemas visuais detalhados ficam em `docs/PLACEHOLDER_REPORT.md`; este arquivo foca em fraturas de engenharia, riscos operacionais, dados e producao.
 
-| ID | Gap / Problema | Severidade | Arquivo(s) e Linhas | Impacto Técnico | Esforço Est. |
+## Resumo Executivo
+
+| Area | Veredito |
+|---|---|
+| Produto | Core loop real existe, mas ha promessas expostas acima da implementacao |
+| Pagamentos | Bloqueio P0/P1: webhook InfinitePay nao persiste doacao |
+| ETL | Bloqueio P1: admin registra solicitacao, mas nao dispara scripts Python |
+| Seguranca | Bloqueio P0: segredo aparente em documentacao legada |
+| Banco | Schema amplo e usado, mas pre-flight ativo nao validado |
+| Auth | Logto implementado em codigo; runtime end-to-end ainda precisa validacao |
+| Observabilidade | Analytics interno basico; sem monitoramento robusto confirmado |
+| Testes/CI | Sem workflows `.github/workflows`; cobertura automatizada nao identificada |
+
+## Tabela Oficial De Gaps
+
+| ID | Gap | Severidade | Evidencia | Impacto | Status |
 |---|---|---|---|---|---|
-| G-01 | `.env.example` expõe apenas 6 de 30+ variáveis reais | **P0** | `.env.example` (raiz) | Bloqueio para novos devs e CI — ambiente impossível de configurar sem acesso ao `.env.local` real | 30 min |
-| G-02 | Webhook Stripe removido do runtime | **Arquivado** | histórico | Fluxo Stripe não faz mais parte da aplicação ativa | — |
-| G-03 | Webhook InfinitePay não persiste doação no banco | **P0** | `app/src/app/api/webhooks/infinitepay/route.ts:34` | Idem G-02 — fluxo de doação estruturalmente incompleto | 1h |
-| G-04 | Nenhum GitHub Actions workflow existe | **P0** | `.github/` (diretório inexistente) | ETL documentado como "cron automatizado" mas depende 100% de execução manual — dados param sem intervenção humana | 1 dia |
-| G-05 | `href="#"` em produção — links inativos no perfil de candidato 2026 | **P1** | `app/src/app/(site)/candidatos-2026/[slug]/CandidatoPageClient.tsx:168,329` | UX quebrada — usuário clica e nada acontece; sinaliza feature incompleta | 2h |
-| G-06 | Zero cobertura de testes em todo o repositório | **P1** | Global | Sem garantia de regressão em qualquer alteração de código ou ETL | 3–5 sprints |
-| G-07 | ETL gastos Câmara 2026 não executado | **P1** | `etl/camara/collect_camara_gastos.py` | Dados de CEAP 2026 ausentes — usuários veem gastos apenas até 2025 | 1 dia |
-| G-08 | ETL senadores pendente (re-run para `mandato_inicio`) | **P1** | `etl/senado/collect_senadores.py` | 81 senadores sem campo `mandato_inicio` — informação errada no perfil | 2h |
-| G-09 | `populate_siafi.py` pendente após novos senadores | **P1** | `etl/portal_transparencia/populate_siafi.py` | Emendas de senadores sem `politico_id` — cruzamento incompleto no banco | 1h |
-| G-10 | Todos os scores de `METRICS.md` marcados "ETL pendente" | **P1** | `docs/METRICS.md` · `app/src/components/politico-v2/ScoreRow.tsx` | Presença, LES e alinhamento de bancada exibem `"–"` para todos os políticos | 1–2 sprints |
-| G-11 | Monorepo sem orquestrador de build (sem Turbo) | **P2** | `package.json` (raiz) | Sem cache de build, sem pipeline estruturado — builds lentos; ausência documentada como Gap P2 (Regra 13 do MONOREPO) | 1 dia |
-| G-12 | README raiz desatualizado | **P2** | `README.md` (raiz) | Referenciava `001_schema.sql` monolítico, .env com 6 vars, estrutura errada | ✅ Resolvido — Lote 1 |
-| G-13 | `etl/ale/` não integrado formalmente ao pipeline | **P2** | `etl/ale/` (diretório não commitado) | ALESP, ALEP, ALMG, ALMT, CLDF coletadas sem documentação de status, sem validação de dados no banco | 1 dia |
-| G-14 | Sem monitoramento de erros de runtime | **P2** | Global — sem Sentry, Datadog ou similar | Erros em produção não alertam a equipe — invisibilidade operacional total | 1 dia |
-| G-15 | `app/public/partidos/` não rastreado pelo git | **P2** | `app/public/partidos/` (untracked) | Logos de partidos ausentes do repositório — risco de inconsistência entre ambientes | 30 min |
-| G-16 | Artefato HTML de análise de banco na raiz | **P3** | `compare-NORO_*.html` (raiz) | Poluição da raiz do repositório | ✅ Arquivado — Lote 1 |
-| G-17 | Sem `CHANGELOG.md` | **P3** | raiz | Sem histórico estruturado de versões | 30 min — Lote 8 |
-| G-18 | `app/README.md` era boilerplate `create-next-app` | **P3** | `app/README.md` | Confundia novos colaboradores sem descrever o projeto real | ✅ Resolvido — Lote 1 |
-| G-19 | Zero cobertura de File Banners nos arquivos core | **P3** | `app/src/app/` · `app/src/components/` · `app/src/lib/` | Sem cabeçalho de contexto para guiar agentes IA em edições futuras (Regra 11) | Incremental |
+| G-01 | Segredo aparente em documentacao legada | P0 | `docs/meuspoliticos_master.md:229`, `docs/meuspoliticos_master.md:264` | Risco de abuso de API, incidente de seguranca e necessidade de rotacao | Aberto |
+| G-02 | Webhook InfinitePay nao persiste doacao | P0/P1 | `app/src/app/api/webhooks/infinitepay/route.ts:34-45` | Pagamento confirmado nao vira registro em banco; perda de historico financeiro | Aberto |
+| G-03 | Webhook InfinitePay sem autenticidade robusta | P1 | `app/src/app/api/webhooks/infinitepay/route.ts:27`, `docs/API.md:251` | Payload falso/replay pode ser aceito se tiver NSUs | Aberto |
+| G-04 | Admin ETL nao executa scripts Python | P1 | `app/src/app/api/admin/etl/run/route.ts:43`, `app/src/app/api/admin/etl/run/route.ts:53` | Botao de ETL apenas registra log; dados nao atualizam | Aberto |
+| G-05 | Sem `.github/workflows` | P1 | `Test-Path .github/workflows` retornou `False` | Sem CI/CD/cron ETL confirmado | Aberto |
+| G-06 | Pre-flight de banco abortado | P1 | `app/.env.local` classificado como remoto/desconhecido | Nao ha prova runtime de conectividade, grants e dados | Aberto |
+| G-07 | Multiplas conexoes Postgres duplicadas | P2 | `new Pool` em 25+ arquivos | Risco de inconsistencia de config, pool excessivo e manutencao dificil | Aberto |
+| G-08 | Respostas de erro expõem `pgError.message`/`code` | P2 | APIs admin/acompanhamentos retornam erro Postgres | Pode vazar detalhes internos e facilitar troubleshooting indevido | Aberto |
+| G-09 | `auth.users` legado ainda participa do linking | P1/P2 | `app/src/lib/auth/profile-linking.ts` consulta `auth.users` | Migração Logto depende de schema legado; risco se auth legado for removido | Aberto |
+| G-10 | Analytics sem observabilidade operacional | P2 | `/api/analytics`, `analytics_eventos`, sem monitoramento externo confirmado | Erros de producao e webhooks podem ficar invisiveis | Aberto |
+| G-11 | Agenda e alertas do painel usam dados estaticos | P1/P2 | `AlertasList.tsx:10`, `ProximasVotacoes.tsx:11` | Usuario pode ver alertas/votacoes ficticias | Aberto |
+| G-12 | Links inativos e botoes sem acao em UI | P1/P2 | Ver `PLACEHOLDER_REPORT.md` | UX quebrada, promessa falsa | Aberto |
+| G-13 | Paginas de candidatos 2026 dependem de tabela opcional | P2 | Codigo captura ausencia de `candidatos_bens` | Dados patrimoniais podem nao existir em runtime | Aberto |
+| G-14 | Ausencia de testes automatizados identificados | P1 | Nenhuma suite/test runner consolidado no inventario | Regressao invisivel em auth, pagamentos, ETL e APIs | Aberto |
+| G-15 | README raiz desatualizado | P2 | README antigo mencionava Supabase Auth/legado | Confundia setup e arquitetura | Resolvido no Lote 1 |
+| G-16 | Falta de inventario de rotas/features | P2 | Documentos nao existiam | Dificultava handoff e priorizacao | Resolvido no Lote 2 |
+| G-19 | Artefatos temporarios `.txt` dentro de `app/` | P2 | `app/temp_analysis.txt`, `app/temp_text_only.txt`, `app/temp_structure.txt`, `app/temp_clean_text.txt` | Ruido em inventario, handoff e buscas tecnicas | Aberto; arquivamento requer confirmacao humana |
+| G-20 | Matriz CSV de wireframes fora da documentacao canonica | P3 | `docs/stitch_wireframes_match.csv` | Drift documental entre matriz historica e manuais atuais | Aberto; arquivamento requer confirmacao humana |
 
----
+## Artefatos TXT/CSV Avulsos
 
-## Detalhamento por Severidade
+| Arquivo | Diagnostico | Impacto | Acao Recomendada |
+|---|---|---|---|
+| `docs/stitch_wireframes_match.csv` | CSV documental que cruza wireframes com rotas e status (`match-direto`, `match-parcial`, `gap`, `nao-pagina`). Nao e massa de dados de banco. Contem backlog historico de produto/design, incluindo suite de inteligencia, FAQ, sustentabilidade, portais de transparencia e paginas parcialmente mapeadas. | Alto valor como evidencia historica, mas duplica informacoes que agora foram incorporadas nos manuais canonicos. Pode gerar divergencia se mantido como fonte paralela. | Manter ate validacao de rastreabilidade; depois arquivar em `docs/archive/` `[REQUER_CONFIRMAÇÃO_HUMANA]`. |
+| `requirements.txt` | Manifesto tecnico de dependencias Python para ETL (`requests`, `psycopg[binary]`, `python-dotenv`, `python-dateutil`, `unidecode`). | Corrige a leitura de que ha uma referencia raiz de dependencias Python; ainda falta orquestracao formal e acoplamento claro aos scripts `etl/`. | Manter; alinhar com documentacao de ETL e scripts de deploy. |
+| `app/temp_analysis.txt` | Export temporario/HTML do wireframe "App / Painel civico pessoal (logado)". | Polui a arvore `app/`, pode ser confundido com artefato operacional e nao deve participar de build ou inventario de codigo. | Arquivar em `docs/archive/` ou remover apos revisao `[REQUER_CONFIRMAÇÃO_HUMANA]`. |
+| `app/temp_text_only.txt` | Variante textual temporaria do mesmo wireframe. | Mesmo risco de ruido documental dentro da aplicacao. | Arquivar em `docs/archive/` ou remover apos revisao `[REQUER_CONFIRMAÇÃO_HUMANA]`. |
+| `app/temp_structure.txt` | Variante estrutural/HTML temporaria, com payload visual/fonte sem uso operacional. | Mesmo risco, agravado pelo volume e pelo conteudo de markup nao canonico. | Arquivar em `docs/archive/` ou remover apos revisao `[REQUER_CONFIRMAÇÃO_HUMANA]`. |
+| `app/temp_clean_text.txt` | Variante limpa temporaria do wireframe. | Mesmo risco de fonte paralela. | Arquivar em `docs/archive/` ou remover apos revisao `[REQUER_CONFIRMAÇÃO_HUMANA]`. |
 
-### P0 — Críticos
+### G-19. Artefatos Temporarios Dentro De `app/`
 
-#### G-01 · .env.example incompleto
+Os arquivos `app/temp_analysis.txt`, `app/temp_text_only.txt`, `app/temp_structure.txt` e `app/temp_clean_text.txt` nao sao codigo, seed, migration, schema ou documentacao canonica. Eles pertencem ao historico de design/produto e devem sair da arvore da aplicacao para reduzir ruido em buscas, auditorias e handoffs tecnicos.
 
+Prioridade: P2.
 
-**Consequência:** novo desenvolvedor ou pipeline de CI que use `.env.example` como base não consegue rodar o projeto — erros crípticos de autenticação e conexão.
+Acao: arquivar em `docs/archive/` ou remover apos confirmacao humana `[REQUER_CONFIRMAÇÃO_HUMANA]`.
 
-**Ação:** atualizar `.env.example` com todas as chaves (apenas placeholders). Ver `docs/ENVIRONMENT.md` (Lote 3).
+### G-20. Matriz De Wireframes Fora Da Documentacao Canonica
 
----
+`docs/stitch_wireframes_match.csv` registra uma matriz util de wireframes x rotas, mas a verdade operacional passa a estar distribuida nos manuais `BUSINESS_DOMAIN.md`, `INVENTORY_ROUTES.md`, `INVENTORY_FEATURES.md`, `DESIGN.md` e neste `GAP_ANALYSIS.md`. Enquanto o CSV continuar ativo, qualquer alteracao futura de rota pode gerar drift documental.
 
-#### G-02 / G-03 · Webhooks de pagamento sem persistência
+Prioridade: P3.
 
-**Stripe:** removido do runtime e arquivado para auditoria.
+Acao: manter somente como evidencia historica ate revisao humana e depois arquivar em `docs/archive/` `[REQUER_CONFIRMAÇÃO_HUMANA]`.
 
-**InfinitePay** (`app/src/app/api/webhooks/infinitepay/route.ts:34`):
-```typescript
-// TODO: registrar doação no banco de dados
+## Gaps P0
+
+### G-01. Segredo aparente em documentacao legada
+
+Severidade: **P0**.
+
+Evidencia:
+
+| Arquivo:linha | Problema |
+|---|---|
+| `docs/meuspoliticos_master.md:229` | Valor aparente de `RESEND_API_KEY` |
+| `docs/meuspoliticos_master.md:264` | Mesmo valor aparente repetido |
+
+O valor nao deve ser reproduzido em relatorios, commits, issues ou logs. A presenca em documentacao legada exige resposta de seguranca, mesmo que a chave ja esteja revogada.
+
+Impacto:
+
+- risco de envio abusivo de e-mails;
+- risco reputacional;
+- necessidade de rotacao;
+- necessidade de varredura historica conforme Regra 13;
+- documentacao legada nao pode ser arquivada/removida sem confirmacao humana.
+
+Acoes:
+
+1. Rotacionar a chave no Resend.
+2. Remover o valor do documento, substituindo por placeholder.
+3. Executar varredura historica Git de segredos.
+4. Registrar mitigacao em `docs/SECURITY.md`.
+5. Se houver remocao/arquivamento de documento, marcar como `[REQUER_CONFIRMAÇÃO_HUMANA]`.
+
+### G-02. Webhook InfinitePay nao persiste doacao
+
+Severidade: **P0/P1**.
+
+Evidencia:
+
+| Arquivo:linha | Observacao |
+|---|---|
+| `app/src/app/api/webhooks/infinitepay/route.ts:27` | Valida apenas `order_nsu` e `transaction_nsu` |
+| `app/src/app/api/webhooks/infinitepay/route.ts:34` | `TODO: registrar doação no banco de dados` |
+| `app/src/app/api/webhooks/infinitepay/route.ts:35-45` | Pseudo-upsert em `doacoes` comentado |
+| `app/src/app/api/webhooks/infinitepay/route.ts:47` | Evento confirmado vai para `console.log` |
+| `docs/TODO_PRODUCTION.md:76-86` | Pendencia ja registrada para InfinitePay |
+
+O fluxo ativo de apoio cria link via `/api/apoio/criar-link`, recebe `order_nsu` e configura `webhook_url` para `/api/webhooks/infinitepay`. Entretanto, quando o webhook chega, a aplicacao nao grava nada.
+
+Impacto:
+
+- nao existe historico confiavel de doacoes;
+- usuario pode pagar sem que o sistema reconheca a doacao;
+- time nao consegue conciliar receita;
+- impossibilidade de relatorios de apoiadores;
+- risco de atendimento/compliance;
+- LGPD fica mal definida porque dados transacionais sao logados, mas nao governados em tabela com politica clara.
+
+Contrato minimo recomendado:
+
+| Campo | Origem | Persistencia recomendada |
+|---|---|---|
+| `order_nsu` | Criado em `/api/apoio/criar-link` | Chave idempotente/unica |
+| `transaction_nsu` | Payload webhook | Identificador transacional |
+| `invoice_slug` | Payload webhook | Referencia InfinitePay |
+| `amount` | Payload webhook | Valor esperado |
+| `paid_amount` | Payload webhook | Valor efetivamente pago |
+| `capture_method` | Payload webhook | Metodo/canal |
+| `receipt_url` | Payload webhook | Recibo |
+| `tipo` | Parse de `order_nsu` | `mensal` ou `unica` |
+| `status` | Evento recebido | `pago` inicialmente |
+| `pago_em` | `now()` | Timestamp de confirmacao |
+| `raw_payload` | Payload completo | JSONB para auditoria |
+
+Acao tecnica:
+
+1. Criar migration para `doacoes` se a tabela ainda nao existir.
+2. Implementar `Pool`/query Postgres no webhook, nao pseudo-Supabase.
+3. Usar `INSERT ... ON CONFLICT (order_nsu) DO UPDATE`.
+4. Retornar `200` somente apos persistencia bem-sucedida.
+5. Em erro de banco, retornar `400`/`500` conforme contrato de retry da InfinitePay.
+6. Adicionar teste unitario/integração do webhook.
+
+### G-03. Webhook InfinitePay sem verificacao de autenticidade robusta
+
+Severidade: **P1**.
+
+Evidencia:
+
+| Arquivo:linha | Observacao |
+|---|---|
+| `app/src/app/api/webhooks/infinitepay/route.ts:27` | Rejeita apenas payload sem `order_nsu` ou `transaction_nsu` |
+| `docs/API.md:251` | Documentacao aponta ausencia de verificacao de assinatura |
+| `docs/SECURITY.md:114-118` | Risco ja reconhecido em seguranca |
+
+Impacto:
+
+- payload falso pode ser aceito se contiver campos obrigatorios;
+- replay de webhook pode duplicar atualizacoes sem idempotencia;
+- sem validacao por IP/HMAC, a origem do evento nao e comprovada.
+
+Acao:
+
+1. Verificar documentacao oficial InfinitePay sobre assinatura/HMAC/IP allowlist.
+2. Implementar idempotencia mesmo antes do HMAC.
+3. Logar tentativas invalidas em tabela/observabilidade.
+4. Documentar fallback se o provedor nao oferecer assinatura.
+
+## Gaps P1
+
+### G-04. Admin ETL nao executa scripts Python
+
+Severidade: **P1**.
+
+Evidencia:
+
+| Arquivo:linha | Observacao |
+|---|---|
+| `app/src/app/api/admin/etl/run/route.ts:43` | Insere acao em `admin_logs` |
+| `app/src/app/api/admin/etl/run/route.ts:53` | Retorna `Trigger manual via SSH em breve` |
+| `app/src/components/admin/EtlSourceCard.tsx:60` | Frontend chama `/api/admin/etl/run` |
+| `etl/*` | Scripts Python reais existem para Camara, Senado, TSE, ALE, IBGE, STN, Portal da Transparencia |
+
+O backoffice oferece uma acao de ETL, mas ela nao dispara nenhum processo. A API registra somente a intencao:
+
+```sql
+INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
 ```
 
-**Consequência:** pagamentos são processados pelo gateway e confirmados ao usuário, mas **nenhum registro é criado no banco**. Sem histórico de apoiadores. Sem dados para relatórios de financiamento. Risco de compliance com LGPD (dados de transação sem armazenamento controlado).
+Impacto:
 
-**Ação:** criar tabela `doacoes` (verificar se existe no schema v2.12) e implementar `INSERT` nos handlers de webhook.
+- administrador acredita que acionou coleta, mas dados nao mudam;
+- dados ficam obsoletos;
+- auditoria de `admin_logs` pode sugerir execucoes que nunca ocorreram;
+- UX interna cria falsa confianca operacional.
 
----
+Modelos possiveis de correcao:
 
-#### G-04 · Sem automação de ETL
-
-**Situação:** `README.md`, `app/CLAUDE.md` e `docs/data_source_master.md` descrevem coletas via "GitHub Actions em cron diário". O diretório `.github/workflows/` **não existe**.
-
-**Consequência:** todo ETL é manual. Sem desenvolvedor disponível → dados param de ser atualizados. Escalabilidade zero.
-
-**Ação sugerida — workflows mínimos:**
-
-| Workflow | Script(s) | Frequência |
+| Modelo | Pro | Contra |
 |---|---|---|
-| `collect-camara.yml` | `collect_deputados.py` + `collect_votacoes.py` + `collect_proposicoes.py` | Diário 6h |
-| `collect-senado.yml` | `collect_senadores.py` + `collect_senado_votacoes.py` + `collect_senado_gastos.py` | Diário 6h |
-| `collect-emendas.yml` | `collect_emendas.py` + `populate_siafi.py` | Diário 7h |
-| `collect-ale.yml` | scripts `etl/ale/` | Semanal |
+| Job runner interno | Feedback direto no admin | Complexidade e risco em ambiente serverless |
+| GitHub Actions dispatch | Boa separacao operacional | Requer workflow e token seguro |
+| Worker/queue externa | Escalavel e observavel | Mais infra |
+| Manter manual e renomear UI | Menor risco imediato | Nao resolve automacao |
 
----
+Acao minima antes de producao:
 
-### P1 — Altos
+1. Renomear botao para "Registrar solicitacao" se nao executar ETL.
+2. Mostrar status real: `solicitado`, `em_execucao`, `concluido`, `falhou`.
+3. Criar pipeline real ou workflow para pelo menos Camara/Senado/Emendas.
+4. Atualizar `coletas_log` apos execucao real.
 
-#### G-05 · Links inativos em candidatos-2026
+### G-05. Sem workflows `.github/workflows`
 
-**Arquivo:** `app/src/app/(site)/candidatos-2026/[slug]/CandidatoPageClient.tsx`
+Severidade: **P1**.
 
-- **Linha 168:** `<a href="#">` — link de ação não implementado
-- **Linha 329:** `<a href="#">` — idem
+Evidencia: `Test-Path .github/workflows` retornou `False`.
 
-**Ação:** mapear destino correto ou substituir por `<button>` com `onClick` apropriado, ou remover o link até implementação.
+Impacto:
 
----
+- sem CI de build/lint/test;
+- sem cron ETL;
+- sem guardrail de regressao;
+- documentacao que mencione automacao de ETL fica divergente do repo.
 
-#### G-10 · Scores todos em placeholder
+Workflows minimos recomendados:
 
-**Situação:** `docs/METRICS.md` define 3 scores (Presença, Atividade Legislativa, Alinhamento de Bancada). Todos marcados `⬜ ETL pendente`. Componente `ScoreRow.tsx` exibe `"–"` para todos os políticos.
+| Workflow | Objetivo |
+|---|---|
+| `ci.yml` | `npm install`, lint, build |
+| `etl-camara.yml` | Coleta Camara em agenda definida |
+| `etl-senado.yml` | Coleta Senado em agenda definida |
+| `etl-emendas.yml` | Portal da Transparencia e SIAFI |
+| `secret-scan.yml` | Varredura de segredos em PR |
 
-**ETL necessário:** `collect_presenca.py` (sessões via `GET /deputados/{id}/eventos` — Câmara API). Não está em nenhum script ativo.
+### G-06. Pre-flight de banco abortado
 
----
+Severidade: **P1**.
 
-### P2 — Médios
+Evidencia: `app/.env.local` foi classificado como `remote-dev-unknown`, com senha presente e host nao-local. A regra P0 impediu conexao ativa.
 
-#### G-13 · etl/ale/ — status desconhecido
+Impacto:
 
-**Situação:** `etl/ale/` contém scripts para ALESP (SP), ALEP (PR), ALMG (MG), ALMT (MT) e CLDF (DF), além de base SAPL genérica e `update_presenca_pct.py`. Todo o diretório está **não commitado** na branch `feat/redesign-2026`.
+- nao ha evidencia runtime de que as queries atuais funcionam;
+- nao ha prova de grants/RLS;
+- nao ha prova de que migrations e codigo estao alinhados;
+- build pode falhar se variaveis de ambiente estiverem inconsistentes.
 
-**Questões em aberto:**
-- Quais assembleias já foram coletadas?
-- Quantos deputados estaduais têm dados no banco além dos do TSE/2022?
-- Os scripts já foram executados em produção?
+Acao:
 
-**Ação:** verificar no banco (`SELECT cargo, COUNT(*) FROM politicos GROUP BY cargo`) e atualizar `app/CLAUDE.md` com o status.
+1. Criar ambiente local/dev explicitamente seguro.
+2. Rodar `SELECT 1` com timeout 5s.
+3. Validar existencia das tabelas centrais.
+4. Validar uma consulta por fluxo: busca, perfil, painel, admin, analytics.
 
----
+### G-09. Dependencia residual de `auth.users`
 
-### Divergências de Requisitos
+Severidade: **P1/P2**.
 
-#### README vs. Schema — Arquivo único vs. Migrations
+Evidencia: `app/src/lib/auth/profile-linking.ts` consulta `auth.users` para vincular perfil legado por email.
 
+Impacto:
 
+- migracao Logto nao esta isolada do legado;
+- remover Supabase Auth/schema `auth` pode quebrar linking;
+- novos usuarios Logto sem perfil preexistente retornam `null` se nao houver estrategia de criacao de perfil.
 
-**Resolução:** o schema atual está nas migrations. O `001_schema.sql` é histórico. README atualizado no Lote 1.
+Acao:
 
----
+1. Definir regra para criacao de perfil novo via Logto.
+2. Encapsular fallback legado em feature flag/migration mode.
+3. Documentar criterio de desligamento de `auth.users`.
 
-## Histórico de Resolução
+### G-11. Dados estaticos operacionais no painel
 
-| ID | Gap | Status | Lote | Data |
-|---|---|---|---|---|
-| G-12 | README raiz desatualizado | ✅ Resolvido | Lote 1 | 2026-05-29 |
-| G-16 | Artefato HTML na raiz | ✅ Arquivado em `docs/archive/` | Lote 1 | 2026-05-29 |
-| G-18 | app/README.md boilerplate | ✅ Substituído por README técnico | Lote 1 | 2026-05-29 |
+Severidade: **P1/P2**.
 
----
+Evidencia:
 
-*Próxima revisão: após execução do Lote 2 (DATABASE.md + AUTH.md + BUSINESS_DOMAIN.md)*
+| Arquivo:linha | Problema |
+|---|---|
+| `app/src/components/painel/AlertasList.tsx:10` | Alertas iniciais hardcoded |
+| `app/src/components/painel/AlertasList.tsx:46` | Botao `+ NOVO` sem handler |
+| `app/src/components/painel/ProximasVotacoes.tsx:11` | Base fixa de votacoes |
+| `app/src/components/painel/ProximasVotacoes.tsx:17` | Label fixa `16.MAI 10h` |
+| `app/src/components/painel/ProximasVotacoes.tsx:23` | Label fixa `17.MAI 14h` |
+
+Impacto:
+
+- o painel pode mostrar agenda falsa;
+- alertas parecem configuraveis, mas sao estado local;
+- contagem do painel nao representa banco.
+
+Acao:
+
+1. Remover `ProximasVotacoes` ate existir fonte real ou conectar fonte real.
+2. Persistir alertas por usuario ou ocultar configuracao.
+3. Nao exibir datas hardcoded.
+
+### G-14. Ausencia de testes automatizados identificados
+
+Severidade: **P1**.
+
+Impacto:
+
+- pagamentos sem teste de idempotencia;
+- auth Logto sem teste de callback/reconciliacao;
+- busca sem teste de contrato;
+- admin sem teste RBAC;
+- ETL sem teste de parsing/carga.
+
+Suite minima:
+
+| Area | Teste minimo |
+|---|---|
+| `/api/busca` | Query vazia, filtro por cargo, paginacao |
+| `/api/acompanhamentos` | 401, insert, duplicidade, delete |
+| Logto linking | perfil por `logto_sub`, fallback legado, usuario sem perfil |
+| InfinitePay webhook | payload valido, invalido, duplicado |
+| Admin | usuario comum recebe 403 |
+
+## Gaps P2
+
+### G-07. Duplicacao de conexao Postgres
+
+Severidade: **P2**.
+
+Evidencia: `new Pool` aparece em muitos arquivos, incluindo paginas publicas, admin, APIs, painel e actions.
+
+Impacto:
+
+- configuracao inconsistente (`5432` vs `5433`);
+- risco de pool excessivo;
+- dificil aplicar SSL, timeout, logging e retry de forma uniforme;
+- maior chance de divergencia entre ambientes.
+
+Acao:
+
+1. Criar helper unico `getPgPool()` em `app/src/lib/db`.
+2. Centralizar host/port/db/user/password/SSL/timeouts.
+3. Reusar tipos e tratamento de erro.
+4. Atualizar chamadas gradualmente.
+
+### G-08. Erros Postgres expostos ao cliente
+
+Severidade: **P2**.
+
+Evidencia: APIs de acompanhamento/admin retornam `pgError.message` e `pgError.code` em alguns caminhos.
+
+Impacto:
+
+- mensagens internas podem expor detalhes de schema;
+- UX de erro fica tecnica;
+- risco de enumeracao de constraints.
+
+Acao:
+
+1. Mapear codigos Postgres permitidos para mensagens publicas.
+2. Logar detalhes internamente.
+3. Retornar mensagens genericas para cliente.
+
+### G-10. Observabilidade operacional incompleta
+
+Severidade: **P2**.
+
+Evidencia:
+
+- `/api/analytics` registra eventos;
+- admin analytics consulta `analytics_eventos`;
+- nao foi identificado Sentry/Datadog/alertas uptime;
+- webhook usa `console.log`/`console.error`.
+
+Acao:
+
+1. Definir provedor de monitoramento.
+2. Instrumentar erro em APIs criticas.
+3. Persistir eventos financeiros e ETL.
+4. Criar alertas para falha de webhook, falha de ETL e erro 500.
+
+### G-12. Debito visual e funcional de UI
+
+Severidade: **P1/P2**, dependendo do item.
+
+Detalhe completo: `docs/PLACEHOLDER_REPORT.md`.
+
+Itens mais relevantes:
+
+| Problema | Evidencia |
+|---|---|
+| `href="#"` | `CandidatoPageClient.tsx:168`, `CandidatoPageClient.tsx:329` |
+| Chat candidato desabilitado | `CandidatoPageClient.tsx:260`, `CandidatoPageClient.tsx:269` |
+| Abas painel em breve | `FeedCivico.tsx:108` |
+| Dados mock app home | `HomeApp.tsx:22` |
+| Heatmap/coesao placeholder | `PartidoDetailClient.tsx:604`, `:644`, `:655` |
+
+## Gaps Resolvidos Nesta Consolidação
+
+| ID anterior/novo | Gap | Status | Evidencia |
+|---|---|---|---|
+| G-15 | README raiz desatualizado | Resolvido no Lote 1 | `README.md` atualizado com Logto, Next.js 16, Postgres direto e docs |
+| G-16 | Falta de `MVP_REAL_IDENTIFICADO.md` e `PRODUCAO_READINESS.md` | Resolvido no Lote 1 | Arquivos criados |
+| G-17 | Falta de inventario de rotas/features | Resolvido no Lote 2 | `INVENTORY_ROUTES.md`, `INVENTORY_FEATURES.md` |
+
+## Divergencias De Requisitos
+
+### Stripe vs InfinitePay
+
+Documentos antigos ainda mencionam Stripe e `payment_intent`. O runtime ativo identificado usa InfinitePay:
+
+| Fonte | Estado |
+|---|---|
+| `docs/API.md` | Ainda contem secao historica de Stripe |
+| `docs/TODO_PRODUCTION.md` | Mantem historico Stripe e item InfinitePay |
+| Codigo atual | `app/src/app/api/apoio/*`, `webhooks/infinitepay` |
+
+Resolucao: tratar Stripe como historico; foco de producao deve ser InfinitePay.
+
+### Supabase Auth vs Logto
+
+Documentos antigos mencionam Supabase Auth. Codigo atual usa Logto:
+
+| Fonte | Estado |
+|---|---|
+| `app/src/lib/logto/*` | Ativo |
+| `app/src/app/api/auth/logto/*` | Ativo |
+| `app/src/lib/auth/profile-linking.ts` | Ainda usa fallback legado em `auth.users` |
+
+Resolucao: Logto e fonte ativa; fallback legado deve ser documentado e ter plano de desligamento.
+
+### Admin ETL: "Rodar agora" vs "Registrar solicitacao"
+
+UI/admin sugere acao operacional de ETL. API apenas registra log e retorna mensagem de SSH manual.
+
+Resolucao: ate haver trigger real, a feature deve ser renomeada ou marcada como solicitacao manual.
+
+## Ordem Recomendada De Correcao
+
+| Ordem | Item | Motivo |
+---|---|---|
+| 1 | Rotacionar/remover segredo em doc legado | P0 seguranca |
+| 2 | Persistir webhook InfinitePay | P0/P1 financeiro |
+| 3 | Validar banco/dev e build | P1 go-live tecnico |
+| 4 | Corrigir ETL admin ou rebaixar promessa da UI | P1 operacional |
+| 5 | Remover agenda/alertas fake do painel | P1 confianca do usuario |
+| 6 | Corrigir `href="#"` e botoes sem acao | P1/P2 UX |
+| 7 | Centralizar Postgres pool | P2 manutenibilidade |
+| 8 | Implementar testes minimos | P1/P2 regressao |
+
+## Handoff Para Lotes Seguintes
+
+Lote 4 deve aprofundar banco e uso real:
+
+- confirmar se `doacoes` existe ou nao no schema;
+- mapear tabelas ativas/fantasmas;
+- separar tabelas usadas por app, admin, ETL e docs antigas;
+- documentar `perfis`, `acompanhamentos`, `politicos`, `votacoes`, `gastos`, `emendas`, `proposicoes`, `analytics_eventos`, `admin_logs`.
+
+Lote 5 deve fechar API/Auth:
+
+- documentar contrato exato de `/api/apoio/criar-link` e `/api/webhooks/infinitepay`;
+- documentar rotas Logto;
+- documentar lacuna de `auth.users` legado;
+- cruzar APIs expostas vs chamadas pelo frontend.

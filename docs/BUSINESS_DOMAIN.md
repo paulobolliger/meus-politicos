@@ -1,274 +1,312 @@
 ---
 file: docs/BUSINESS_DOMAIN.md
-module: Business Domain Reference
+module: Business Domain
 status: Active
-related: [docs/DATABASE.md, docs/METRICS.md, docs/BACKOFFICE_DATA_CONTRACT.md, docs/meuspoliticos_master.md]
+related: [docs/DATABASE.md, docs/INVENTORY_DATABASE_USAGE.md, docs/MVP_REAL_IDENTIFICADO.md, docs/INVENTORY_FEATURES.md, docs/API.md]
 ---
 
-# Domínio de Negócio — Meus Políticos
+# Business Domain
 
-> Este documento descreve as regras de negócio, entidades políticas, fluxos de dados e invariantes do domínio. Para métricas e scores, ver `docs/METRICS.md`. Para fallbacks e display de campos, ver `docs/BACKOFFICE_DATA_CONTRACT.md`.
+Data da consolidacao: 2026-06-02.
 
----
+Este documento descreve o modelo conceitual do dominio de transparencia politica implementado no repositorio. Ele separa o que o produto promete, quais entidades existem no schema/codigo e quais jornadas de usuario foram identificadas como reais.
 
-## 1. Missão e princípios
+## Missao Do Produto
 
-**Missão:** Transparência para decidir melhor — o sistema operacional da cidadania política brasileira.
+O Meus Politicos e uma plataforma de transparencia politica brasileira que organiza dados publicos oficiais sobre representantes, candidatos, partidos, votacoes, gastos, emendas, proposicoes, estados e municipios. A proposta de valor e reduzir friccao informacional sem editorializar o resultado.
 
-**Empresa:** NORO GURU (NORO Tecnologia e Turismo Ltda · CNPJ 63.429.497/0001-88)
+Principios operacionais:
 
-### Princípios inegociáveis
-
-| Princípio | Regra de implementação |
+| Principio | Regra no dominio |
 |---|---|
-| Sem opinião, sem ranking moral | Scores são benchmarks relativos — nunca julgamento absoluto |
-| Neutralidade política absoluta | Nenhum partido, candidato ou ideologia é favorecido na plataforma |
-| IA como facilitador | Resumos IA sempre rotulados; fonte original sempre acessível |
-| LGPD | CEP nunca persistido; CPF apenas no ETL, nunca no banco público |
-| Filtro de decisão | "Isso aumenta transparência ou só aumenta ruído?" — se não aumenta claramente, não entra |
+| Neutralidade politica | Nao recomendar, endossar ou ranquear moralmente candidatos, partidos ou ideologias |
+| Rastreabilidade | Todo dado factual deve ter fonte oficial ou status de dado incompleto |
+| Linguagem cidada | Conteudos tecnicos devem ser simplificados sem alterar significado |
+| IA como facilitador | Resumos IA devem ser rotulados e cacheados |
+| Dados pessoais minimos | CEP nao deve ser persistido; CPF deve ficar restrito ao ETL quando usado como ancora |
+| Codigo vence documentacao | Divergencias antigas viram gaps |
 
----
+## Usuarios E Atores
 
-## 2. Entidades políticas cobertas
-
-### 2.1 Políticos ativos (tabela `politicos`)
-
-| Cargo | Universo | Fonte |
-|---|---|---|
-| Deputado Federal | 513 | Câmara API v2 |
-| Senador | 81 | API Senado |
-| Governador | 27 | TSE + fontes estaduais |
-| Deputado Estadual | ~1.059 (ALEs coletadas) | TSE + APIs ALEs |
-
-**Total de políticos no banco:** ~1.680 registros
-
-### 2.2 Candidatos 2026 (tabela `candidatos`)
-
-Candidatos registrados no TSE para as eleições de outubro 2026. Perfil cruzado com `politicos` via `politico_id` quando o candidato já tem mandato.
-
-**Tipos de perfil (`perfil_candidato`):**
-- `em_exercicio` — candidato com mandato atual (deputado se candidatando à reeleição, por exemplo)
-- `ex_mandatario` — já teve mandato, sem mandato atual
-- `sem_mandato` — candidato sem histórico de mandato
-
-### 2.3 Cobertura geográfica
-
-- 5.570 municípios com código IBGE e código TSE (para cruzamento)
-- 27 estados com dados institucionais, econômicos e de governo
-- Regiões: Norte, Nordeste, Centro-Oeste, Sudeste, Sul
-
----
-
-## 3. Modelo de dados — relacionamentos principais
-
-```
-auth.users
-    └── perfis (1:1, trigger automático)
-            └── acompanhamentos (N:M → politicos)
-
-partidos
-    └── politicos.partido_id (partido atual)
-    └── politico_partidos (histórico de filiações)
-    └── candidatos.partido_id
-
-politicos (hub central)
-    ├── votacoes (N:1)
-    ├── gastos (N:1)
-    ├── presenca (N:1)
-    ├── emendas (N:1)
-    ├── discursos (N:1)
-    ├── feed_eventos (N:1)
-    ├── redes_sociais (N:1)
-    ├── candidatos.politico_id (quando candidato tem mandato)
-    ├── politico_ids (entity resolution Câmara v1↔v2)
-    └── politico_senado_ids (entity resolution Câmara↔Senado)
-
-senadores (paralelo a politicos para fase 2)
-    ├── senado_votacoes
-    ├── senado_materias
-    ├── senado_comissoes
-    ├── senado_discursos
-    └── senado_sessoes
-
-proposicoes
-    ├── proposicao_autores → politicos (soft FK)
-    └── proposicao_tramitacoes (histórico de tramitação)
-
-municipios
-    ├── politicos.municipio_id (naturalidade/domicílio)
-    ├── emendas.municipio_ibge (destino da emenda)
-    └── candidatos.municipio_id
-
-estados_info
-    ├── estados_economia
-    ├── estados_governos → politicos (soft FK)
-    ├── estados_ale
-    ├── estados_pacto_federativo
-    ├── estados_tribunais
-    └── estados_timeline
-```
-
----
-
-## 4. Entity Resolution (cruzamento de fontes)
-
-O maior desafio técnico do projeto: cada fonte de dados usa um identificador diferente para o mesmo político.
-
-| Campo em `politicos` | Fonte | Uso |
-|---|---|---|
-| `id_camara` | Câmara API v2 | Coletas de votações, gastos, presença |
-| `id_senado` | API Senado | Coletas de dados do Senado |
-| `id_tse` | TSE | Cruzamento com candidaturas 2026 |
-| `codigo_siafi` | CGU/SIAFI | Cruzamento com emendas parlamentares |
-| `id_ale` | APIs das ALEs | Coletas de assembleias estaduais |
-
-**CPF como âncora no ETL:** O CPF é usado apenas dentro do ETL para cruzar IDs entre fontes. Nunca é persistido no banco público. Após o cruzamento, `politico_senado_ids.match_confidence` registra a confiança do match.
-
-**`match_confidence` em `politico_senado_ids`:**
-- `1.000` = CPF + nome + UF coincidem exatamente
-- `0.950` = CPF + nome (fuzzy match)
-- `0.800` = nome + UF apenas (sem CPF disponível)
-- `< 0.800` = validação manual obrigatória
-
----
-
-## 5. Categorias temáticas
-
-9 temas usados para classificar votações, discursos e projetos (seed fixo, não altera sem migration):
-
-| Slug | Nome | Cor | Ícone |
+| Ator | Objetivo | Entidades principais | Status no codigo |
 |---|---|---|---|
-| `economia` | Economia | `#e8eefb` | `ti-chart-bar` |
-| `social` | Social | `#e8f5ee` | `ti-users` |
-| `educacao` | Educação | `#f0e8ff` | `ti-school` |
-| `saude` | Saúde | `#e8f5ee` | `ti-heart` |
-| `seguranca` | Segurança | `#fff0e8` | `ti-shield` |
-| `meio-ambiente` | Meio Ambiente | `#e8f5ee` | `ti-leaf` |
-| `politica` | Política | `#e8eefb` | `ti-building-bank` |
-| `infraestrutura` | Infraestrutura | `#faeeda` | `ti-road` |
-| `institucional` | Institucional | `#f5f6fa` | `ti-file-description` |
+| Cidadao anonimo | Buscar representantes e entender atuacao | `politicos`, `partidos`, `votacoes`, `gastos`, `presenca`, `emendas`, `proposicoes`, `glossario` | Implementado parcialmente |
+| Usuario autenticado | Acompanhar politicos e ver feed civico | `perfis`, `acompanhamentos`, `politicos`, `votacoes`, `gastos` | Core loop implementado |
+| Admin | Monitorar dados, flags, usuarios e solicitacoes ETL | `perfis`, `feature_flags`, `admin_logs`, `coletas_log`, `analytics_eventos` | Parcial |
+| Operador ETL | Coletar e reconciliar dados oficiais | `coletas_log`, tabelas de dominio e scripts `etl/*` | Scripts existem, orquestracao parcial |
+| Apoiador financeiro | Fazer apoio/doacao | InfinitePay, futura `doacoes` | Link real; persistencia ausente |
+| Sistema externo | Enviar webhook/retorno | `/api/webhooks/infinitepay`, Logto callback | Parcial/nao validado |
 
----
+## Entidades Nucleares
 
-## 6. Hierarquia de impacto
+### Politico
 
-Usado em `votacoes`, `gastos`, `discursos` e `feed_eventos` para priorização no feed do usuário:
+Tabela: `politicos`.
 
-| Nível | Valor | Exemplos |
+Entidade central do dominio. Representa ocupantes ou candidatos conectados a cargos publicos, com identificadores de multiplas fontes.
+
+Campos conceituais:
+
+| Grupo | Exemplos |
+|---|---|
+| Identidade publica | `nome`, `nome_civil`, `nome_eleitoral`, `slug`, `foto_url` |
+| Mandato | `cargo`, `uf`, `situacao`, `mandato_inicio`, `mandato_fim` |
+| Partido atual | `partido_id` |
+| Fonte externa | `id_camara`, `id_senado`, `id_tse`, `id_ale`, `codigo_siafi` |
+| Agregados de UI | `presenca_pct_atual`, `gasto_total_ano`, `total_votacoes`, totais de emendas |
+| Qualidade do dado | `dado_estado`, `source_id`, `source_record_id`, `collected_at`, `removido_em` |
+
+Relacionamentos:
+
+| Relacao | Tipo | Tabelas |
 |---|---|---|
-| Baixo | `'1'` | Gasto CEAP, discurso, participação em comissão |
-| Médio | `'2'` | Votação nominal comum, novo PL, ausência |
-| Alto | `'3'` | Votação relevante, PEC, candidatura 2026 |
-| Crítico | `'4'` | Cassação, afastamento, troca de partido, votação constitucional |
+| Partido atual | N:1 | `politicos.partido_id -> partidos.id` |
+| Votacoes | 1:N | `votacoes.politico_id` |
+| Gastos | 1:N | `gastos.politico_id` |
+| Presenca | 1:N | `presenca.politico_id` |
+| Emendas | 1:N | `emendas.politico_id` |
+| Seguidores | N:M | `acompanhamentos` |
+| Candidatura | 1:N / 1:1 contextual | `candidatos.politico_id` |
+| Proposicoes autoradas | N:M soft | `proposicao_autores.politico_id` |
 
----
+### Partido
 
-## 7. Estado do dado (`dado_estado`)
+Tabela: `partidos`.
 
-Indica a qualidade/frescor de cada registro. Exibido na UI como indicador de confiabilidade:
+Representa partido politico e metadados de exibicao. O codigo tambem consulta `partidos_fundos`, mas essa tabela nao foi encontrada nas migrations; ela e criada dinamicamente por `etl/partidos/collect_fundos_tse.py`.
 
-| Estado | Significado | UI |
+| Uso | Evidencia |
+|---|---|
+| Busca de politicos | `/api/busca` |
+| Perfil de politico | `politicos/[id]/page.tsx` |
+| Pagina de partidos | `(site)/partidos/page.tsx` |
+| Detalhe de partido | `(site)/partidos/[sigla]/page.tsx` |
+| ETL | `collect_deputados.py`, `collect_senadores.py`, `collect_candidatos_2026.py` |
+
+### Votacao
+
+Tabela: `votacoes`.
+
+Registra voto nominal ou evento de voto associado a politico. E uma das bases mais usadas pelo produto.
+
+| Jornada | Uso |
+|---|---|
+| Home publica | Votacoes recentes agrupadas por `proposicao_id` |
+| Perfil | Historico recente de votos |
+| Painel | Feed civico dos politicos acompanhados |
+| Partidos | Coesao e maioria por proposicao |
+| Projetos | Votacoes associadas a proposicao |
+| ETL | Camara, Senado, ALEs |
+
+### Gasto
+
+Tabela: `gastos`.
+
+Representa despesas parlamentares/CEAP/CEAPS e gastos coletados de fontes legislativas.
+
+| Jornada | Uso |
+|---|---|
+| Perfil | Gastos do ano atual por politico |
+| Painel | Eventos de gasto dos politicos seguidos |
+| Camara | Agregados e destaques |
+| Partido | Gasto agregado por partido |
+| ETL | Camara, Senado, ALEs |
+
+### Presenca
+
+Tabela: `presenca`.
+
+Representa presenca parlamentar por periodo. E consultada no perfil de politico, mas parte da cobertura parece depender de ETL pendente ou agregacoes ALE.
+
+### Emenda
+
+Tabela: `emendas`.
+
+Representa emendas parlamentares, valores, municipio/UF destino, area/funcao e vinculo com politico. Tem uso em perfil, estado, admin de dados, match manual e ETL Portal da Transparencia.
+
+### Proposicao
+
+Tabelas: `proposicoes`, `proposicao_autores`, `proposicao_tramitacoes`.
+
+Modela projetos de lei, PECs, PLPs, MPs e historico de tramitacao. O produto expõe essas entidades em `/projetos`, `/projetos/[slug]`, `/proposicoes` e `/proposicoes/[slug]`.
+
+### Candidato 2026
+
+Tabela: `candidatos`.
+
+Representa candidatos eleitorais coletados do TSE. O codigo tenta consultar `candidatos_bens`, mas essa tabela nao foi encontrada no schema versionado. Portanto, bens patrimoniais sao uma dependência nao garantida.
+
+### Usuario/Perfil
+
+Tabelas: `perfis`, `acompanhamentos`.
+
+O runtime atual usa Logto para identidade externa e `perfis` para identidade interna/RBAC. `acompanhamentos` conecta usuario a politico.
+
+| Conceito | Implementacao |
+|---|---|
+| Identidade externa | Logto (`logto_sub`) |
+| Perfil interno | `perfis.id` |
+| Role admin | `perfis.role` |
+| Compat legado | `perfis.supabase_user_id`, consulta a `auth.users` |
+| Seguir politico | `acompanhamentos(usuario_id, politico_id)` |
+
+### Admin E Operacao
+
+Tabelas: `feature_flags`, `admin_logs`, `analytics_eventos`, `coletas_log`.
+
+| Entidade | Papel |
+|---|---|
+| `feature_flags` | Liga/desliga features e rollout |
+| `admin_logs` | Auditoria de acoes admin |
+| `analytics_eventos` | Eventos de uso capturados por `/api/analytics` |
+| `coletas_log` | Status de ETLs |
+
+### IA E Glossario
+
+Tabelas: `glossario`, `politico_resumos_ia`, `politico_resumos_ia_cotas`.
+
+| Entidade | Papel |
+|---|---|
+| `glossario` | Definicoes simples/tecnicas e termos relacionados |
+| `politico_resumos_ia` | Cache de resumo interpretativo |
+| `politico_resumos_ia_cotas` | Limite diario de geracao |
+
+## Jornadas Criticas Do Usuario
+
+### Jornada 1: Descobrir e buscar politicos
+
+1. Usuario acessa `/`.
+2. Home exibe votacoes recentes.
+3. Usuario navega para `/busca`.
+4. `BuscaClient` chama `/api/busca`.
+5. API consulta `politicos` e `partidos`.
+6. Usuario abre `/politicos/[id]`.
+
+Entidades: `politicos`, `partidos`, `votacoes`, `gastos`, `presenca`, `emendas`.
+
+Status: implementada em codigo; runtime de banco nao validado nesta auditoria.
+
+### Jornada 2: Acompanhar politico
+
+1. Usuario clica em acompanhar no perfil.
+2. Se nao autenticado, vai para Logto via `/api/auth/logto/sign-in`.
+3. `getCurrentUser()` reconcilia Logto com `perfis`.
+4. `POST /api/acompanhamentos` grava o vinculo.
+5. `/painel` le `acompanhamentos`.
+
+Entidades: `perfis`, `acompanhamentos`, `politicos`.
+
+Status: core MVP implementado.
+
+### Jornada 3: Feed civico
+
+1. Usuario autenticado acessa `/painel`.
+2. Painel carrega seguidos.
+3. Consulta `votacoes` e `gastos` dos ultimos 7 dias.
+4. Monta `FeedEvento`.
+
+Entidades: `perfis`, `acompanhamentos`, `politicos`, `partidos`, `votacoes`, `gastos`.
+
+Status: parcial; alertas e proximas votacoes ainda usam dados estaticos/placeholders.
+
+### Jornada 4: Investigar partido
+
+1. Usuario acessa `/partidos`.
+2. Lista partidos, membros e fundos.
+3. Usuario abre `/partidos/[sigla]`.
+4. Produto consulta membros, gastos, coesao e votos.
+
+Entidades: `partidos`, `politicos`, `gastos`, `votacoes`, `partidos_fundos`.
+
+Status: parcial; `partidos_fundos` nao esta em migration versionada.
+
+### Jornada 5: Investigar projeto/proposicao
+
+1. Usuario acessa `/projetos` ou `/proposicoes`.
+2. Lista proposicoes.
+3. Abre detalhe.
+4. Ve autores, tramitacao e votacoes relacionadas.
+
+Entidades: `proposicoes`, `proposicao_autores`, `proposicao_tramitacoes`, `votacoes`, `politicos`, `partidos`.
+
+Status: parcial; historico detalhado ainda aparece como "em breve" em UI.
+
+### Jornada 6: Estado e municipio
+
+1. Usuario acessa `/estado` ou `/meu-estado`.
+2. Seleciona UF/cidade ou informa CEP.
+3. Produto apresenta governador, bancada, economia, municipios, emendas e ALE.
+
+Entidades: `estados_governos`, `estados_economia`, `estados_pacto_federativo`, `estados_tribunais`, `estados_timeline`, `estados_ale`, `municipios`, `emendas`, `politicos`, `partidos`.
+
+Status: parcial; deputados estaduais, vereadores e emendas estaduais ainda têm lacunas visuais/dados.
+
+### Jornada 7: Apoiar financeiramente
+
+1. Usuario acessa `/apoio`.
+2. Frontend chama `/api/apoio/criar-link`.
+3. Backend cria link InfinitePay.
+4. InfinitePay chama `/api/webhooks/infinitepay`.
+
+Entidades esperadas: futura `doacoes`.
+
+Status: incompleto. Link e real, mas webhook nao persiste; `doacoes` nao foi identificada no schema versionado.
+
+### Jornada 8: Admin operacional
+
+1. Admin acessa `/admin`.
+2. Ve contagens, usuarios, flags, analytics, dados e ETL.
+3. Atualiza flags/politicos/emendas.
+4. Registra logs em `admin_logs`.
+
+Entidades: `perfis`, `feature_flags`, `admin_logs`, `analytics_eventos`, `coletas_log`, `politicos`, `emendas`.
+
+Status: parcial; ETL run nao executa scripts Python, apenas registra solicitacao.
+
+## Artefatos Extras TXT/CSV Integrados
+
+Esta consolidacao incorporou os arquivos `.txt` e `.csv` avulsos encontrados no repositorio seguindo a hierarquia v4.0: schema/codigo em producao permanece fonte primaria; artefatos de wireframe e texto temporario entram como evidencia historica de produto, nao como contrato operacional.
+
+| Artefato | Conteudo Util Incorporado | Classificacao |
 |---|---|---|
-| `oficial` | Dado confirmado da fonte oficial | Sem alerta |
-| `parcial` | Dado incompleto ou em reconciliação | Badge "Parcial" |
-| `atrasado` | ETL atrasado — dado pode estar desatualizado | Badge "Atrasado" |
-| `em_processamento` | ETL em andamento | Badge "Processando" |
-| `indisponivel` | Fonte temporariamente inacessível | Exibir "–" |
+| `docs/stitch_wireframes_match.csv` | Matriz de correspondencia entre wireframes e rotas existentes/faltantes. Confirma como requisitos historicos os fluxos de busca, perfil politico, comparacao, proposicoes, painel civico pessoal, fontes, glossario, estado, candidatos 2026 e paginas institucionais. Tambem registra lacunas de rotas para FAQ, sustentabilidade, portais de transparencia legislativa/municipal e suite de inteligencia. | Referencia historica de produto/design. |
+| `app/temp_analysis.txt` | Evidencia textual/HTML de wireframe "App / Painel civico pessoal (logado)", reforcando que o painel autenticado deve centralizar acompanhamento civico pessoal. | Export temporario; nao e documento canonico. |
+| `app/temp_text_only.txt` | Variante textual do mesmo painel civico pessoal logado, sem regra adicional de dominio alem do requisito de dashboard autenticado. | Export temporario; nao e documento canonico. |
+| `app/temp_structure.txt` | Variante estrutural/HTML do painel civico pessoal logado, incluindo markup e payload visual sem funcao operacional no app. | Export temporario; nao e documento canonico. |
+| `app/temp_clean_text.txt` | Variante limpa do mesmo material de painel civico pessoal, util apenas para rastreabilidade historica do requisito. | Export temporario; nao e documento canonico. |
 
----
+Requisitos de negocio herdados desses artefatos:
 
-## 8. Glossário cívico
+- O painel civico pessoal logado e uma jornada nuclear de usuario autenticado, conectando acompanhamento de politicos, alertas, feed civico e possivel priorizacao por interesses.
+- A suite de inteligencia aparece como ambicao de produto posterior ao MVP real: busca avancada, terminal de inteligencia, dossie, matriz de confronto, monitoramento de alertas e home analitica nao devem ser tratadas como prontas.
+- Portais de transparencia por orgao legislativo e municipio representam verticais futuras, nao superficie atual validada de producao.
+- A matriz historica indica divergencia em partido/modulo de partidos; como o inventario atual ja mapeia rotas de partidos, esse ponto deve ser tratado como drift documental, nao como ausencia confirmada.
+- FAQ e sustentabilidade aparecem como paginas esperadas sem rota consolidada; entram como pendencia de experiencia/institucional, nao como bloqueio do core loop.
 
-50 termos em `glossario` com:
-- `definicao_simples` — linguagem cidadã (para o site público)
-- `definicao_tecnica` — linguagem jurídica (para o app analítico)
-- `categoria` — `'legislativo'` | `'eleitoral'` | `'financeiro'` | `'institucional'`
-- `termos_relacionados` — array de slugs para links cruzados
+## Regras De Negocio E Invariantes
 
-**Termos principais cobertos:** PL, PEC, CEAP, emenda parlamentar, emenda Pix, plenário, quórum, votação nominal, regime de urgência, impeachment, ficha limpa, SIAFI, TCU, CGU, Portal da Transparência, entre outros.
+| Regra | Implementacao/risco |
+|---|---|
+| Politico deve ter `slug` unico | Usado em rotas publicas |
+| Candidato pode ou nao estar vinculado a politico | `candidatos.politico_id` nullable |
+| Acompanhamento exige perfil interno | `currentUser.perfilId` usado em APIs |
+| Duplicidade de acompanhamento nao deve falhar para usuario | `23505` retorna `{ ok: true }` |
+| ETLs devem ser idempotentes | Scripts usam `ON CONFLICT ... DO UPDATE` em varias cargas |
+| Pagamento deve ser idempotente | Ainda nao implementado; usar `order_nsu` |
+| Dados IA devem ser cacheados/cotados | `politico_resumos_ia*` |
+| Dado sem fonte/sem cobertura deve ser rotulado | Nem todas as telas fazem essa distincao |
 
----
+## Divergencias De Dominio
 
-## 9. Fluxo de correção de dados
+| Divergencia | Estado real |
+|---|---|
+| Supabase Auth vs Logto | Logto e runtime atual; `auth.users` ainda e fallback legado |
+| Stripe vs InfinitePay | InfinitePay e fluxo ativo; Stripe e historico |
+| `doacoes` | Necessaria para dominio financeiro, nao identificada no schema versionado |
+| `partidos_fundos` | Consultada pelo app e criada por ETL, mas ausente das migrations |
+| `candidatos_bens` | Consultada com catch de ausencia, mas ausente das migrations |
+| Scores/rankings amplos | Parcial; nao devem ser promessa publica plena |
 
-Qualquer cidadão pode reportar dados incorretos via `/correcao` no site público.
+## Conclusao
 
-```
-Usuário submete → INSERT em correcoes (INSERT sem auth)
-                → status: 'pendente'
-                → Admin revisa em /admin/dados
-                → status: 'aprovado' | 'rejeitado' | 'arquivado'
-```
-
-`link_fonte` é obrigatório na submissão — o dado correto deve ter fonte rastreável.
-
----
-
-## 10. Feature Flags
-
-Controle de features sem deploy — gerenciado em `/admin/flags`.
-
-| Slug | Descrição | Default |
-|---|---|---|
-| `busca_postgres_direto` | Busca via Postgres direto | ON (100%) |
-| `emendas_pix_visivel` | Seção Emendas Pix no perfil | OFF |
-| `comparativo_parlamentares` | Página /comparar | OFF |
-| `candidatos_2026` | Seção de candidatos 2026 | OFF |
-| `glossario_tooltips` | Tooltips inline do glossário | OFF |
-| `plano_premium` | Exportação CSV e alertas por email | OFF |
-| `insights_rankings` | Página /insights com rankings | OFF |
-| `na_imprensa` | Aba "Na imprensa" no perfil | OFF |
-| `push_notifications` | Alertas via Web Push API | OFF |
-| `atuacao_parlamentar` | Aba de atuação parlamentar | OFF |
-| `timeline_politica` | Linha do tempo no perfil | OFF |
-| `modo_eleicao_2026` | Estado especial eleições outubro 2026 | OFF |
-| `explique_votacao` | Contexto IA por votação | OFF |
-
----
-
-## 11. Pipeline ETL — fontes de dados
-
-| Fonte | Diretório | Dados coletados |
-|---|---|---|
-| Câmara dos Deputados | `etl/camara/` | Deputados, votações, gastos (CEAP), proposições, presença |
-| Senado Federal | `etl/senado/` | Senadores, votações, gastos (CEAPS), discursos |
-| TSE | `etl/tse/` | Eleitos 2022, candidatos 2026, histórico eleitoral |
-| Assembleias Estaduais | `etl/ale/` | ALESP (SP), ALEP (PR), ALMG (MG), ALMT (MT), CLDF (DF) |
-| IBGE | `etl/ibge/` | Municípios, estados, dados demográficos |
-| Portal da Transparência | `etl/portal_transparencia/` | Emendas parlamentares, SIAFI |
-| Partidos | `etl/partidos/` | Dados de partidos e fundos partidários |
-| IA | `etl/ia/` | Processamento com OpenAI (resumos, simplificação) |
-| STN | `etl/stn/` | Secretaria do Tesouro Nacional (pacto federativo) |
-
-**Padrão de escrita:** todos os ETLs usam `UPSERT ... ON CONFLICT ... DO UPDATE` para idempotência. Após cada coleta, `INSERT` em `coletas_log` com status, registros e duração.
-
----
-
-## 12. IA no domínio
-
-O sistema usa OpenAI para:
-
-| Caso de uso | Campo | Controle |
-|---|---|---|
-| Simplificar ementa de votação | `votacoes.descricao_simples` | `ia_processado`, `ia_gerado_em`, `ia_modelo` |
-| Simplificar ementa de proposição | `proposicoes.ementa_simples` | idem |
-| Resumir proposta de governo (candidatos 2026) | `candidatos.proposta_resumo` (JSONB) | idem |
-| Resumo interpretativo de perfil | `politico_resumos_ia.conteudo_json` | Cache + cota diária |
-
-**Cota diária de resumos:** `politico_resumos_ia_cotas.limite_diario` (default 3) — controlado por `IA_RESUMO_MAX_GERACOES_DIA` no `.env`.
-
-**Invariante:** todo conteúdo IA deve ser explicitamente rotulado na UI com "Gerado por IA" e link para a fonte original.
-
----
-
-## 13. LGPD — dados pessoais
-
-| Dado | Status | Regra |
-|---|---|---|
-| CEP do usuário | Nunca persistido | Usado apenas server-side para "quem me representa"; descartado após a query |
-| CPF | Apenas no ETL | Usado como âncora para entity resolution; nunca inserido em nenhuma tabela do banco público |
-| Nome do usuário | `perfis.nome` | RLS: `auth.uid() = id` — acessível apenas pelo próprio usuário |
-
----
-
-*Atualizado em: 2026-05-29 · Auditoria v2.1*
+O dominio implementado ja sustenta um MVP de transparencia politica baseado em busca, perfil, acompanhamento e feed civico. As principais fragilidades conceituais sao a ausencia de persistencia financeira (`doacoes`), uso de tabelas fora do schema versionado (`partidos_fundos`, `candidatos_bens`) e funcionalidades de painel que parecem operacionais mas ainda usam dados estaticos.

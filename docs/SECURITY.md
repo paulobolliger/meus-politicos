@@ -1,197 +1,207 @@
 ---
 file: docs/SECURITY.md
-module: Security Reference
+module: Security Audit
 status: Active
-related: [docs/AUTH.md, docs/DATABASE.md, docs/ENVIRONMENT.md, docs/GAP_ANALYSIS.md]
+related: [docs/AUTH.md, docs/ENVIRONMENT.md, docs/API.md, docs/INTEGRATIONS.md, docs/GAP_ANALYSIS.md, docs/PRODUCAO_READINESS.md]
 ---
 
-# Segurança — Meus Políticos
+# Seguranca
 
-> **Nota de legado Auth:** as referencias a RLS com `auth.uid()`,
-> atual/legado. A arquitetura alvo aprovada e Logto + PostgreSQL VPS. Ver
-> `docs/auth/AUTH_MIGRATION_LOGTO.md` e
-> `docs/adr/ADR-001-logto-as-identity-provider.md`.
+Este documento registra a auditoria de seguranca atual do projeto em 2026-06-02, com foco em Logto/RBAC, webhooks, segredos, exposicao client e plano urgente de rotacao da chave P0 da Resend detectada em documento legado.
 
----
+## 1. Superficie de Ataque
 
-## 1. Superfície de ataque — visão geral
+| Superficie | Arquivos/rotas | Estado | Risco |
+|---|---|---|---|
+| Auth Logto | `app/src/app/api/auth/logto/*`, `app/src/lib/logto/*` | Ativo | Redirect/env incorretos podem quebrar sessao |
+| Proxy multi-host | `app/src/proxy.ts` | Ativo | Barreiras dependem de host correto |
+| APIs publicas | `/api/busca`, `/api/glossario`, `/api/analytics`, `/api/apoio/*` | Ativas | Rate limit e validacao limitados |
+| APIs autenticadas | `/api/acompanhamentos*` | Ativas | Dependem de `getCurrentUser()` e perfil reconciliado |
+| APIs admin | `/api/admin/*` | Ativas | Dependem de `role === 'admin'` |
+| Webhook InfinitePay | `/api/webhooks/infinitepay` | Incompleto | Sem assinatura e sem persistencia |
+| Banco | `POSTGRES_*` via `pg` | Ativo | Usuario/privilegios e repeticao de Pool |
+| IA/OpenAI | Server Action e ETL | Ativo condicionado | Custo e prompt/data governance |
+| Docs versionados | `docs/meuspoliticos_master.md` | Problema P0 | Chave Resend aparente exposta |
 
-| Camada | Mecanismo de proteção | Status |
+## 2. Logto e RBAC
+
+### 2.1 Modelo Atual
+
+| Camada | Implementacao | Garantia |
 |---|---|---|
-| Banco de dados | Row Level Security (RLS) em todas as tabelas | ✅ Ativo |
-| Rotas Next.js | Middleware `proxy.ts` — auth por subdomínio | ✅ Ativo |
-| API Routes admin | Verificação `perfis.role = 'admin'` via admin client | ✅ Ativo |
-| Webhooks Stripe | Verificação de assinatura `stripe.webhooks.constructEvent` | ✅ Ativo |
-| Webhooks InfinitePay | Validação mínima de payload (NSU obrigatório) | ⚠️ Parcial |
-| Segredos no git | `.env.local` não commitado — verificado via `git log` | ✅ Confirmado |
-| LGPD | CEP não persistido, CPF apenas no ETL | ✅ Ativo |
-| Runtime error tracking | ❌ Sem Sentry ou similar | ⚠️ Gap G-14 |
+| Sessao | `getLogtoContext(getLogtoConfig(), { fetchUserInfo: true })` | Usuario autenticado no Logto |
+| Usuario preliminar | `buildCurrentUserFromLogto()` | Extrai `sub`, email/nome e claims |
+| Perfil operacional | `getProfileByLogtoSubPostgres()` | Resolve `perfis.logto_sub` |
+| Reconciliacao legado | `linkLogtoProfileByLegacyEmailPostgres()` | Tenta vincular por email legado em `auth.users` |
+| Role | `perfis.role` | `user` ou `admin` conforme tipo mapeado |
+| Guard admin | `getCurrentUser()` + `user.role !== 'admin'` | Bloqueia endpoints admin |
 
----
+### 2.2 Barreiras de Rota
 
-## 2. Row Level Security (RLS)
-
-RLS está habilitado em **todas as tabelas** do banco. Nenhuma tabela tem acesso irrestrito.
-
-### Modelo de políticas
-
-| Política | Tabelas afetadas | Regra SQL |
+| Contexto | Arquivo | Regra |
 |---|---|---|
-| Leitura pública | `municipios`, `partidos`, `temas`, `politicos`, `votacoes`, `gastos`, `presenca`, `emendas`, `discursos`, `candidatos`, `proposicoes`, `estados_*`, `ale_*`, `glossario`, `feed_eventos`, `feature_flags` (leitura), `senadores`, `senado_*` | `FOR SELECT USING (true)` |
-| Perfil próprio | `perfis` | `FOR ALL USING (auth.uid() = id)` |
-| Acompanhamentos próprios | `acompanhamentos` | `FOR ALL USING (auth.uid() = usuario_id)` |
-| INSERT público (correções) | `correcoes` | `FOR INSERT WITH CHECK (true)` |
-| Admin (JWT claim) | `coletas_log`, `raw_senado`, `politico_resumos_ia`, `politico_resumos_ia_cotas` | `FOR ALL USING (auth.jwt() ->> 'role' = 'admin')` |
-| Admin (tabela perfis) | `admin_logs`, `feature_flags` (write), `analytics_eventos` | `FOR ALL USING (EXISTS (SELECT 1 FROM perfis WHERE id = auth.uid() AND role = 'admin'))` |
-| Admin (raw Bronze layer) | `raw_senado` | `FOR ALL USING (auth.jwt() ->> 'role' = 'admin')` |
+| Host painel | `app/src/proxy.ts` | Sem sessao: redirect para `/login` ou 401 em API |
+| Rotas auth | `app/src/proxy.ts` | `/login`, `/cadastro`, `/recuperar-senha`, `/auth`, `/api/auth/logto` liberadas |
+| Host app | `app/src/proxy.ts` | `/` -> `/home`, `/busca` -> `/app-busca`, `/login` -> painel |
+| Main host | `app/src/proxy.ts` | `/login` redireciona para painel em producao |
+| Admin API | `app/src/app/api/admin/**` | Exige usuario admin |
 
-### Invariante RLS
+### 2.3 Pontos Fortes
 
-
-- `createAdminClient()` em API Routes admin
-- Scripts ETL Python (via conexão PostgreSQL direta)
-
----
-
-## 3. Proteção de rotas — middleware
-
-`app/src/proxy.ts` executa antes de qualquer rota e aplica as seguintes proteções:
-
-```
-painel.* sem sessão → 302 /login       (páginas)
-painel.* sem sessão → 401 JSON         (API routes /api/*)
-app.*    /login     → 302 painel.*     (evita login duplicado)
-meuspoliticos.* /login → 302 painel.*  (produção)
-```
-
-
----
-
-## 4. Proteção de rotas admin
-
-O layout `app/src/app/(admin)/admin/layout.tsx` implementa proteção dupla:
-
-```typescript
-// 1. Verificar se há usuário autenticado
-if (!user) redirect('/')
-
-// 2. Verificar role admin via admin client (bypassa tipos TypeScript desatualizados)
-const adminClient = createAdminClient()
-const { data: perfil } = await adminClient
-  .from('perfis')
-  .select('role, email')
-  .eq('id', user.id)
-  .single()
-
-if (!perfil || perfil.role !== 'admin') redirect('/')
-```
-
-As API Routes admin replicam a mesma verificação:
-
-```typescript
-// Padrão em /api/admin/* route handlers
-if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-
-const { data: perfil } = await adminClient.from('perfis').select('role').eq('id', user.id).single()
-if (!perfil || perfil.role !== 'admin') return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-```
-
----
-
-## 5. Segurança de webhooks
-
-### Stripe (`/api/webhooks/stripe`)
-
-Verificação criptográfica da assinatura via SDK oficial:
-
-```typescript
-event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET ?? '')
-// Lança erro se assinatura inválida → retorna 400
-```
-
-`body` é lido como texto raw (`req.text()`) antes da verificação — imprescindível para que a assinatura bata. Qualquer transformação do body antes desta linha invalida a assinatura.
-
-### InfinitePay (`/api/webhooks/infinitepay`)
-
-Validação apenas de campos obrigatórios (`order_nsu`, `transaction_nsu`). **Não há verificação de assinatura ou IP** — risco de replay attack.
-
-**Recomendação:** implementar verificação de IP de origem ou HMAC quando a InfinitePay liberar documentação de segurança de webhook.
-
----
-
-## 6. Injeção e validação de input
-
-| Área | Proteção |
+| Controle | Evidencia |
 |---|---|
-| Formulários frontend | `react-hook-form` + `zod` — validação client-side e server-side |
-| API Routes | Validação manual de campos obrigatórios antes de qualquer operação DB |
+| Segredos Logto obrigatorios | `getRequiredEnv()` em `app/src/lib/logto/config.ts` |
+| Cookie seguro em producao | `cookieSecure: process.env.NODE_ENV === 'production'` |
+| RBAC server-side | Endpoints admin checam `getCurrentUser()` |
+| Perfil reconciliado no banco | `perfis.logto_sub`, `auth_provider`, `migrado_logto_em` |
 
-Não há nenhum uso de `sql.raw()` ou concatenação de SQL identificado nos route handlers.
+### 2.4 Gaps
 
----
+| Prioridade | Gap | Impacto | Acao |
+|---|---|---|---|
+| P1 | Guard admin duplicado por endpoint | Risco de endpoint novo esquecer check | Criar helper `requireAdmin()` compartilhado |
+| P1 | Perfil sem `logto_sub` retorna null | Usuario autenticado pode ficar sem acesso operacional | Finalizar migracao/reconciliacao |
+| P1 | Sem rate limit em auth-adjacent/API publicas | Abuso de busca/analytics/apoio | Adicionar rate limit por IP/usuario |
+| P2 | Claims Logto nao usadas para RBAC direto | RBAC depende do banco | Aceitavel, mas documentar fonte oficial de role |
 
-## 7. Segredos e credenciais
+## 3. Relatorio de Varredura de Segredos
 
-### Status do git (auditado em 2026-05-29)
+### 3.1 Escopo Executado
 
-Nenhum arquivo `.env` ou `.env.local` foi commitado em nenhuma branch ou tag do repositório. Verificado via:
+Comandos executados sem imprimir o valor sensivel:
+
+| Comando | Objetivo |
+|---|---|
+| `rg -n --no-heading "RESEND_API_KEY=|OPENAI_API_KEY=|STRIPE_SECRET_KEY=|LOGTO_APP_SECRET=|LOGTO_COOKIE_SECRET=|POSTGRES_PASSWORD=|NEXT_PUBLIC_.*(SECRET|KEY|PASSWORD)|PRIVATE_KEY=" . --glob '!node_modules/**' --glob '!app/.next/**'` | Varredura textual do workspace atual |
+| `git log --all --oneline -- docs/meuspoliticos_master.md` | Historico do arquivo legado afetado |
+| `git log --all --oneline -S RESEND_API_KEY -- docs/meuspoliticos_master.md` | Historico Git por introducao/remocao nominal de `RESEND_API_KEY` |
+
+### 3.2 Achado P0 Confirmado
+
+| Achado | Local | Severidade | Status |
+|---|---|---|---|
+| Valor aparente real de `RESEND_API_KEY` | `docs/meuspoliticos_master.md:229` e `docs/meuspoliticos_master.md:264` | P0 | Presente no workspace atual |
+
+O valor nao foi reproduzido neste documento para evitar ampliar a exposicao.
+
+### 3.3 Historico Git Afetado
+
+Ocorrencias nominais de `RESEND_API_KEY` foram encontradas no historico de `docs/meuspoliticos_master.md` nos commits:
+
+| Commit | Mensagem |
+|---|---|
+| `50ad33a` | Session checkpoint |
+| `824978d` | Session checkpoint |
+| `27ef38f` | Session checkpoint |
+| `6324566` | `feat: setup supabase clients, middleware e componentes shadcn/ui` |
+
+O arquivo tambem aparece em commits posteriores sem necessariamente alterar a string. Como o segredo entrou no historico, remover apenas o conteudo atual nao elimina exposicao se o repositorio ja foi compartilhado.
+
+### 3.4 Outros Resultados da Varredura Atual
+
+| Categoria | Resultado |
+|---|---|
+| Placeholders seguros | `.env.example`, `README.md`, `docs/ENVIRONMENT.md` contem nomes/placeholder de env |
+| `OPENAI_API_KEY` | Apenas placeholder/documentacao sem valor real aparente no scan atual |
+| `POSTGRES_PASSWORD` | Placeholder/template/documentacao; nenhum valor real impresso pelo scan |
+| `LOGTO_APP_SECRET`/`LOGTO_COOKIE_SECRET` | Placeholder/template/documentacao |
+| `NEXT_PUBLIC_*SECRET/KEY/PASSWORD` | Nenhuma exposicao client de segredo identificada |
+| Stripe | Referencias legadas em docs; runtime atual usa InfinitePay |
+
+## 4. Plano de Rotacao Urgente Resend P0
+
+### 4.1 Objetivo
+
+Invalidar imediatamente a chave Resend exposta, remover o segredo do workspace atual e reduzir risco residual no historico.
+
+### 4.2 Sequencia Obrigatoria
+
+| Ordem | Acao | Responsavel | Resultado esperado |
+|---:|---|---|---|
+| 1 | Revogar a chave atual no painel da Resend | Humano com acesso ao provedor | Chave exposta deixa de funcionar |
+| 2 | Criar nova chave com menor escopo possivel | Humano | Nova credencial ativa |
+| 3 | Atualizar secret manager do ambiente que realmente usa email | Humano/DevOps | Runtime nao depende da chave antiga |
+| 4 | Substituir ocorrencias em `docs/meuspoliticos_master.md` por placeholder | Engenharia | Workspace atual sem segredo |
+| 5 | Rodar nova varredura textual | Engenharia | Sem valor real no workspace |
+| 6 | Se repo publico/compartilhado, reescrever historico ou abrir incidente formal | Tech PM/Owner | Risco residual documentado |
+| 7 | Registrar data/hora de revogacao | Tech PM | Evidencia de resposta a incidente |
+
+### 4.3 Comandos de Verificacao Pos-remocao
 
 ```bash
-git log --all --full-history -- '*.env' '*.env.local' '.env*'
-# → nenhum resultado
+rg -n --no-heading "RESEND_API_KEY=" . --glob '!node_modules/**' --glob '!app/.next/**'
+git log --all --oneline -S RESEND_API_KEY -- docs/meuspoliticos_master.md
 ```
 
-### Classificação de segredos presentes em `app/.env.local`
+Nota: o segundo comando pode continuar mostrando historico ate que haja reescrita de historico. Isso nao significa que a chave ainda esteja ativa; significa que a string existiu em commits.
 
-| Credencial | Risco | Notas |
+## 5. Webhooks e Pagamentos
+
+| Endpoint | Estado | Risco | Acao |
+|---|---|---|---|
+| `/api/webhooks/infinitepay` | Recebe payload, valida campos minimos, loga e retorna `{ ok: true }` | Evento falso, perda de confirmacao, sem idempotencia | Implementar assinatura/origem, persistencia e idempotencia |
+| `/api/apoio/criar-link` | Cria link InfinitePay | Abuso de criacao de links, sem rate limit | Rate limit e logs estruturados |
+| `/api/apoio/verificar-pagamento` | Consulta provider | Sem consumidor UI mapeado | Definir uso ou remover |
+
+Requisitos minimos para webhook seguro:
+
+1. Validacao de assinatura/HMAC ou mecanismo equivalente suportado pela InfinitePay.
+2. Persistencia de payload bruto sanitizado.
+3. Idempotencia por `transaction_nsu`/`order_nsu`.
+4. Estado transacional `created -> paid -> failed/refunded` quando aplicavel.
+5. Logs sem dados sensiveis.
+
+## 6. Banco e Acesso a Dados
+
+| Area | Estado | Risco | Recomendacao |
+|---|---|---|---|
+| Conexao | `pg` direto com `new Pool()` em varios arquivos | Politica inconsistente de timeout/SSL | Centralizar factory |
+| Usuario | Defaults frequentes para `postgres` | Privilegio excessivo | Criar usuario app read/write limitado e usuario ETL separado |
+| RLS | Nao e a barreira principal do runtime mapeado | Conexao direta pode contornar politicas Supabase | Aplicar least privilege no PostgreSQL |
+| Erros SQL | Alguns endpoints retornam `message`/`code` | Pode expor detalhe interno | Normalizar erro publico e log interno |
+
+## 7. Validacao de Input
+
+| Area | Estado | Risco |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | 🔴 Crítico | Modo teste ativo — substituir por live na produção |
-| `OPENAI_API_KEY` | 🔴 Alto | Custo direto se vazado |
-| `RESEND_API_KEY` | 🟡 Médio | Limite de 3k emails/mês — risco de spam |
-| `GOOGLE_CLIENT_SECRET` | 🟡 Médio | OAuth — rotacionar se comprometido |
-| `PORTAL_TRANSPARENCIA_API_KEY` | 🟡 Médio | API pública com rate limiting |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | 🟢 Baixo | Projetada para uso público |
+| Busca | Params tratados e SQL parametrizado | Contratos divergentes `limite`/`porPagina`; sem rate limit |
+| Acompanhamentos | JSON validado parcialmente; SQL parametrizado | Falhas retornam mensagem DB |
+| Admin flags/politicos/emendas | Campos limitados por allowlist parcial | Sem schema Zod compartilhado |
+| IA | `zod` usado em server action | Custos/prompt governance |
+| Analytics | Payload aceito de forma ampla | Pode crescer lixo operacional |
 
-### Rotação de credenciais
+## 8. Exposicao Client de Segredos
 
-Se qualquer credencial crítica for comprometida:
+| Variavel | Status |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Publica e aceitavel |
+| `NEXT_PUBLIC_APP_URL` | Publica e aceitavel |
+| `NEXT_PUBLIC_PAINEL_URL` | Publica e aceitavel |
+| `NEXT_PUBLIC_OPENAI_API_KEY` | Nao identificada |
+| `NEXT_PUBLIC_RESEND_API_KEY` | Nao identificada |
+| `NEXT_PUBLIC_POSTGRES_*` | Nao identificada |
+| `NEXT_PUBLIC_LOGTO_APP_SECRET` | Nao identificada |
 
-2. `STRIPE_SECRET_KEY`: revogar no Stripe Dashboard → Developers → API Keys
-3. `POSTGRES_PASSWORD`: alterar no Coolify + atualizar `.env.local` + todos os ambientes
-4. `OPENAI_API_KEY`: revogar no OpenAI Platform → API Keys
+## 9. Headers e Hardening
 
----
+Nao foi identificada politica customizada consolidada de headers em `next.config.ts` durante os lotes anteriores. Recomendado:
 
-## 8. LGPD — dados pessoais
+| Header/controle | Recomendacao |
+|---|---|
+| CSP | Definir politica compativel com Logto, InfinitePay e assets externos |
+| `X-Frame-Options`/frame ancestors | Impedir clickjacking |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | Restringir geolocalizacao/camera/microfone conforme uso |
+| HSTS | Habilitar em dominios HTTPS de producao |
 
-| Dado | Localização | Proteção |
+## 10. Prioridades
+
+| Prioridade | Item | Prazo recomendado |
 |---|---|---|
-| CEP do usuário | Nunca persistido | Usado server-side para "quem me representa" e descartado |
-| CPF | Apenas em memória no ETL | Usado como âncora de entity resolution — nunca inserido em tabela |
-| Nome do usuário | `perfis.nome` | RLS: `auth.uid() = id` |
-| Dados de pagamento | ❌ Não armazenados | Tokens Stripe/InfinitePay — nunca número de cartão |
-
-**Nota sobre doações:** os webhooks de pagamento recebem `nome` e `email` nos metadados do `PaymentIntent` Stripe (ver `intent.metadata.nome` e `intent.metadata.email`). Atualmente esses dados são apenas logados em console e descartados — o TODO de persistência (Gap G-02/G-03) deve incluir análise de base legal LGPD para armazenamento.
-
----
-
-## 9. Headers de segurança
-
-O Next.js 16 aplica automaticamente headers de segurança básicos. Não foi identificada configuração customizada em `next.config.ts`.
-
-**Recomendação para produção:** adicionar Content Security Policy (CSP) e HSTS via `headers()` no `next.config.ts` ou via Cloudflare.
-
----
-
-## 10. Gaps de segurança identificados
-
-| Gap | Severidade | Descrição |
-|---|---|---|
-| G-02 / G-03 | P0 | Webhooks de pagamento não persistem doações — dados financeiros perdidos |
-| G-14 | P2 | Sem monitoramento de erros de runtime (Sentry / Datadog) — erros em produção invisíveis |
-| InfinitePay sem HMAC | P2 | Webhook InfinitePay sem verificação de assinatura — risco de replay attack |
-| CSP ausente | P3 | Sem Content Security Policy customizada |
-
----
-
-*Atualizado em: 2026-05-29 · Auditoria v2.1*
+| P0 | Revogar chave Resend vazada | Imediato |
+| P0 | Remover valor real de `docs/meuspoliticos_master.md` | Imediato apos revogacao |
+| P0/P1 | Implementar seguranca/persistencia do webhook InfinitePay | Antes de producao financeira |
+| P1 | Centralizar DB e aplicar least privilege | Antes de producao plena |
+| P1 | Criar `requireAdmin()`/`requireUser()` compartilhados | Proxima iteracao backend |
+| P1 | Rate limit para busca, analytics, apoio e auth-adjacent | Proxima iteracao infra |
+| P2 | Headers customizados e CSP | Antes de go-live publico |
