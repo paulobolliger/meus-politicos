@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+import { getCurrentUser } from '@/lib/auth/current-user'
 import { AdminPageHeader } from '@/components/admin/AdminCard'
 import { PoliticoEditorSection } from '@/components/admin/PoliticoEditorSection'
 import { MatchEmendaButton } from '@/components/admin/MatchEmendaButton'
@@ -16,44 +17,99 @@ function fmtBRL(valor: number | null): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
 }
 
+type CountRow = {
+  count: number
+}
+
+type OrphanEmendaRow = {
+  nome_parlamentar: string | null
+  tipo_emenda: string | null
+  valor_pago: number | string | null
+  valor_empenhado: number | string | null
+}
+
+type NormalizedOrphanEmendaRow = {
+  nome_parlamentar: string | null
+  tipo_emenda: string | null
+  valor_pago: number | null
+  valor_empenhado: number | null
+}
+
+type PoliticoEditorRow = {
+  id: string
+  nome_civil: string | null
+  nome_eleitoral: string | null
+  foto_url: string | null
+  codigo_siafi: string | null
+  email: string | null
+}
+
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return pool
+}
+
+function toNumber(value: number | string | null): number | null {
+  if (value === null) return null
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : null
+}
+
 export default async function DadosQualidadePage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  const currentUser = await getCurrentUser()
+  if (!currentUser) redirect('/login')
+  if (currentUser.role !== 'admin') redirect('/painel')
 
   const params = await searchParams
   const busca = params.busca ?? ''
+  const db = getPool()
 
   // Section 1: incomplete politicians
-  const { count: semFoto } = await adminClient
-    .from('politicos')
-    .select('*', { count: 'exact', head: true })
-    .is('foto_url', null) as { count: number | null }
+  const { rows: semFotoRows } = await db.query<CountRow>(
+    'SELECT COUNT(*)::int AS count FROM politicos WHERE foto_url IS NULL'
+  )
+  const semFoto = semFotoRows[0]?.count ?? 0
 
-  const { count: semSiafi } = await db
-    .from('politicos')
-    .select('*', { count: 'exact', head: true })
-    .is('codigo_siafi', null) as { count: number | null }
+  const { rows: semSiafiRows } = await db.query<CountRow>(
+    'SELECT COUNT(*)::int AS count FROM politicos WHERE codigo_siafi IS NULL'
+  )
+  const semSiafi = semSiafiRows[0]?.count ?? 0
 
   // Section 2: orphan emendas — fetch individual ones only (bancada/comissão are expected orphans)
-  const { data: orphanEmendas } = await db
-    .from('emendas')
-    .select('nome_parlamentar, tipo_emenda, valor_pago, valor_empenhado')
-    .is('politico_id', null)
-    .limit(3000) as { data: { nome_parlamentar: string | null; tipo_emenda: string | null; valor_pago: number | null; valor_empenhado: number | null }[] | null }
+  const { rows: orphanEmendasRows } = await db.query<OrphanEmendaRow>(`
+    SELECT nome_parlamentar, tipo_emenda, valor_pago, valor_empenhado
+    FROM emendas
+    WHERE politico_id IS NULL
+    LIMIT 3000
+  `)
+  const orphanEmendas: NormalizedOrphanEmendaRow[] = orphanEmendasRows.map((emenda) => ({
+    nome_parlamentar: emenda.nome_parlamentar,
+    tipo_emenda: emenda.tipo_emenda,
+    valor_pago: toNumber(emenda.valor_pago),
+    valor_empenhado: toNumber(emenda.valor_empenhado),
+  }))
 
   // Separate individual (fixable) from collective (expected)
-  const individualOrphans: typeof orphanEmendas = []
-  const collectiveOrphans: typeof orphanEmendas = []
-  for (const e of orphanEmendas ?? []) {
+  const individualOrphans: NormalizedOrphanEmendaRow[] = []
+  const collectiveOrphans: NormalizedOrphanEmendaRow[] = []
+  for (const e of orphanEmendas) {
     const nm = (e.nome_parlamentar ?? '').toLowerCase()
     const isBancada = nm.startsWith('bancada') || nm.startsWith('com.') || nm.startsWith('comissão') || nm.startsWith('comissao')
     if (isBancada) collectiveOrphans.push(e)
@@ -77,24 +133,19 @@ export default async function DadosQualidadePage({
   const collectiveTotal = collectiveOrphans.reduce((sum, e) => sum + (e.valor_pago ?? e.valor_empenhado ?? 0), 0)
 
   // Section 3: politician editor search
-  type PoliticoEditorRow = {
-    id: string
-    nome_civil: string | null
-    nome_eleitoral: string | null
-    foto_url: string | null
-    codigo_siafi: string | null
-    email: string | null
+  let politicosResults: PoliticoEditorRow[] = []
+  if (busca.length >= 2) {
+    const { rows } = await db.query<PoliticoEditorRow>(
+      `
+        SELECT id, nome_civil, nome_eleitoral, foto_url, codigo_siafi, email
+        FROM politicos
+        WHERE nome_civil ILIKE $1 OR nome_eleitoral ILIKE $1
+        LIMIT 20
+      `,
+      [`%${busca}%`]
+    )
+    politicosResults = rows
   }
-  const politicosResults: { data: PoliticoEditorRow[] } =
-    busca.length >= 2
-      ? await db
-          .from('politicos')
-          .select('id, nome_civil, nome_eleitoral, foto_url, codigo_siafi, email')
-          .or(
-            `nome_civil.ilike.%${busca}%,nome_eleitoral.ilike.%${busca}%`
-          )
-          .limit(20)
-      : { data: [] }
 
   return (
     <div style={{ padding: '32px 36px', maxWidth: 1000 }}>
@@ -258,7 +309,7 @@ export default async function DadosQualidadePage({
 
       <PoliticoEditorSection
         busca={busca}
-        results={politicosResults.data ?? []}
+        results={politicosResults}
       />
     </div>
   )

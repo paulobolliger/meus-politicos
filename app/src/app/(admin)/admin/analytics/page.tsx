@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+import { getCurrentUser } from '@/lib/auth/current-user'
 import { AdminPageHeader, KpiCard } from '@/components/admin/AdminCard'
 
 export const metadata = { title: 'Analytics — Admin' }
@@ -14,22 +15,35 @@ type EventRow = {
 type SearchEntry = { query: string; count: number }
 type ViewEntry = { politico_id: string; nome: string; count: number }
 
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return pool
+}
+
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
+  const currentUser = await getCurrentUser()
+  if (!currentUser) redirect('/login')
+  if (currentUser.role !== 'admin') redirect('/painel')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
-
-  const { data: eventos } = await db
-    .from('analytics_eventos')
-    .select('tipo, payload, criado_em, usuario_id')
-    .order('criado_em', { ascending: false })
-    .limit(2000) as { data: EventRow[] | null }
-
-  const rows = eventos ?? []
+  const { rows } = await getPool().query<EventRow>(`
+    SELECT tipo, payload, criado_em::text AS criado_em, usuario_id
+    FROM analytics_eventos
+    ORDER BY criado_em DESC
+    LIMIT 2000
+  `)
 
   // Total events
   const totalEventos = rows.length

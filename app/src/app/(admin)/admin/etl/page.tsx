@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+import { getCurrentUser } from '@/lib/auth/current-user'
 import { AdminPageHeader } from '@/components/admin/AdminCard'
 import { EtlSourceCard } from '@/components/admin/EtlSourceCard'
 
@@ -22,6 +23,24 @@ type EtlSource = {
   history: EtlRow[]
 }
 
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return pool
+}
+
 function etlBadgeVariant(status: string): 'ok' | 'warn' | 'err' | 'never' {
   if (status === 'ok' || status === 'sucesso') return 'ok'
   if (status === 'parcial' || status === 'aviso') return 'warn'
@@ -34,24 +53,23 @@ export default async function EtlMonitorPage({
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  const currentUser = await getCurrentUser()
+  if (!currentUser) redirect('/login')
+  if (currentUser.role !== 'admin') redirect('/painel')
 
   const params = await searchParams
   const focusFonte = params.fonte ?? null
 
-  const { data: rows } = await adminClient
-    .from('coletas_log')
-    .select('id, fonte, tipo, status, criado_em, duracao_ms, registros, mensagem')
-    .order('fonte', { ascending: true })
-    .order('criado_em', { ascending: false })
-    .limit(500)
+  const { rows } = await getPool().query<EtlRow>(`
+    SELECT id, fonte, tipo, status, criado_em::text AS criado_em, duracao_ms, registros, mensagem
+    FROM coletas_log
+    ORDER BY fonte ASC, criado_em DESC
+    LIMIT 500
+  `)
 
   // Group by fonte
   const sourceMap = new Map<string, EtlSource>()
-  for (const row of (rows ?? []) as EtlRow[]) {
+  for (const row of rows) {
     if (!sourceMap.has(row.fonte)) {
       sourceMap.set(row.fonte, { fonte: row.fonte, latest: row, history: [] })
     }
