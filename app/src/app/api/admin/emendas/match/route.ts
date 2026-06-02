@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+
+import { getCurrentUser } from '@/lib/auth/current-user'
+
+type PgError = Error & {
+  code?: string
+}
+
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return _pool
+}
 
 /**
  * PATCH /api/admin/emendas/match
@@ -7,21 +30,11 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
  * Body: { nome_parlamentar: string, politico_id: string }
  */
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
+  const currentUser = await getCurrentUser()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  if (!currentUser) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { data: perfil } = await db
-    .from('perfis')
-    .select('role')
-    .eq('id', user.id)
-    .single() as { data: { role: string | null } | null; error: unknown }
-
-  if (!perfil || perfil.role !== 'admin') {
+  if (currentUser.role !== 'admin') {
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
   }
 
@@ -34,34 +47,42 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'nome_parlamentar e politico_id são obrigatórios' }, { status: 400 })
   }
 
-  // Atualiza emendas pelo nome (case-insensitive)
-  const { error, count } = await db
-    .from('emendas')
-    .update({ politico_id: body.politico_id, atualizado_em: new Date().toISOString() })
-    .is('politico_id', null)
-    .ilike('nome_parlamentar', body.nome_parlamentar) as { error: { message: string } | null; count: number | null }
+  try {
+    // Buscar código SIAFI do nome se ainda não tiver no político
+    await getPool().query(
+      'SELECT id, codigo_siafi FROM politicos WHERE id = $1 LIMIT 1',
+      [body.politico_id]
+    )
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    // Atualiza emendas pelo nome (case-insensitive)
+    const result = await getPool().query(
+      `UPDATE emendas
+       SET politico_id = $1,
+           atualizado_em = $2
+       WHERE politico_id IS NULL
+         AND nome_parlamentar ILIKE $3`,
+      [body.politico_id, new Date().toISOString(), body.nome_parlamentar]
+    )
 
-  // Buscar código SIAFI do nome se ainda não tiver no político
-  const { data: politico } = await db
-    .from('politicos')
-    .select('id, codigo_siafi')
-    .eq('id', body.politico_id)
-    .single() as { data: { id: string; codigo_siafi: string | null } | null; error: unknown }
+    const emendasAtualizadas = result.rowCount ?? 0
 
-  // Log
-  await db.from('admin_logs').insert({
-    usuario_id: user.id,
-    acao: 'match_emendas',
-    entidade: 'emendas',
-    entidade_id: body.politico_id,
-    detalhe: {
-      nome_parlamentar: body.nome_parlamentar,
-      politico_id: body.politico_id,
-      emendas_atualizadas: count,
-    },
-  })
+    await getPool().query(
+      `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
+       VALUES ($1, 'match_emendas', 'emendas', $2, $3::jsonb)`,
+      [
+        currentUser.perfilId,
+        body.politico_id,
+        JSON.stringify({
+          nome_parlamentar: body.nome_parlamentar,
+          politico_id: body.politico_id,
+          emendas_atualizadas: emendasAtualizadas,
+        }),
+      ]
+    )
 
-  return NextResponse.json({ ok: true, emendas_atualizadas: count ?? 0 })
+    return NextResponse.json({ ok: true, emendas_atualizadas: emendasAtualizadas })
+  } catch (error) {
+    const pgError = error as PgError
+    return NextResponse.json({ error: pgError.message, code: pgError.code }, { status: 500 })
+  }
 }

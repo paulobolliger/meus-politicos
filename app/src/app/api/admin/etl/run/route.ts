@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+
+import { getCurrentUser } from '@/lib/auth/current-user'
+
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return _pool
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
+  const currentUser = await getCurrentUser()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  if (!currentUser) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const { data: perfil } = await db
-    .from('perfis')
-    .select('role')
-    .eq('id', user.id)
-    .single() as { data: { role: string | null } | null; error: unknown }
-
-  if (!perfil || perfil.role !== 'admin') {
+  if (currentUser.role !== 'admin') {
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
   }
 
@@ -30,13 +39,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // Log the admin action (no actual ETL trigger yet)
-  await db.from('admin_logs').insert({
-    usuario_id: user.id,
-    acao: 'etl_rodar_agora',
-    entidade: 'coletas_log',
-    entidade_id: fonte,
-    detalhe: { fonte, solicitado_em: new Date().toISOString() },
-  })
+  await getPool().query(
+    `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
+     VALUES ($1, 'etl_rodar_agora', 'coletas_log', $2, $3::jsonb)`,
+    [
+      currentUser.perfilId,
+      fonte,
+      JSON.stringify({ fonte, solicitado_em: new Date().toISOString() }),
+    ]
+  )
 
   return NextResponse.json({
     message: `Ação registrada para ETL "${fonte}". Trigger manual via SSH em breve.`,
