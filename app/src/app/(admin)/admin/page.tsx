@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+
 import { AdminPageHeader, KpiCard, StatusBadge } from '@/components/admin/AdminCard'
+import { getCurrentUser } from '@/lib/auth/current-user'
 
 export const metadata = { title: 'Dashboard Admin — Meus Políticos' }
 
@@ -11,6 +13,27 @@ type EtlRow = {
   duracao_ms: number | null
   registros: number | null
   mensagem: string | null
+}
+
+type CountRow = {
+  count: number | string
+}
+
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return _pool
 }
 
 function etlBadgeVariant(status: string): 'ok' | 'warn' | 'err' | 'never' {
@@ -41,48 +64,56 @@ function fmtNum(n: number | null): string {
   return n.toLocaleString('pt-BR')
 }
 
-export default async function AdminDashboardPage() {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
+async function countRows(pool: Pool, table: string): Promise<number> {
+  const { rows } = await pool.query<CountRow>(`SELECT COUNT(*)::int AS count FROM ${table}`)
+  return Number(rows[0]?.count ?? 0)
+}
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+export default async function AdminDashboardPage() {
+  const currentUser = await getCurrentUser()
+
+  if (!currentUser) {
+    redirect('/login')
+  }
+
+  if (currentUser.role !== 'admin') {
+    redirect('/painel')
+  }
+
+  const pool = getPool()
 
   // User stats
-  const { count: totalUsers } = await adminClient
-    .from('perfis')
-    .select('*', { count: 'exact', head: true })
+  const totalUsers = await countRows(pool, 'perfis')
 
   const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const { count: newUsers7d } = await adminClient
-    .from('perfis')
-    .select('*', { count: 'exact', head: true })
-    .gte('criado_em', since7d)
+  const { rows: newUsersRows } = await pool.query<CountRow>(
+    'SELECT COUNT(*)::int AS count FROM perfis WHERE criado_em >= $1',
+    [since7d],
+  )
+  const newUsers7d = Number(newUsersRows[0]?.count ?? 0)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
-  // DB counts — use adminClient (service role) for tables not in generated types
   const counts = await Promise.all([
-    db.from('politicos').select('*', { count: 'exact', head: true }),
-    db.from('emendas').select('*', { count: 'exact', head: true }),
-    db.from('gastos').select('*', { count: 'exact', head: true }),
-    db.from('votacoes').select('*', { count: 'exact', head: true }),
-    db.from('proposicoes').select('*', { count: 'exact', head: true }),
-    db.from('municipios').select('*', { count: 'exact', head: true }),
-  ]) as { count: number | null }[]
+    countRows(pool, 'politicos'),
+    countRows(pool, 'emendas'),
+    countRows(pool, 'gastos'),
+    countRows(pool, 'votacoes'),
+    countRows(pool, 'proposicoes'),
+    countRows(pool, 'municipios'),
+  ])
 
   const [politicos, emendas, gastos, votacoes, proposicoes, municipios] = counts
 
   // ETL latest per fonte
-  const { data: etlRaw } = await adminClient
-    .from('coletas_log')
-    .select('fonte, status, criado_em, duracao_ms, registros, mensagem')
-    .order('criado_em', { ascending: false })
-    .limit(200)
+  const { rows: etlRaw } = await pool.query<EtlRow>(
+    `SELECT fonte, status, criado_em::text AS criado_em, duracao_ms, registros, mensagem
+     FROM coletas_log
+     ORDER BY criado_em DESC
+     LIMIT 200`
+  )
 
   // Group by fonte — pick latest per fonte
   const etlMap = new Map<string, EtlRow>()
-  for (const row of (etlRaw ?? []) as EtlRow[]) {
+  for (const row of etlRaw ?? []) {
     if (!etlMap.has(row.fonte)) etlMap.set(row.fonte, row)
   }
   const etlLatest = Array.from(etlMap.values())
@@ -95,12 +126,12 @@ export default async function AdminDashboardPage() {
   )
 
   const dbCards = [
-    { label: 'Políticos', value: politicos.count ?? 0 },
-    { label: 'Emendas', value: emendas.count ?? 0 },
-    { label: 'Gastos', value: gastos.count ?? 0 },
-    { label: 'Votações', value: votacoes.count ?? 0 },
-    { label: 'Proposições', value: proposicoes.count ?? 0 },
-    { label: 'Municípios', value: municipios.count ?? 0 },
+    { label: 'Políticos', value: politicos },
+    { label: 'Emendas', value: emendas },
+    { label: 'Gastos', value: gastos },
+    { label: 'Votações', value: votacoes },
+    { label: 'Proposições', value: proposicoes },
+    { label: 'Municípios', value: municipios },
   ]
 
   return (

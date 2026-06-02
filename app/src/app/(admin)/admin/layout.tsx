@@ -1,36 +1,19 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { AdminShell } from '@/components/admin/AdminShell'
+import { getCurrentUser } from '@/lib/auth/current-user'
 
 export const metadata = { title: 'Admin — Meus Políticos' }
 
-type PerfilAdmin = {
-  role: string | null
-  email: string | null
-}
-
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
+  const currentUser = await getCurrentUser()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/')
+  if (!currentUser) {
+    redirect('/login')
   }
 
-  // Use admin client to read new 'role' column (not yet in generated types)
-  const adminClient = createAdminClient()
-  const { data: perfil } = await adminClient
-    .from('perfis')
-    .select('role, email')
-    .eq('id', user.id)
-    .single() as { data: PerfilAdmin | null; error: unknown }
-
-  if (!perfil || perfil.role !== 'admin') {
-    redirect('/')
+  if (currentUser.role !== 'admin') {
+    redirect('/painel')
   }
 
-  return <AdminShell email={perfil.email ?? user.email ?? ''}>{children}</AdminShell>
+  return <AdminShell email={currentUser.email ?? ''}>{children}</AdminShell>
 }
