@@ -10,6 +10,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Added / Adicionado
 - `docs/migrations/2026-06-postgres-logto-migration.md` como cronologia oficial das últimas sprints
 - `docs/PROJECT_STATUS_2026-06.md` como status executivo da plataforma
+- `docs/auth/LOGTO_IMPLEMENTATION_PLAN.md` como inventário completo do uso atual de Supabase Auth
+- `docs/auth/LOGTO_RUNTIME_PLAN.md` como plano técnico do runtime Logto
+- `docs/auth/LOGTO_RUNTIME_CHECKLIST.md` como checklist de implementação por PRs
+- `docs/auth/LOGTO_EXECUTION_PLAN.md` como plano de execução por branches e commits
 - Atualização da documentação principal para refletir PostgreSQL VPS ativo, Supabase legado, Logto em preparação e InfinitePay ativo
 
 ### Sprint 0R - Auditoria Banco Real
