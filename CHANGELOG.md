@@ -55,6 +55,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - `STRIPE_*` removidas do template de ambiente
 - Fluxo ativo mantido em InfinitePay
 
+### Sprint 5B/5C - Reconciliação Logto Operacional
+- Login Logto operacional com scopes `openid`, `profile` e `email`
+- Callback Logto operacional em `/api/auth/logto/callback`
+- Reconciliação automática por e-mail legado operacional via `auth.users.email`
+- `logto_sub` preenchido automaticamente em `public.perfis` no primeiro vínculo válido
+- `auth_provider` migrado automaticamente para `logto`
+- `migrado_logto_em` preenchido automaticamente no vínculo
+- Supabase Auth deixou de ser necessário para usuários já migrados
+
 ---
 
 ## [Unreleased / Não lançado] — branch `feat/redesign-2026`

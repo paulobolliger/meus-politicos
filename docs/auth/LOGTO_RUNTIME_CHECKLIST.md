@@ -87,10 +87,24 @@ Escopo:
 |---|---|
 | Objetivo | Vincular a identidade Logto ao perfil da aplicação sem perder compatibilidade com a base legada. |
 | Arquivos prováveis | `app/src/lib/auth/profile-linking.ts`, `app/src/lib/auth/current-user.ts`, `app/src/lib/auth/types.ts`, `docs/auth/LOGTO_RUNTIME_PLAN.md`, `docs/auth/AUTH_MIGRATION_LOGTO.md` |
-| Critérios de aceite | `logto_sub` é a identidade principal; `supabase_user_id` continua como legado; reconciliacao por `auth.users.email` só funciona como fallback controlado. |
+| Critérios de aceite | `logto_sub` é a identidade principal; `supabase_user_id` continua como legado; reconciliação por `auth.users.email` só funciona como fallback controlado. |
 | Testes | Usuário legado vinculado por `logto_sub`; usuário legado vinculado por e-mail único; e-mail duplicado bloqueia vínculo automático; perfil novo é criado quando não há match. |
 | Riscos | Ambiguidade por e-mail duplicado; perda de vínculo com perfis existentes; preenchimento incorreto de `auth_provider` ou `migrado_logto_em`. |
 | Rollback | Voltar a usar `supabase_user_id` como identificador de trabalho, preservar `logto_sub` e não promover a identidade Logto como única fonte até validar tudo. |
+
+### Status Sprint 5B/5C
+
+Status: concluído.
+
+- Login Logto operacional.
+- Callback Logto operacional.
+- Reconciliação automática por e-mail legado operacional.
+- `logto_sub` preenchido automaticamente em `public.perfis`.
+- `auth_provider` migrado para `logto`.
+- `migrado_logto_em` preenchido no momento do vínculo.
+- Supabase Auth não é mais necessário para usuários já migrados.
+
+Critério operacional adicional: se um usuário Logto não resolver um perfil de aplicação, o runtime não deve usar `claims.sub` como `perfilId`, pois `perfilId` precisa representar `public.perfis.id`.
 
 ---
 
@@ -130,4 +144,3 @@ Escopo:
 | Testes | Busca por `supabase.auth` no runtime retorna zero; login/logout/cadastro/reset usam Logto; painel/admin continuam estáveis; docs não prometem mais Supabase Auth como caminho ativo. |
 | Riscos | Remoção prematura quebrar painel, admin ou rotas públicas; algum fluxo antigo ainda depender de `user.id`; logout e recuperação de senha ficarem incompletos. |
 | Rollback | Reintroduzir os imports e a configuração legada, manter os helpers de compatibilidade e restaurar o fluxo Supabase como fallback operacional. |
-

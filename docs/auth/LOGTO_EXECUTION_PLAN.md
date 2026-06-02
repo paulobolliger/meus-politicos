@@ -150,6 +150,18 @@ Escopo:
 - `supabase_user_id` continua como legado;
 - reconciliação por `auth.users.email` só funciona como fallback controlado.
 
+**Status Sprint 5B/5C:** concluído.
+
+- Login Logto operacional.
+- Callback Logto operacional.
+- Reconciliação automática por e-mail legado operacional.
+- `logto_sub` preenchido automaticamente.
+- `auth_provider` migrado para `logto`.
+- `migrado_logto_em` preenchido.
+- Supabase Auth não é mais necessário para usuários já migrados.
+
+**Resultado operacional:** `getCurrentUser()` resolve primeiro por `logto_sub`; se não houver vínculo, usa o e-mail entregue pelo Logto para localizar exatamente um usuário legado em `auth.users` e aplicar o update condicional em `public.perfis`. Depois do vínculo, o perfil passa a ser resolvido diretamente por Logto.
+
 **Estratégia de rollback:**
 
 - voltar a usar `supabase_user_id` como identificador de trabalho;
@@ -284,4 +296,3 @@ O ponto de não retorno ocorre no PR 5, quando `logto_sub` passa a ser a identid
 - Manter o callback legado até a fase final.
 - Desativar Logto com `AUTH_PROVIDER=supabase` se necessário.
 - Não apagar helpers nem docs até a validação completa.
-

@@ -23,6 +23,20 @@ Hoje o runtime ainda depende de Supabase Auth diretamente em login, cadastro, re
 
 Observação importante: o fluxo de recuperação de senha monta `redirectTo=/auth/callback?next=/conta/nova-senha`, mas o callback atual lê `redirectTo`, não `next`. Isso é o comportamento real hoje e deve ser tratado como ponto de risco/documentação, não como comportamento assumido.
 
+## Status pós-Sprint 5B/5C
+
+As Sprints 5B/5C concluíram a primeira reconciliação operacional de identidade Logto:
+
+- login Logto operacional;
+- callback Logto operacional em `/api/auth/logto/callback`;
+- reconciliação automática por e-mail legado operacional;
+- `public.perfis.logto_sub` preenchido automaticamente no primeiro vínculo;
+- `public.perfis.auth_provider` migrado para `logto`;
+- `public.perfis.migrado_logto_em` preenchido automaticamente;
+- Supabase Auth não é mais necessário para usuários já migrados.
+
+O fallback controlado continua usando `auth.users.email` apenas para reconciliar usuários legados existentes. Depois que o perfil tem `logto_sub`, a identidade Logto passa a ser suficiente para resolver o usuário da aplicação.
+
 ---
 
 ## 1. Fluxo de login
@@ -370,7 +384,14 @@ Observação importante: o fluxo de recuperação de senha monta `redirectTo=/au
 - `app/src/lib/auth/profile-linking.ts`
 - `app/src/lib/auth/current-user.ts`
 
+### Concluído nas Sprints 5B/5C
+
+- `getCurrentUser()` resolve usuários Logto por `logto_sub`.
+- Quando `logto_sub` ainda não existe, o runtime busca usuário legado por `auth.users.email`.
+- Havendo exatamente um perfil legado compatível, o vínculo é aplicado com update condicional.
+- O update preserva perfis já vinculados e não sobrescreve `logto_sub`.
+- Usuários já migrados não precisam mais de sessão Supabase Auth para entrar no painel.
+
 ### Inference explícita
 
-Com base no `rg` atual, esses helpers existem como preparação para a migração, mas os consumidores de runtime ainda chamam Supabase diretamente. Isso significa que o inventário acima representa o estado vivo hoje, não o estado alvo.
-
+Com base no `rg` executado na Sprint 2A, os helpers existiam como preparação para a migração, mas os consumidores de runtime ainda chamavam Supabase diretamente. Esse inventário representa o estado vivo daquela auditoria. O status pós-Sprint 5B/5C acima registra a evolução já concluída para login, callback e reconciliação Logto.
