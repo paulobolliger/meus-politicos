@@ -4,7 +4,19 @@ type RuntimeAuthProvider = 'supabase' | 'logto'
 
 const defaultSiteUrl = 'http://localhost:3000'
 
-export const authProvider = (process.env.AUTH_PROVIDER ?? 'supabase') as RuntimeAuthProvider
+const getAuthProvider = (): RuntimeAuthProvider => {
+  const provider = process.env.AUTH_PROVIDER ?? 'supabase'
+
+  if (provider !== 'supabase' && provider !== 'logto') {
+    throw new Error(
+      `Invalid AUTH_PROVIDER value "${provider}". Expected "supabase" or "logto".`,
+    )
+  }
+
+  return provider
+}
+
+export const authProvider = getAuthProvider()
 
 export const isLogtoEnabled = authProvider === 'logto'
 
@@ -13,6 +25,7 @@ export const logtoSignInPath = '/api/auth/logto/sign-in'
 export const logtoSignOutPath = '/api/auth/logto/sign-out'
 
 const getBaseUrl = () =>
+  process.env.LOGTO_BASE_URL ??
   process.env.NEXT_PUBLIC_APP_URL ??
   process.env.NEXT_PUBLIC_SITE_URL ??
   defaultSiteUrl
@@ -33,5 +46,5 @@ export const getLogtoConfig = (): LogtoNextConfig => ({
   appSecret: getRequiredEnv('LOGTO_APP_SECRET'),
   baseUrl: getBaseUrl(),
   cookieSecret: getRequiredEnv('LOGTO_COOKIE_SECRET'),
-  cookieSecure: getBaseUrl().startsWith('https://'),
+  cookieSecure: process.env.NODE_ENV === 'production',
 })

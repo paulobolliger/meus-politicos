@@ -22,7 +22,13 @@ function getRedirectUrl(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  await handleSignIn(getLogtoConfig(), request.nextUrl)
+  const config = getLogtoConfig()
+  const callbackUrl = new URL(
+    `${request.nextUrl.pathname}${request.nextUrl.search}${request.nextUrl.hash}`,
+    config.baseUrl,
+  )
+
+  await handleSignIn(config, callbackUrl)
 
   return NextResponse.redirect(getRedirectUrl(request))
 }

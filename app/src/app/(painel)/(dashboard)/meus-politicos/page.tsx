@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
 
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/current-user'
 
 export default async function MeusPoliticosPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
 
-  if (!user) redirect('/login')
+  if (!currentUser) redirect('/login')
 
   redirect('/painel')
 }

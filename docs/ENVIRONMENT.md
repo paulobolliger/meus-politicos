@@ -106,21 +106,34 @@ NEXT_PUBLIC_PAINEL_URL=https://painel.meuspoliticos.com.br
 
 Supabase Auth continua sendo o runtime ativo. Logto está em preparação e só deve ser ativado quando `AUTH_PROVIDER=logto` for definido junto com callback, sessão e substituição dos fluxos de autenticação.
 
+O guia oficial do Logto para Next.js App Router usa `app/logto.ts` nos exemplos. Neste projeto, a configuração bootstrap fica em `app/src/lib/logto/config.ts` para seguir a organização existente em `app/src/lib`.
+
 | Variável | Tipo | Obrigatória | Descrição |
 |---|---|---|---|
 | `AUTH_PROVIDER` | Server | ✅ Sim | Provedor runtime. Default seguro atual: `supabase` |
+| `LOGTO_BASE_URL` | Server | Logto only | URL base da aplicação Next.js usada pelo SDK Logto. Se vazia, o projeto usa `NEXT_PUBLIC_APP_URL`, depois `NEXT_PUBLIC_SITE_URL` |
 | `LOGTO_ENDPOINT` | Server | Logto only | Endpoint do tenant Logto |
 | `LOGTO_APP_ID` | Server | Logto only | App ID da aplicação Logto |
 | `LOGTO_APP_SECRET` | Secret | Logto only | App secret da aplicação Logto — **nunca expor no cliente** |
-| `LOGTO_COOKIE_SECRET` | Secret | Logto only | Secret usado para assinar cookies de sessão Logto — **nunca expor no cliente** |
+| `LOGTO_COOKIE_SECRET` | Secret | Logto only | Secret usado para assinar cookies de sessão Logto — mínimo de 32 caracteres — **nunca expor no cliente** |
 
 ```env
 AUTH_PROVIDER=supabase
+LOGTO_BASE_URL=<nextjs-app-base-url>
 LOGTO_ENDPOINT=<endpoint-logto>
 LOGTO_APP_ID=<logto-app-id>
 LOGTO_APP_SECRET=<logto-app-secret>
-LOGTO_COOKIE_SECRET=<logto-cookie-secret>
+LOGTO_COOKIE_SECRET=<logto-cookie-secret-min-32-chars>
 ```
+
+### URIs do Logto Console
+
+Cadastrar estas URIs na aplicação tradicional do Logto quando o runtime for ativado:
+
+| Tipo | Produção |
+|---|---|
+| Redirect URI | `https://app.meuspoliticos.com.br/api/auth/logto/callback` |
+| Post sign-out redirect URI | `https://app.meuspoliticos.com.br` |
 
 ---
 
@@ -297,9 +310,11 @@ NEXT_PUBLIC_PAINEL_URL=http://painel.localhost:3000
 # PR 1 Logto Bootstrap: manter supabase como default.
 # ============================================================
 AUTH_PROVIDER=supabase
+LOGTO_BASE_URL=
 LOGTO_ENDPOINT=
 LOGTO_APP_ID=
 LOGTO_APP_SECRET=<logto-app-secret-placeholder>
+# Deve ter no mínimo 32 caracteres.
 LOGTO_COOKIE_SECRET=<logto-cookie-secret-placeholder>
 
 # ============================================================

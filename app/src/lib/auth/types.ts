@@ -15,6 +15,10 @@ export type UserRole = 'user' | 'admin' | string
 export type AuthProfile = {
   id: string
   nome: string | null
+  /**
+   * Email resolved from the identity provider or from legacy auth.users.
+   * public.perfis does not own an email column during the migration.
+   */
   email: string | null
   role: UserRole
   logtoSub: string | null

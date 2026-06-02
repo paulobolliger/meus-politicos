@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { getProxySession } from '@/lib/auth/proxy-session'
 
 const PAINEL_URL = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
 
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request)
+  const { response, user } = await getProxySession(request)
 
   const host = request.headers.get('host')?.toLowerCase() ?? ''
   const { pathname } = request.nextUrl
@@ -25,7 +25,8 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith('/login') ||
       pathname.startsWith('/cadastro') ||
       pathname.startsWith('/recuperar-senha') ||
-      pathname.startsWith('/auth/')
+      pathname.startsWith('/auth/') ||
+      pathname.startsWith('/api/auth/logto/')
 
     if (!user && !isAuthRoute) {
       // API routes devem retornar 401 (não redirecionar para HTML do login)
@@ -45,7 +46,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(destination)
     }
 
-    return supabaseResponse
+    return response
   }
 
   // ── app.* ─────────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.rewrite(rewritten)
     }
 
-    return supabaseResponse
+    return response
   }
 
   // ── meuspoliticos.com.br (site público) ───────────────────────────────────
@@ -88,7 +89,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {

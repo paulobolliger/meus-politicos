@@ -3,7 +3,9 @@ import { getLogtoContext, type LogtoContext } from '@logto/next/server-actions'
 import { getLogtoConfig } from './config'
 
 export async function getLogtoSession(): Promise<LogtoContext> {
-  return getLogtoContext(getLogtoConfig(), { fetchUserInfo: true })
+  const session = await getLogtoContext(getLogtoConfig(), { fetchUserInfo: true })
+
+  return session
 }
 
 export async function getAuthenticatedLogtoSession(): Promise<LogtoContext | null> {

@@ -9,7 +9,6 @@
  * intentionally not activated here and no consumers are changed in this sprint.
  */
 
-import { createClient } from '@/lib/supabase/server'
 import { getAuthenticatedLogtoSession } from '@/lib/logto/session'
 import { buildCurrentUserFromLogto } from '@/lib/logto/user'
 import { getAuthProvider } from './providers'
@@ -19,9 +18,9 @@ import {
   type CurrentUser,
 } from './types'
 import {
-  buildCurrentUserFromSupabase,
-  getProfileById,
-  getProfileBySupabaseUserId,
+  getProfileByLegacyEmailPostgres,
+  getProfileByLogtoSubPostgres,
+  linkLogtoProfileByLegacyEmailPostgres,
 } from './profile-linking'
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -61,23 +60,41 @@ async function getCurrentLogtoUser(): Promise<CurrentUser | null> {
     return null
   }
 
-  return buildCurrentUserFromLogto(session)
-}
+  const logtoUser = buildCurrentUserFromLogto(session)
 
-async function getCurrentSupabaseUser(): Promise<CurrentUser | null> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
+  if (!logtoUser?.logtoSub) {
     return null
   }
 
-  const profile =
-    (await getProfileBySupabaseUserId(supabase, user.id)) ??
-    (await getProfileById(supabase, user.id))
+  let profile = await getProfileByLogtoSubPostgres(logtoUser.logtoSub)
 
-  return buildCurrentUserFromSupabase(user, profile)
+  if (!profile) {
+    const legacyProfile = await getProfileByLegacyEmailPostgres(logtoUser.email)
+
+    if (legacyProfile) {
+      profile = await linkLogtoProfileByLegacyEmailPostgres(
+        logtoUser.email,
+        logtoUser.logtoSub
+      )
+    }
+  }
+
+  if (!profile) {
+    return null
+  }
+
+  return {
+    ...logtoUser,
+    perfilId: profile.id,
+    email: logtoUser.email ?? profile.email,
+    name: profile.nome ?? logtoUser.name,
+    role: profile.role,
+    logtoSub: profile.logtoSub ?? logtoUser.logtoSub,
+    supabaseUserId: profile.supabaseUserId,
+    profile,
+  }
+}
+
+async function getCurrentSupabaseUser(): Promise<CurrentUser | null> {
+  return null
 }

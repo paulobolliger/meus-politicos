@@ -14,7 +14,10 @@ function getSafeRedirectPath(request: NextRequest, fallback: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const config = getLogtoConfig()
+  const config = {
+    ...getLogtoConfig(),
+    scopes: ['openid', 'profile', 'email'],
+  }
   const redirectUri = new URL(logtoCallbackPath, config.baseUrl)
   const postRedirectUri = new URL(getSafeRedirectPath(request, '/meus-politicos'), request.url)
 

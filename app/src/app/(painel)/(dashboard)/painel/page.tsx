@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { Pool } from 'pg'
 
 import { AlertasList } from '@/components/painel/AlertasList'
 import { FeedCivico, type FeedEvento } from '@/components/painel/FeedCivico'
@@ -6,8 +7,7 @@ import { KpiStrip } from '@/components/painel/KpiStrip'
 import { PainelHeader } from '@/components/painel/PainelHeader'
 import { ProximasVotacoes } from '@/components/painel/ProximasVotacoes'
 import { SeguindoList, type SeguidoPolitico } from '@/components/painel/SeguindoList'
-import { createAdminClient, createClient } from '@/lib/supabase/server'
-import type { Database } from '@/lib/supabase/types'
+import { getCurrentUser } from '@/lib/auth/current-user'
 
 type AcompanhamentoRow = {
   politico_id: string
@@ -25,15 +25,48 @@ type PoliticoResumoRow = {
   partidos: { sigla: string | null } | { sigla: string | null }[] | null
 }
 
-type VotacaoRow = Pick<
-  Database['public']['Tables']['votacoes']['Row'],
-  'id' | 'politico_id' | 'data' | 'hora' | 'voto' | 'descricao_simples' | 'proposicao'
->
+type PerfilRow = {
+  nome: string | null
+}
 
-type GastoRow = Pick<
-  Database['public']['Tables']['gastos']['Row'],
-  'id' | 'politico_id' | 'valor' | 'categoria' | 'fornecedor' | 'mes' | 'ano' | 'descricao' | 'criado_em'
->
+type VotacaoRow = {
+  id: string
+  politico_id: string
+  data: string
+  hora: string | null
+  voto: string
+  descricao_simples: string | null
+  proposicao: string | null
+}
+
+type GastoRow = {
+  id: string
+  politico_id: string
+  valor: number | string | null
+  categoria: string | null
+  fornecedor: string | null
+  mes: number
+  ano: number
+  descricao: string | null
+  criado_em: string | null
+}
+
+let _pool: Pool | null = null
+function getPool(): Pool {
+  if (!_pool) {
+    _pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return _pool
+}
 
 function extrairSigla(partidos: { sigla: string | null } | { sigla: string | null }[] | null | undefined): string {
   if (!partidos) return '--'
@@ -93,13 +126,10 @@ function isFeedEvento(item: FeedEvento | null): item is FeedEvento {
 }
 
 export default async function PainelPage() {
-  const supabase = await createClient()
-  const db = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : supabase
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const db = getPool()
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     redirect('/login')
   }
 
@@ -107,34 +137,52 @@ export default async function PainelPage() {
   const dataSeteDias = seteDiasAtrasISO(agora)
   const inicioHoje = inicioDiaISO(agora)
 
-  const { data: perfil } = await supabase.from('perfis').select('nome').eq('id', user.id).single()
+  const { rows: perfilRows } = await db.query<PerfilRow>(
+    'SELECT nome FROM perfis WHERE id = $1 LIMIT 1',
+    [currentUser.perfilId],
+  )
+  const perfil = perfilRows[0] ?? null
 
-  const { data: acompanhamentosRows, error: acompanhamentosError } = await db
-    .from('acompanhamentos')
-    .select('politico_id')
-    .eq('usuario_id', user.id)
-
-  if (acompanhamentosError) {
+  let acompanhamentosRows: AcompanhamentoRow[] = []
+  try {
+    const { rows } = await db.query<AcompanhamentoRow>(
+      'SELECT politico_id FROM acompanhamentos WHERE usuario_id = $1',
+      [currentUser.perfilId],
+    )
+    acompanhamentosRows = rows
+  } catch {
     // Mantem o painel funcional sem quebrar a renderizacao em dev.
   }
 
-  const acompanhamentos = (acompanhamentosRows ?? []) as AcompanhamentoRow[]
+  const acompanhamentos = acompanhamentosRows ?? []
   const idsAcompanhados = Array.from(new Set(acompanhamentos.map((a) => a.politico_id).filter(Boolean)))
 
-  const { data: politicosRows, error: politicosError } = idsAcompanhados.length
-    ? await supabase
-        .from('politicos')
-        .select('id, slug, nome, nome_eleitoral, cargo, uf, foto_url, presenca_pct_atual, partidos:partido_id(sigla)')
-        .in('id', idsAcompanhados)
-    : { data: [], error: null }
-
-  if (politicosError) {
-    // Mantem o painel funcional sem quebrar a renderizacao em dev.
+  let politicosRows: PoliticoResumoRow[] = []
+  if (idsAcompanhados.length) {
+    try {
+      const { rows } = await db.query<PoliticoResumoRow>(
+        `SELECT
+           p.id,
+           p.slug,
+           p.nome,
+           p.nome_eleitoral,
+           p.cargo,
+           p.uf,
+           p.foto_url,
+           p.presenca_pct_atual,
+           CASE WHEN pa.sigla IS NULL THEN NULL ELSE json_build_object('sigla', pa.sigla) END AS partidos
+         FROM politicos p
+         LEFT JOIN partidos pa ON pa.id = p.partido_id
+         WHERE p.id = ANY($1::uuid[])`,
+        [idsAcompanhados],
+      )
+      politicosRows = rows
+    } catch {
+      // Mantem o painel funcional sem quebrar a renderizacao em dev.
+    }
   }
 
-  const politicosMap = new Map(
-    (((politicosRows ?? []) as PoliticoResumoRow[]).map((p) => [p.id, p] as const))
-  )
+  const politicosMap = new Map(politicosRows.map((p) => [p.id, p] as const))
 
   const seguindo = idsAcompanhados
     .map((id) => {
@@ -151,24 +199,29 @@ export default async function PainelPage() {
   let gastos7d: GastoRow[] = []
 
   if (ids.length > 0) {
-    const { data: votacoesData } = await supabase
-      .from('votacoes')
-      .select('id, politico_id, data, hora, voto, descricao_simples, proposicao')
-      .in('politico_id', ids)
-      .gte('data', dataSeteDias)
-      .order('data', { ascending: false })
-      .limit(20)
+    const [{ rows: votacoesData }, { rows: gastosData }] = await Promise.all([
+      db.query<VotacaoRow>(
+        `SELECT id, politico_id, data::text AS data, hora::text AS hora, voto, descricao_simples, proposicao
+         FROM votacoes
+         WHERE politico_id = ANY($1::uuid[])
+           AND data >= $2
+         ORDER BY data DESC
+         LIMIT 20`,
+        [ids, dataSeteDias],
+      ),
+      db.query<GastoRow>(
+        `SELECT id, politico_id, valor, categoria, fornecedor, mes, ano, descricao, criado_em::text AS criado_em
+         FROM gastos
+         WHERE politico_id = ANY($1::uuid[])
+           AND criado_em >= $2
+         ORDER BY criado_em DESC
+         LIMIT 20`,
+        [ids, dataSeteDias],
+      ),
+    ])
 
-    const { data: gastosData } = await supabase
-      .from('gastos')
-      .select('id, politico_id, valor, categoria, fornecedor, mes, ano, descricao, criado_em')
-      .in('politico_id', ids)
-      .gte('criado_em', dataSeteDias)
-      .order('criado_em', { ascending: false })
-      .limit(20)
-
-    votacoes7d = (votacoesData ?? []) as VotacaoRow[]
-    gastos7d = (gastosData ?? []) as GastoRow[]
+    votacoes7d = votacoesData ?? []
+    gastos7d = gastosData ?? []
   }
 
   const eventosVotacao = votacoes7d
@@ -233,8 +286,8 @@ export default async function PainelPage() {
       <div className="painel-page-layout" style={{ padding: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
         <div style={{ flex: 1.6, minWidth: 0 }}>
           <PainelHeader
-            email={user.email ?? 'usuario@meuspoliticos.com.br'}
-            nomeUsuario={(perfil?.nome as string | null) ?? user.email ?? 'cidadão'}
+            email={currentUser.email ?? 'usuario@meuspoliticos.com.br'}
+            nomeUsuario={(perfil?.nome as string | null) ?? currentUser.email ?? 'cidadão'}
             atualizacoesCount={feedEventos.length}
           />
 
