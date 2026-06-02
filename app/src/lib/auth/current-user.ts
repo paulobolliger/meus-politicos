@@ -10,6 +10,8 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { getAuthenticatedLogtoSession } from '@/lib/logto/session'
+import { buildCurrentUserFromLogto } from '@/lib/logto/user'
 import { getAuthProvider } from './providers'
 import {
   AdminRequiredError,
@@ -26,9 +28,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const provider = getAuthProvider()
 
   if (provider === 'logto') {
-    // Sprint 1B only reserves the provider switch. Until Sprint 2 wires Logto,
-    // keep Supabase as the compatibility runtime to avoid behavior changes.
-    return getCurrentSupabaseUser()
+    return getCurrentLogtoUser()
   }
 
   return getCurrentSupabaseUser()
@@ -52,6 +52,16 @@ export async function requireAdmin(): Promise<CurrentUser> {
   }
 
   return user
+}
+
+async function getCurrentLogtoUser(): Promise<CurrentUser | null> {
+  const session = await getAuthenticatedLogtoSession()
+
+  if (!session) {
+    return null
+  }
+
+  return buildCurrentUserFromLogto(session)
 }
 
 async function getCurrentSupabaseUser(): Promise<CurrentUser | null> {
