@@ -100,7 +100,31 @@ NEXT_PUBLIC_PAINEL_URL=https://painel.meuspoliticos.com.br
 
 ---
 
-## 4. Pagamentos
+## 4. Auth runtime — Supabase legado / Logto em preparação
+
+### Status atual
+
+Supabase Auth continua sendo o runtime ativo. Logto está em preparação e só deve ser ativado quando `AUTH_PROVIDER=logto` for definido junto com callback, sessão e substituição dos fluxos de autenticação.
+
+| Variável | Tipo | Obrigatória | Descrição |
+|---|---|---|---|
+| `AUTH_PROVIDER` | Server | ✅ Sim | Provedor runtime. Default seguro atual: `supabase` |
+| `LOGTO_ENDPOINT` | Server | Logto only | Endpoint do tenant Logto |
+| `LOGTO_APP_ID` | Server | Logto only | App ID da aplicação Logto |
+| `LOGTO_APP_SECRET` | Secret | Logto only | App secret da aplicação Logto — **nunca expor no cliente** |
+| `LOGTO_COOKIE_SECRET` | Secret | Logto only | Secret usado para assinar cookies de sessão Logto — **nunca expor no cliente** |
+
+```env
+AUTH_PROVIDER=supabase
+LOGTO_ENDPOINT=<endpoint-logto>
+LOGTO_APP_ID=<logto-app-id>
+LOGTO_APP_SECRET=<logto-app-secret>
+LOGTO_COOKIE_SECRET=<logto-cookie-secret>
+```
+
+---
+
+## 5. Pagamentos
 
 ### Status atual
 
@@ -120,7 +144,7 @@ INFINITEPAY_HANDLE=meus-politicos
 
 ---
 
-## 5. APIs externas
+## 6. APIs externas
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
@@ -136,7 +160,7 @@ PORTAL_TRANSPARENCIA_API_KEY=<ver gerenciador de senhas>
 
 ---
 
-## 6. E-mail transacional (Resend)
+## 7. E-mail transacional (Resend)
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
@@ -152,7 +176,7 @@ RESEND_FROM=noreply@meuspoliticos.com.br
 
 ---
 
-## 7. OAuth — provedores
+## 8. OAuth — provedores
 
 ### Google
 
@@ -196,7 +220,7 @@ LINKEDIN_CLIENT_SECRET=<ver gerenciador de senhas>
 
 ---
 
-## 8. Supabase Dashboard / Studio
+## 9. Supabase Dashboard / Studio
 
 Credenciais de acesso à interface web do Supabase self-hosted em `https://supabase.meuspoliticos.com.br`.
 
@@ -216,7 +240,7 @@ DASHBOARD_PASSWORD=<ver gerenciador de senhas>
 
 ---
 
-## 9. MinIO (storage de arquivos)
+## 10. MinIO (storage de arquivos)
 
 MinIO é o S3-compatible storage do Supabase self-hosted (rodando no mesmo VPS Vultr).
 
@@ -232,7 +256,7 @@ MINIO_PASSWORD=<ver gerenciador de senhas>
 
 ---
 
-## 10. Template completo `.env.example`
+## 11. Template completo `.env.example`
 
 O arquivo `.env.example` na raiz deve ser atualizado para incluir todas as variáveis abaixo (**Gap G-01**):
 
@@ -267,6 +291,16 @@ POSTGRES_PASSWORD=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://app.localhost:3000
 NEXT_PUBLIC_PAINEL_URL=http://painel.localhost:3000
+
+# ============================================================
+# Auth runtime — Supabase legado / Logto em preparação
+# PR 1 Logto Bootstrap: manter supabase como default.
+# ============================================================
+AUTH_PROVIDER=supabase
+LOGTO_ENDPOINT=
+LOGTO_APP_ID=
+LOGTO_APP_SECRET=<logto-app-secret-placeholder>
+LOGTO_COOKIE_SECRET=<logto-cookie-secret-placeholder>
 
 # ============================================================
 # Pagamentos
@@ -313,7 +347,7 @@ MINIO_PASSWORD=
 
 ---
 
-## 11. Variáveis mínimas para rodar em dev
+## 12. Variáveis mínimas para rodar em dev
 
 Para desenvolvimento local com funcionalidades básicas (sem pagamentos, sem OAuth):
 
@@ -329,4 +363,4 @@ NEXT_PUBLIC_PAINEL_URL=http://painel.localhost:3000
 
 ---
 
-*Atualizado em: 2026-05-29 · Auditoria v2.1 · 30 variáveis documentadas*
+*Atualizado em: 2026-06-01 · Logto Bootstrap · 35 variáveis documentadas*
