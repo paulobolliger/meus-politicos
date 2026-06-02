@@ -1,24 +1,6 @@
 import type { LogtoNextConfig } from '@logto/next'
 
-type RuntimeAuthProvider = 'supabase' | 'logto'
-
 const defaultSiteUrl = 'http://localhost:3000'
-
-const getAuthProvider = (): RuntimeAuthProvider => {
-  const provider = process.env.AUTH_PROVIDER ?? 'supabase'
-
-  if (provider !== 'supabase' && provider !== 'logto') {
-    throw new Error(
-      `Invalid AUTH_PROVIDER value "${provider}". Expected "supabase" or "logto".`,
-    )
-  }
-
-  return provider
-}
-
-export const authProvider = getAuthProvider()
-
-export const isLogtoEnabled = authProvider === 'logto'
 
 export const logtoCallbackPath = '/api/auth/logto/callback'
 export const logtoSignInPath = '/api/auth/logto/sign-in'

@@ -38,7 +38,7 @@ const secoes = [
     conteudo: [
       'O acesso à plataforma pode ocorrer por meio de:',
       '• Google OAuth;\n• login via X (Twitter);\n• autenticação por e-mail e senha;\n• outros métodos que venham a ser disponibilizados futuramente.',
-      'Os processos de autenticação utilizam serviços especializados de infraestrutura, incluindo Supabase Authentication, com mecanismos de segurança para:',
+      'Os processos de autenticação utilizam um serviço especializado de identidade, com mecanismos de segurança para:',
       '• gerenciamento de sessão;\n• emissão de tokens;\n• validação de acesso;\n• proteção contra acessos indevidos.',
       'O usuário é responsável por manter a confidencialidade de suas credenciais e comunicar imediatamente qualquer uso suspeito ou não autorizado de sua conta.',
     ],

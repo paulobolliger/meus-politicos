@@ -115,7 +115,6 @@ Repetir este padrao para todo campo exposto na UI.
 ## 10. Checklist de rollout
 
 1. Atualizar migration para campos ainda ausentes na tabela politicos.
-2. Regenerar tipagem do Supabase.
 3. Atualizar endpoint de perfil para retornar status por campo.
 4. Adequar frontend para consumir text_value e status.
 5. Validar dashboard V2 com politicos completos e incompletos.

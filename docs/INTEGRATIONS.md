@@ -7,33 +7,24 @@ related: [docs/API.md, docs/ENVIRONMENT.md, docs/SECURITY.md, docs/DATABASE.md]
 
 # Integrações com Terceiros
 
-> **Nota de legado Auth:** a secao Supabase descreve o estado atual/legado.
-> Supabase Auth sera substituido por Logto como provedor de identidade. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
 
 ---
 
-## 1. Supabase (self-hosted)
 
 **Papel:** banco de dados, autenticação, storage (MinIO), PostgREST API.
 
 | Aspecto | Detalhe |
 |---|---|
-| URL | `https://supabase.meuspoliticos.com.br` |
 | Tipo | Self-hosted no VPS Vultr via Coolify |
-| SDK | `@supabase/supabase-js` ^2.105.4 + `@supabase/ssr` ^0.10.3 |
 | Banco | PostgreSQL 15 — `meuspoliticos_db` |
-| Auth | Supabase Auth — JWT, OAuth, e-mail+senha |
 | Storage | MinIO (S3-compatible) — logos, fotos |
 
 **Três contextos de cliente:**
 
 | Contexto | Arquivo | Chave usada |
 |---|---|---|
-| Browser / Client Component | `lib/supabase/client.ts` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| Server / API Route | `lib/supabase/server.ts` → `createClient()` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| Admin (bypassa RLS) | `lib/supabase/server.ts` → `createAdminClient()` | `SUPABASE_SERVICE_ROLE_KEY` |
 
 ---
 
@@ -130,18 +121,14 @@ Stripe foi removido do runtime e das dependências da aplicação.
 | Região AWS | `sa-east-1` |
 | DNS | SPF/DKIM configurado no Cloudflare |
 
-**Uso:** os e-mails são disparados diretamente pelo Supabase Auth (configurado com Resend como SMTP). O Next.js não chama a API Resend diretamente — é transparente para o código da aplicação.
 
 ---
 
 ## 6. OAuth — Provedores
 
-Os três provedores são configurados no Supabase Dashboard → Authentication → Providers.
 
-O Supabase gerencia o fluxo OAuth inteiro. O Next.js só precisa implementar o callback:
 
 ```
-/auth/callback → supabase.auth.exchangeCodeForSession(code) → redirect /painel
 ```
 
 ### Google
@@ -150,7 +137,6 @@ O Supabase gerencia o fluxo OAuth inteiro. O Next.js só precisa implementar o c
 |---|---|
 | Client ID var | `GOOGLE_CLIENT_ID` |
 | Client Secret var | `GOOGLE_CLIENT_SECRET` |
-| Redirect URI | `https://supabase.meuspoliticos.com.br/auth/v1/callback` |
 | Dados recebidos | `full_name`, `email`, `picture` (avatar) |
 
 ### Twitter / X

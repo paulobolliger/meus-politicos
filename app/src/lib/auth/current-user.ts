@@ -1,17 +1,9 @@
 /**
- * File: app/src/lib/auth/current-user.ts
- * Purpose: Provider-neutral current-user helpers for the Supabase Auth -> Logto migration.
- * References:
- * - docs/auth/AUTH_MIGRATION_LOGTO.md
- * - docs/adr/ADR-001-logto-as-identity-provider.md
- *
- * Sprint 1B keeps Supabase as the only implemented runtime provider. Logto is
- * intentionally not activated here and no consumers are changed in this sprint.
+ * Helper de usuário autenticado para o runtime Logto.
  */
 
 import { getAuthenticatedLogtoSession } from '@/lib/logto/session'
 import { buildCurrentUserFromLogto } from '@/lib/logto/user'
-import { getAuthProvider } from './providers'
 import {
   AdminRequiredError,
   AuthRequiredError,
@@ -24,13 +16,7 @@ import {
 } from './profile-linking'
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const provider = getAuthProvider()
-
-  if (provider === 'logto') {
-    return getCurrentLogtoUser()
-  }
-
-  return getCurrentSupabaseUser()
+  return getCurrentLogtoUser()
 }
 
 export async function requireUser(): Promise<CurrentUser> {
@@ -90,11 +76,7 @@ async function getCurrentLogtoUser(): Promise<CurrentUser | null> {
     name: profile.nome ?? logtoUser.name,
     role: profile.role,
     logtoSub: profile.logtoSub ?? logtoUser.logtoSub,
-    supabaseUserId: profile.supabaseUserId,
+    legacyAuthUserId: profile.legacyAuthUserId,
     profile,
   }
-}
-
-async function getCurrentSupabaseUser(): Promise<CurrentUser | null> {
-  return null
 }

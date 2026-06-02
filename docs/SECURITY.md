@@ -8,7 +8,6 @@ related: [docs/AUTH.md, docs/DATABASE.md, docs/ENVIRONMENT.md, docs/GAP_ANALYSIS
 # Segurança — Meus Políticos
 
 > **Nota de legado Auth:** as referencias a RLS com `auth.uid()`,
-> `auth.jwt()`, `createAdminClient()` e Supabase Auth descrevem o estado
 > atual/legado. A arquitetura alvo aprovada e Logto + PostgreSQL VPS. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
@@ -22,7 +21,6 @@ related: [docs/AUTH.md, docs/DATABASE.md, docs/ENVIRONMENT.md, docs/GAP_ANALYSIS
 | Banco de dados | Row Level Security (RLS) em todas as tabelas | ✅ Ativo |
 | Rotas Next.js | Middleware `proxy.ts` — auth por subdomínio | ✅ Ativo |
 | API Routes admin | Verificação `perfis.role = 'admin'` via admin client | ✅ Ativo |
-| API Routes autenticadas | `supabase.auth.getUser()` antes de qualquer operação | ✅ Ativo |
 | Webhooks Stripe | Verificação de assinatura `stripe.webhooks.constructEvent` | ✅ Ativo |
 | Webhooks InfinitePay | Validação mínima de payload (NSU obrigatório) | ⚠️ Parcial |
 | Segredos no git | `.env.local` não commitado — verificado via `git log` | ✅ Confirmado |
@@ -49,9 +47,7 @@ RLS está habilitado em **todas as tabelas** do banco. Nenhuma tabela tem acesso
 
 ### Invariante RLS
 
-O cliente anon (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) nunca acessa dados privados, mesmo com acesso direto à URL do Supabase. A chave anon é segura para expor no código do cliente.
 
-**A chave `SUPABASE_SERVICE_ROLE_KEY` bypassa completamente o RLS** — usada apenas em:
 - `createAdminClient()` em API Routes admin
 - Scripts ETL Python (via conexão PostgreSQL direta)
 
@@ -68,7 +64,6 @@ app.*    /login     → 302 painel.*     (evita login duplicado)
 meuspoliticos.* /login → 302 painel.*  (produção)
 ```
 
-O `updateSession()` do Supabase SSR é chamado em **toda requisição**, deslizando o TTL do JWT e evitando deslogins silenciosos.
 
 ---
 
@@ -78,7 +73,6 @@ O layout `app/src/app/(admin)/admin/layout.tsx` implementa proteção dupla:
 
 ```typescript
 // 1. Verificar se há usuário autenticado
-const { data: { user } } = await supabase.auth.getUser()
 if (!user) redirect('/')
 
 // 2. Verificar role admin via admin client (bypassa tipos TypeScript desatualizados)
@@ -96,7 +90,6 @@ As API Routes admin replicam a mesma verificação:
 
 ```typescript
 // Padrão em /api/admin/* route handlers
-const { data: { user } } = await supabase.auth.getUser()
 if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
 const { data: perfil } = await adminClient.from('perfis').select('role').eq('id', user.id).single()
@@ -130,10 +123,8 @@ Validação apenas de campos obrigatórios (`order_nsu`, `transaction_nsu`). **N
 
 | Área | Proteção |
 |---|---|
-| Queries Supabase | Parameterizadas pelo SDK — sem concatenação de strings SQL |
 | Formulários frontend | `react-hook-form` + `zod` — validação client-side e server-side |
 | API Routes | Validação manual de campos obrigatórios antes de qualquer operação DB |
-| Busca pública | Sanitização via Supabase client — não usa SQL raw |
 
 Não há nenhum uso de `sql.raw()` ou concatenação de SQL identificado nos route handlers.
 
@@ -154,21 +145,17 @@ git log --all --full-history -- '*.env' '*.env.local' '.env*'
 
 | Credencial | Risco | Notas |
 |---|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | 🔴 Crítico | Bypassa RLS — nunca expor no cliente |
 | `STRIPE_SECRET_KEY` | 🔴 Crítico | Modo teste ativo — substituir por live na produção |
-| `POSTGRES_PASSWORD` / `SUPABASE_DB_PASSWORD` | 🔴 Crítico | Acesso direto ao banco de produção |
 | `OPENAI_API_KEY` | 🔴 Alto | Custo direto se vazado |
 | `RESEND_API_KEY` | 🟡 Médio | Limite de 3k emails/mês — risco de spam |
 | `GOOGLE_CLIENT_SECRET` | 🟡 Médio | OAuth — rotacionar se comprometido |
 | `PORTAL_TRANSPARENCIA_API_KEY` | 🟡 Médio | API pública com rate limiting |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 🟢 Baixo | Segura para expor — RLS protege o banco |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | 🟢 Baixo | Projetada para uso público |
 
 ### Rotação de credenciais
 
 Se qualquer credencial crítica for comprometida:
 
-1. `SUPABASE_SERVICE_ROLE_KEY`: regenerar no Supabase Dashboard → Project Settings → API
 2. `STRIPE_SECRET_KEY`: revogar no Stripe Dashboard → Developers → API Keys
 3. `POSTGRES_PASSWORD`: alterar no Coolify + atualizar `.env.local` + todos os ambientes
 4. `OPENAI_API_KEY`: revogar no OpenAI Platform → API Keys
@@ -181,7 +168,6 @@ Se qualquer credencial crítica for comprometida:
 |---|---|---|
 | CEP do usuário | Nunca persistido | Usado server-side para "quem me representa" e descartado |
 | CPF | Apenas em memória no ETL | Usado como âncora de entity resolution — nunca inserido em tabela |
-| E-mail | `auth.users` (Supabase Auth) | RLS não expõe via queries públicas |
 | Nome do usuário | `perfis.nome` | RLS: `auth.uid() = id` |
 | Dados de pagamento | ❌ Não armazenados | Tokens Stripe/InfinitePay — nunca número de cartão |
 

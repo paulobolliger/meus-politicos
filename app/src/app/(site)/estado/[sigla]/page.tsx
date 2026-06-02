@@ -303,7 +303,7 @@ export default async function EstadoPage(
       [siglaUp]
     ),
 
-    // Postgres direto — politicos JOIN partidos (sem FK constraint, Supabase falha)
+    // Postgres direto — politicos JOIN partidos (sem FK constraint, o join direto falha)
     pool.query<{ id: string; slug: string; nome_eleitoral: string; foto_url: string | null; sigla_partido: string | null }>(
       `SELECT p.id, p.slug, p.nome_eleitoral, p.foto_url, pt.sigla AS sigla_partido
        FROM politicos p

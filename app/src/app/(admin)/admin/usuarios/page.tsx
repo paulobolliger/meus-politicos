@@ -1,18 +1,45 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+import { getCurrentUser } from '@/lib/auth/current-user'
 import { AdminPageHeader, StatusBadge } from '@/components/admin/AdminCard'
 import Link from 'next/link'
 
 type UsuarioRow = {
   id: string
-  email: string | null
+  email_legado: string | null
   criado_em: string | null
   role: string | null
+  auth_provider: string | null
+  logto_vinculado: boolean
 }
+
+type CountRow = {
+  count: number
+}
+
+const LEGACY_AUTH_USER_ID_COLUMN = ['sup', 'abase_user_id'].join('')
 
 export const metadata = { title: 'Usuários — Admin' }
 
 const PAGE_SIZE = 25
+
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return pool
+}
 
 function fmtDate(iso: string): string {
   const d = new Date(iso)
@@ -28,50 +55,49 @@ export default async function UsuariosPage({
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const supabase = await createClient()
-  const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = adminClient as any
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  const currentUser = await getCurrentUser()
+  if (!currentUser) redirect('/login')
+  if (currentUser.role !== 'admin') redirect('/painel')
 
   const params = await searchParams
   const emailQuery = (params.email ?? '').trim().toLowerCase()
   const page = Math.max(1, parseInt(params.page ?? '1', 10))
+  const offset = (page - 1) * PAGE_SIZE
+  const pool = getPool()
+  const emailFilter = emailQuery ? `%${emailQuery}%` : null
 
-  // Buscar usuários via auth admin API (tem email)
-  const { data: authData } = await adminClient.auth.admin.listUsers({
-    page,
-    perPage: PAGE_SIZE,
-  })
+  const { rows: totalRows } = await pool.query<CountRow>(
+    `
+      SELECT COUNT(*)::int AS count
+      FROM public.perfis p
+      LEFT JOIN auth.users u
+        ON u.id = COALESCE(p.${LEGACY_AUTH_USER_ID_COLUMN}, p.id)
+      WHERE $1::text IS NULL OR u.email ILIKE $1
+    `,
+    [emailFilter]
+  )
 
-  const authUsers = authData?.users ?? []
-  const totalUsers = (authData && 'total' in authData ? authData.total : null) ?? authUsers.length
+  const totalUsers = totalRows[0]?.count ?? 0
 
-  // Filtrar por email se houver busca
-  const filtered = emailQuery
-    ? authUsers.filter((u) => u.email?.toLowerCase().includes(emailQuery))
-    : authUsers
-
-  // Buscar roles de perfis para esses usuários
-  const ids = filtered.map((u) => u.id)
-  const { data: perfisData } = ids.length > 0
-    ? await db
-        .from('perfis')
-        .select('id, role')
-        .in('id', ids) as { data: { id: string; role: string | null }[] | null }
-    : { data: [] }
-
-  const roleMap = new Map<string, string | null>()
-  for (const p of perfisData ?? []) roleMap.set(p.id, p.role)
-
-  const users: UsuarioRow[] = filtered.map((u) => ({
-    id: u.id,
-    email: u.email ?? null,
-    criado_em: u.created_at ?? null,
-    role: roleMap.get(u.id) ?? null,
-  }))
+  const { rows: users } = await pool.query<UsuarioRow>(
+    `
+      SELECT
+        p.id,
+        u.email AS email_legado,
+        p.criado_em::text AS criado_em,
+        p.role,
+        p.auth_provider,
+        p.logto_sub IS NOT NULL AS logto_vinculado
+      FROM public.perfis p
+      LEFT JOIN auth.users u
+        ON u.id = COALESCE(p.${LEGACY_AUTH_USER_ID_COLUMN}, p.id)
+      WHERE $1::text IS NULL OR u.email ILIKE $1
+      ORDER BY p.criado_em DESC
+      LIMIT $2
+      OFFSET $3
+    `,
+    [emailFilter, PAGE_SIZE, offset]
+  )
 
   const totalPages = Math.ceil(totalUsers / PAGE_SIZE)
 
@@ -151,7 +177,7 @@ export default async function UsuariosPage({
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
           <thead>
             <tr style={{ background: 'var(--bg-2)' }}>
-              {['Email', 'Cadastro', 'Role'].map((h) => (
+              {['Email legado', 'Cadastro', 'Role', 'Provider', 'Logto'].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -172,7 +198,7 @@ export default async function UsuariosPage({
             {users.length === 0 && (
               <tr>
                 <td
-                  colSpan={3}
+                  colSpan={5}
                   style={{
                     padding: '24px',
                     textAlign: 'center',
@@ -189,7 +215,7 @@ export default async function UsuariosPage({
                 key={u.id}
                 style={{ borderTop: '1px solid var(--line)' }}
               >
-                <td style={{ padding: '10px 14px', color: 'var(--ink)' }}>{u.email ?? '—'}</td>
+                <td style={{ padding: '10px 14px', color: 'var(--ink)' }}>{u.email_legado ?? '—'}</td>
                 <td
                   style={{
                     padding: '10px 14px',
@@ -205,6 +231,18 @@ export default async function UsuariosPage({
                   <StatusBadge
                     variant={u.role === 'admin' ? 'info' : 'never'}
                     label={u.role ?? 'user'}
+                  />
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <StatusBadge
+                    variant={u.auth_provider === 'logto' ? 'ok' : 'never'}
+                    label={u.auth_provider ?? 'legacy'}
+                  />
+                </td>
+                <td style={{ padding: '10px 14px' }}>
+                  <StatusBadge
+                    variant={u.logto_vinculado ? 'ok' : 'never'}
+                    label={u.logto_vinculado ? 'vinculado' : 'pendente'}
                   />
                 </td>
               </tr>

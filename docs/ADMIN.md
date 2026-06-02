@@ -7,7 +7,6 @@ related: [docs/AUTH.md, docs/DATABASE.md, docs/API.md, docs/MONITORING.md]
 
 # Painel Administrativo — Referência
 
-> **Nota de legado Auth:** referencias a `auth.uid()`, RLS Supabase,
 > `createAdminClient()` e service role descrevem o estado atual/legado. O
 > roadmap aprovado migra admin/auth para Logto + PostgreSQL VPS. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
@@ -34,7 +33,6 @@ O painel `/admin` é acessível apenas por usuários com `perfis.role = 'admin'`
 **Como promover usuário a admin:**
 
 ```sql
--- Via Supabase Studio ou service role key
 UPDATE perfis SET role = 'admin' WHERE id = '<user_uuid>';
 ```
 

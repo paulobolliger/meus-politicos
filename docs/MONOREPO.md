@@ -57,7 +57,6 @@ meuspoliticos/                   ← raiz do monorepo
 │       │   ├── auth/            ← formulários de login/cadastro
 │       │   └── ui/              ← shadcn/ui base
 │       ├── lib/
-│       │   └── supabase/        ← client.ts · server.ts · middleware.ts · types.ts
 │       ├── types/               ← tipos TypeScript globais
 │       └── proxy.ts             ← middleware de roteamento por host
 │
@@ -73,7 +72,6 @@ meuspoliticos/                   ← raiz do monorepo
 │   ├── estados/
 │   └── stn/
 │
-├── supabase/
 │   ├── migrations/              ← schema atual — 20+ arquivos
 │   ├── seeds/                   ← seeds de desenvolvimento
 │   └── 001_schema.sql           ← schema monolítico legado (referência histórica)
@@ -145,7 +143,6 @@ Isso **não é o Turborepo** (ferramenta de orquestração de build). É o bundl
 - Sem pipeline declarativo (dependências entre tasks)
 - Scripts da raiz são apenas proxies simples — nenhuma lógica de orquestração
 
-**Por que não é urgente agora:** com um único workspace (`app/`), o overhead de adicionar Turborepo seria maior que o benefício. A situação mudaria se `etl/` ou `supabase/` fossem convertidos em workspaces npm com seus próprios scripts.
 
 **Avaliação recomendada:** revisar quando o número de workspaces crescer ou quando o tempo de build na CI for um problema.
 

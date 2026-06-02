@@ -311,7 +311,6 @@ Divisor com data em texto antes de cada grupo: "Hoje — 12 mai 2026", "Ontem �
 > ✅ Aprovado
 
 ### Objetivo
-Autenticação simples. Supabase Auth gerencia tudo — o frontend é só a interface.
 
 ### Login
 - Logo + hero navy com boas-vindas
@@ -336,7 +335,6 @@ Autenticação simples. Supabase Auth gerencia tudo — o frontend é só a inte
 - Google OAuth como opção principal — reduz atrito no cadastro
 - Nota de privacidade no cadastro — reforça a credibilidade da plataforma
 - Telas simétricas — mesma estrutura, fácil de navegar entre as duas
-- Supabase Auth cuida de: tokens, sessões, reset de senha, OAuth — zero código de auth no frontend
 
 ---
 

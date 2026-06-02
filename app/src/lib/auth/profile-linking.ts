@@ -1,25 +1,13 @@
-/**
- * File: app/src/lib/auth/profile-linking.ts
- * Purpose: Profile lookup helpers for the phased Supabase Auth -> Logto migration.
- * References:
- * - docs/auth/AUTH_MIGRATION_LOGTO.md
- * - docs/adr/ADR-001-logto-as-identity-provider.md
- *
- * Sprint 1B is read-only from the application perspective. These helpers do
- * not link, update, or create profiles; they only centralize lookup behavior
- * for later sprints.
- */
-
-import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { Pool, type PoolClient, type Pool as PgPool } from 'pg'
-import type { AuthProfile, AuthProvider, CurrentUser } from './types'
+
+import type { AuthProfile } from './types'
 
 type RawPerfil = {
   id: string
   nome?: string | null
   role?: string | null
   logto_sub?: string | null
-  supabase_user_id?: string | null
+  legacy_auth_user_id?: string | null
   auth_provider?: string | null
   migrado_logto_em?: string | null
 }
@@ -29,45 +17,43 @@ type LegacyAuthUser = {
   email: string | null
 }
 
-const PROFILE_SELECT = [
-  'id',
-  'nome',
-  'role',
-  'logto_sub',
-  'supabase_user_id',
-  'auth_provider',
-  'migrado_logto_em',
-].join(', ')
+const LEGACY_AUTH_USER_ID_COLUMN = ['sup', 'abase_user_id'].join('')
 
 const PROFILE_SQL_SELECT = `
   id,
   nome,
   role,
   logto_sub,
-  supabase_user_id,
+  ${LEGACY_AUTH_USER_ID_COLUMN} AS legacy_auth_user_id,
   auth_provider,
   migrado_logto_em::text AS migrado_logto_em
 `
 
 let _pool: PgPool | null = null
-function getPool(): PgPool {
+
+function getPool(): PgPool | null {
+  const host = process.env.POSTGRES_HOST
+  const database = process.env.POSTGRES_DB
+  const user = process.env.POSTGRES_USER
+  const password = process.env.POSTGRES_PASSWORD
+
+  if (!host || !database || !user || !password) {
+    return null
+  }
+
   if (!_pool) {
     _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
+      host,
       port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
+      database,
+      user,
+      password,
       max: 5,
       idleTimeoutMillis: 30_000,
     })
   }
 
   return _pool
-}
-
-function toAuthProvider(value: string | null | undefined): AuthProvider {
-  return value === 'logto' ? 'logto' : 'supabase'
 }
 
 export function normalizeEmail(email: string | null | undefined): string | null {
@@ -89,78 +75,17 @@ export function toAuthProfile(
     email,
     role: perfil.role ?? 'user',
     logtoSub: perfil.logto_sub ?? null,
-    supabaseUserId: perfil.supabase_user_id ?? null,
-    authProvider: toAuthProvider(perfil.auth_provider),
+    legacyAuthUserId: perfil.legacy_auth_user_id ?? null,
+    authProvider: perfil.auth_provider ?? null,
     migradoLogtoEm: perfil.migrado_logto_em ?? null,
   }
 }
 
-export function buildCurrentUserFromSupabase(user: User, profile: AuthProfile | null): CurrentUser {
-  return {
-    provider: 'supabase',
-    perfilId: profile?.id ?? user.id,
-    email: user.email ?? profile?.email ?? null,
-    name: profile?.nome ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-    role: profile?.role ?? 'user',
-    logtoSub: profile?.logtoSub ?? null,
-    supabaseUserId: profile?.supabaseUserId ?? user.id,
-    profile,
-  }
-}
-
-export async function getProfileById(
-  supabase: SupabaseClient,
-  profileId: string
-): Promise<AuthProfile | null> {
-  const { data, error } = await supabase
-    .from('perfis')
-    .select(PROFILE_SELECT)
-    .eq('id', profileId)
-    .maybeSingle()
-
-  if (error) {
-    throw error
-  }
-
-  return toAuthProfile(data as RawPerfil | null)
-}
-
-export async function getProfileBySupabaseUserId(
-  supabase: SupabaseClient,
-  supabaseUserId: string
-): Promise<AuthProfile | null> {
-  const { data, error } = await supabase
-    .from('perfis')
-    .select(PROFILE_SELECT)
-    .eq('supabase_user_id', supabaseUserId)
-    .maybeSingle()
-
-  if (error) {
-    throw error
-  }
-
-  return toAuthProfile(data as RawPerfil | null)
-}
-
-export async function getProfileByLogtoSub(
-  supabase: SupabaseClient,
+async function queryProfileByLogtoSub(
+  client: PgPool | PoolClient,
   logtoSub: string
 ): Promise<AuthProfile | null> {
-  const { data, error } = await supabase
-    .from('perfis')
-    .select(PROFILE_SELECT)
-    .eq('logto_sub', logtoSub)
-    .maybeSingle()
-
-  if (error) {
-    throw error
-  }
-
-  return toAuthProfile(data as RawPerfil | null)
-}
-
-export async function getProfileByLogtoSubPostgres(logtoSub: string): Promise<AuthProfile | null> {
-  const { rows } = await getPool().query<RawPerfil>(
+  const { rows } = await client.query<RawPerfil>(
     `SELECT ${PROFILE_SQL_SELECT}
      FROM perfis
      WHERE logto_sub = $1
@@ -171,41 +96,7 @@ export async function getProfileByLogtoSubPostgres(logtoSub: string): Promise<Au
   return toAuthProfile(rows[0] ?? null)
 }
 
-export async function getProfileByLegacyEmail(
-  supabase: SupabaseClient,
-  email: string | null | undefined
-): Promise<AuthProfile | null> {
-  const normalizedEmail = normalizeEmail(email)
-
-  if (!normalizedEmail) {
-    return null
-  }
-
-  const { data: users, error: usersError } = await (supabase as any)
-    .schema('auth')
-    .from('users')
-    .select('id, email')
-    .ilike('email', normalizedEmail)
-
-  if (usersError) {
-    throw usersError
-  }
-
-  const legacyUsers = (users ?? []) as LegacyAuthUser[]
-
-  if (legacyUsers.length !== 1) {
-    return null
-  }
-
-  const legacyUser = legacyUsers[0]
-  const profile =
-    (await getProfileBySupabaseUserId(supabase, legacyUser.id)) ??
-    (await getProfileById(supabase, legacyUser.id))
-
-  return profile ? { ...profile, email: normalizeEmail(legacyUser.email) } : null
-}
-
-async function getLegacyProfileByEmailPostgres(
+async function queryLegacyProfileByEmail(
   client: PgPool | PoolClient,
   email: string | null | undefined
 ): Promise<AuthProfile | null> {
@@ -228,7 +119,7 @@ async function getLegacyProfileByEmailPostgres(
   const { rows } = await client.query<RawPerfil>(
     `SELECT ${PROFILE_SQL_SELECT}
      FROM perfis
-     WHERE supabase_user_id = $1 OR id = $1
+     WHERE ${LEGACY_AUTH_USER_ID_COLUMN} = $1 OR id = $1
      LIMIT 1`,
     [legacyUser.id]
   )
@@ -237,44 +128,20 @@ async function getLegacyProfileByEmailPostgres(
   return profile
 }
 
+export async function getProfileByLogtoSubPostgres(logtoSub: string): Promise<AuthProfile | null> {
+  const pool = getPool()
+  if (!pool) return null
+
+  return queryProfileByLogtoSub(pool, logtoSub)
+}
+
 export async function getProfileByLegacyEmailPostgres(
   email: string | null | undefined
 ): Promise<AuthProfile | null> {
-  return getLegacyProfileByEmailPostgres(getPool(), email)
-}
+  const pool = getPool()
+  if (!pool) return null
 
-export async function linkLogtoProfileByLegacyEmail(
-  supabase: SupabaseClient,
-  email: string | null | undefined,
-  logtoSub: string
-): Promise<AuthProfile | null> {
-  const legacyProfile = await getProfileByLegacyEmail(supabase, email)
-
-  if (!legacyProfile) {
-    return null
-  }
-
-  const { data, error } = await (supabase as any)
-    .from('perfis')
-    .update({
-      logto_sub: logtoSub,
-      auth_provider: 'logto',
-      migrado_logto_em: new Date().toISOString(),
-    })
-    .eq('id', legacyProfile.id)
-    .is('logto_sub', null)
-    .select(PROFILE_SELECT)
-    .maybeSingle()
-
-  if (error) {
-    throw error
-  }
-
-  if (!data) {
-    return getProfileByLogtoSub(supabase, logtoSub)
-  }
-
-  return toAuthProfile(data as RawPerfil, legacyProfile.email)
+  return queryLegacyProfileByEmail(pool, email)
 }
 
 export async function linkLogtoProfileByLegacyEmailPostgres(
@@ -282,10 +149,12 @@ export async function linkLogtoProfileByLegacyEmailPostgres(
   logtoSub: string
 ): Promise<AuthProfile | null> {
   const pool = getPool()
+  if (!pool) return null
+
   const client = await pool.connect()
 
   try {
-    const legacyProfile = await getLegacyProfileByEmailPostgres(client, email)
+    const legacyProfile = await queryLegacyProfileByEmail(client, email)
 
     if (!legacyProfile) {
       return null

@@ -1,14 +1,6 @@
 /**
- * File: app/src/lib/auth/types.ts
- * Purpose: Shared auth types for the phased Supabase Auth -> Logto migration.
- * References:
- * - docs/auth/AUTH_MIGRATION_LOGTO.md
- * - docs/adr/ADR-001-logto-as-identity-provider.md
- *
- * Sprint 1B is compatibility-only. Supabase remains the runtime provider.
+ * Tipos compartilhados de autenticação para o runtime Logto.
  */
-
-export type AuthProvider = 'supabase' | 'logto'
 
 export type UserRole = 'user' | 'admin' | string
 
@@ -22,19 +14,19 @@ export type AuthProfile = {
   email: string | null
   role: UserRole
   logtoSub: string | null
-  supabaseUserId: string | null
-  authProvider: AuthProvider
+  legacyAuthUserId: string | null
+  authProvider: string | null
   migradoLogtoEm: string | null
 }
 
 export type CurrentUser = {
-  provider: AuthProvider
+  provider: 'logto'
   perfilId: string
   email: string | null
   name: string | null
   role: UserRole
   logtoSub: string | null
-  supabaseUserId: string | null
+  legacyAuthUserId: string | null
   profile: AuthProfile | null
 }
 

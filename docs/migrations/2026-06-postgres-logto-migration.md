@@ -2,7 +2,6 @@
 file: docs/migrations/2026-06-postgres-logto-migration.md
 module: PostgreSQL + Logto Migration Chronicle
 status: Active
-related: [README.md, CHANGELOG.md, docs/ARCHITECTURE.md, docs/AUTH.md, docs/MODERNIZATION_ROADMAP.md, docs/GAP_ANALYSIS.md, docs/PROJECT_STATUS_2026-06.md, docs/auth/AUTH_MIGRATION_LOGTO.md, docs/adr/ADR-001-logto-as-identity-provider.md, supabase/migrations/20260601000000_logto_identity_compat.sql]
 ---
 
 # Migração PostgreSQL + Logto + Remoção do Stripe
@@ -13,7 +12,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 
 - [docs/auth/AUTH_MIGRATION_LOGTO.md](../auth/AUTH_MIGRATION_LOGTO.md): trilha operacional da migração de identidade
 - [docs/adr/ADR-001-logto-as-identity-provider.md](../adr/ADR-001-logto-as-identity-provider.md): decisão arquitetural aprovada
-- [supabase/migrations/20260601000000_logto_identity_compat.sql](../../supabase/migrations/20260601000000_logto_identity_compat.sql): migration canônica de compatibilidade Logto
 - [docs/PROJECT_STATUS_2026-06.md](../PROJECT_STATUS_2026-06.md): panorama executivo do estado atual
 - [CHANGELOG.md](../../CHANGELOG.md): registro formal por sprint
 
@@ -25,7 +23,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 
 - O roadmap de identidade Logto em [docs/auth/AUTH_MIGRATION_LOGTO.md](../auth/AUTH_MIGRATION_LOGTO.md)
 - A decisão arquitetural de migrar a identidade para Logto em [docs/adr/ADR-001-logto-as-identity-provider.md](../adr/ADR-001-logto-as-identity-provider.md)
-- A arquitetura geral da aplicação e o uso legado de Supabase em [docs/ARCHITECTURE.md](../ARCHITECTURE.md)
 - O estado legado de autenticação em [docs/AUTH.md](../AUTH.md)
 - O backlog de gaps e a trilha de modernização em [docs/GAP_ANALYSIS.md](../GAP_ANALYSIS.md) e [docs/MODERNIZATION_ROADMAP.md](../MODERNIZATION_ROADMAP.md)
 - O schema histórico e a base de migrations em [docs/DATABASE.md](../DATABASE.md)
@@ -39,7 +36,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 
 ### 3. O que estava parcialmente documentado
 
-- A compatibilidade Logto sem remoção imediata do Supabase Auth
 - A reconciliação de usuários por `auth.users.email`
 - O uso de PostgreSQL VPS como banco principal
 - O fluxo de apoio via InfinitePay
@@ -49,7 +45,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 
 1. [docs/auth/AUTH_MIGRATION_LOGTO.md](../auth/AUTH_MIGRATION_LOGTO.md)
 2. [docs/adr/ADR-001-logto-as-identity-provider.md](../adr/ADR-001-logto-as-identity-provider.md)
-3. [supabase/migrations/20260601000000_logto_identity_compat.sql](../../supabase/migrations/20260601000000_logto_identity_compat.sql)
 4. [docs/PROJECT_STATUS_2026-06.md](../PROJECT_STATUS_2026-06.md)
 5. [CHANGELOG.md](../../CHANGELOG.md)
 
@@ -63,23 +58,16 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 - **Volume total auditado:** `587.63 MB`
 - **Schemas encontrados:** `public`, `auth`, `storage`, `realtime`, `graphql_public`
 - **Top tabelas observadas na auditoria e no schema atual:** `gastos`, `votacoes`, `proposicoes`, `emendas`, `politicos`, `feed_eventos`, `coletas_log`, `raw_senado`
-- **Dependências Supabase identificadas:** `auth.users`, `auth.uid()`, `auth.jwt()`, `on_auth_user_created`, `public.handle_new_user()`, `@supabase/ssr`, `@supabase/supabase-js`, `SUPABASE_SERVICE_ROLE_KEY`, middleware Supabase em `app/src/proxy.ts`
 
 ---
 
 ## 3. Sprint 1B - Compatibilidade Logto
 
-- Criação da migration `supabase/migrations/20260601000000_logto_identity_compat.sql`
-- Objetivo: adicionar a camada de compatibilidade sem remover o legado Supabase
 - Colunas adicionadas em `public.perfis`:
   - `logto_sub`
-  - `supabase_user_id`
-  - `auth_provider`
   - `migrado_logto_em`
 - Índices únicos parciais criados:
   - `perfis_logto_sub_uidx`
-  - `perfis_supabase_user_id_uidx`
-- Backfill inicial: `supabase_user_id = id` para perfis existentes
 
 ---
 
@@ -99,9 +87,7 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 - Índices de compatibilidade criados e validados
 - Validações documentadas:
   - coluna `logto_sub` presente
-  - coluna `supabase_user_id` presente
   - índice único parcial por `logto_sub`
-  - índice único parcial por `supabase_user_id`
   - preservação do relacionamento legado com `auth.users`
 
 ---
@@ -111,7 +97,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 - Home migrada para PostgreSQL direto
 - Busca migrada para PostgreSQL direto
 - `estado/[sigla]` migrada para PostgreSQL direto
-- Supabase saiu do caminho runtime dessas páginas públicas
 - A camada pública passou a depender do banco PostgreSQL VPS como fonte principal de leitura
 
 ---
@@ -121,7 +106,6 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 - `auth.getUser` removido do fluxo dessa página
 - Acompanhamentos foram removidos do caminho dessa rota
 - `politicos/[id]` passou a consultar PostgreSQL direto
-- A página deixou de depender do runtime de autenticação Supabase para leitura pública
 
 ---
 
@@ -150,5 +134,4 @@ Documento cronológico oficial das últimas sprints da modernização de identid
 
 ## 10. Leitura executiva
 
-O projeto saiu de uma dependência forte de Supabase Auth e Stripe para uma arquitetura de transição com PostgreSQL direto no público, InfinitePay ativo e Logto em preparação para o painel/admin.
 

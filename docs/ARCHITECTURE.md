@@ -8,7 +8,6 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 # Arquitetura — Meus Políticos
 
 > **Nota de transição:** as secoes abaixo descrevem a arquitetura ativa/legada
-> com Supabase Auth. A arquitetura alvo aprovada substitui Supabase Auth por
 > Logto e mantem PostgreSQL VPS como banco principal. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
@@ -18,7 +17,6 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 | Eixo | Status |
 |---|---|
 | Banco | PostgreSQL VPS ativo |
-| Auth | Supabase legado; Logto em preparação |
 | Público | Migrado para PostgreSQL direto |
 | Painel/Admin | Aguardando Logto |
 | Pagamentos | Stripe removido; InfinitePay ativo |
@@ -41,11 +39,9 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 | Decisão | Escolha | Justificativa |
 |---|---|---|
 | Framework | Next.js 16 App Router | SSR, ISR, Route Handlers e Server Components em um único runtime |
-| Backend | PostgreSQL VPS + Supabase legado | Banco + Auth + RLS sem servidor dedicado |
 | Route groups | `(site)/`, `(app)/`, `(painel)/`, `(admin)/`, `(checkout)/` | Separação de produtos sem múltiplos deploys |
 | Roteamento multi-produto | `proxy.ts` (middleware por host) | Diferencia produtos pelo header `Host` da requisição |
 | ETL | Scripts Python independentes | Acesso direto ao PostgreSQL; desacoplado do frontend |
-| Auth | Supabase Auth legado + Logto em preparação | `@supabase/ssr` para Server Components e API Routes |
 | Estado global | Nenhum (sem Redux/Zustand) | Server Components para dados; `useState` local para UI |
 
 ---
@@ -54,9 +50,6 @@ related: [README.md, app/src/proxy.ts, docs/DATABASE.md, docs/AUTH.md, docs/API.
 
 | Horizonte | Arquitetura |
 |---|---|
-| Atual | Supabase Auth + PostgreSQL VPS legado |
-| Transicao | Supabase Auth + Logto, com `perfis.logto_sub` |
-| Alvo | Logto + PostgreSQL VPS, sem dependencia runtime de Supabase Auth |
 
 O roadmap completo esta em `docs/auth/AUTH_MIGRATION_LOGTO.md`.
 
@@ -105,7 +98,6 @@ graph TD
     end
 
     subgraph "Camada 2 — Banco Estruturado"
-        DB["PostgreSQL — meuspoliticos_db\nSupabase self-hosted · Schema v2.12\nRLS ativo em todas as tabelas"]
     end
 
     subgraph "Camada 1 — Coleta ETL"
@@ -113,7 +105,6 @@ graph TD
         APIS["APIs Oficiais\nCâmara · Senado · TSE\nPortal Transparência · IBGE\nAssembleias Estaduais"]
     end
 
-    UI -->|"Supabase Client SSR"| DB
     AI -->|"batch insert via ETL"| DB
     ETL --> DB
     APIS --> ETL
@@ -136,7 +127,6 @@ sequenceDiagram
     E->>D: UPSERT (ON CONFLICT UPDATE)
     E->>D: INSERT coletas_log (status, registros, duração)
     U->>N: GET /estado/SP
-    N->>D: SELECT via Supabase Server Client
     D-->>N: Dados + RLS aplicado por role
     N-->>U: HTML renderizado (SSR)
 ```
@@ -216,7 +206,6 @@ sequenceDiagram
 
 ### (admin)/ — Painel Interno
 
-Proteção implementada em `(admin)/admin/layout.tsx` — verifica role `admin` no metadata Supabase.
 
 | Rota | Descrição |
 |---|---|
@@ -253,7 +242,6 @@ Proteção implementada em `(admin)/admin/layout.tsx` — verifica role `admin` 
 | `/api/admin/flags` | GET · POST | Admin | Feature flags |
 | `/api/admin/politicos/[id]` | PATCH | Admin | Editar político |
 | `/api/admin/emendas/match` | POST | Admin | Match manual de emendas |
-| `/auth/callback` | GET | Pública | Callback OAuth Supabase |
 
 ---
 
@@ -264,7 +252,6 @@ Proteção implementada em `(admin)/admin/layout.tsx` — verifica role `admin` 
 Executado em cada requisição (via Next.js middleware config com `matcher` global).
 
 **Fluxo:**
-1. Chama `updateSession(request)` do Supabase SSR — renova cookie de sessão
 2. Lê o header `host` da requisição
 3. Aplica lógica de routing:
    - `painel.*` → sem sessão: redireciona para `/login`; API routes retornam `401`
@@ -277,11 +264,8 @@ Executado em cada requisição (via Next.js middleware config com `matcher` glob
 
 | Estratégia | Uso |
 |---|---|
-| **Server Components (RSC)** | Páginas com fetch direto no Supabase — sem estado no cliente |
 | **Client Components (`'use client'`)** | Componentes interativos: busca, formulários, abas, carrossel |
 | **React Hook Form + Zod** | Formulários com validação client-side |
-| **Supabase SSR Client** | Autenticação e dados em Server Components e API Routes |
-| **Supabase Browser Client** | Operações client-side autenticadas (acompanhamentos) |
 
 ---
 
@@ -290,10 +274,8 @@ Executado em cada requisição (via Next.js middleware config com `matcher` glob
 | Componente | Tecnologia | Detalhe |
 |---|---|---|
 | Frontend | Vercel | Configurado via `vercel.json` na raiz |
-| Banco de dados | PostgreSQL / Supabase self-hosted | VPS Vultr `45.32.169.173` via Coolify + Docker |
 | DNS / CDN | Cloudflare | `meuspoliticos.com.br` + redirect `.com` → `.com.br` |
 | E-mail transacional | Resend (SES / sa-east-1) | `noreply@meuspoliticos.com.br` |
-| Storage de arquivos | MinIO (via Supabase) | VPS Vultr |
 
 **Build config `vercel.json`:**
 ```json

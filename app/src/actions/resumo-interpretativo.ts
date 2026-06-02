@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
+import { Pool } from 'pg'
 import { z } from 'zod'
 
 import { stableHash } from '@/lib/ai/stable-hash'
@@ -54,18 +54,32 @@ export type ResumoInterpretativoErro = {
 const SYSTEM_PROMPT =
   'Es um tradutor de dados publicos neutro. Traduz as metricas num JSON para cidadaos leigos em leitura rapida. REGRAS: 1. Tom institucional, sem adjetivos; 2. Gera exatamente 3 bullets curtos (maximo 12 palavras por bullet); 3. Nunca facas calculos; 4. Gera 1 alerta APENAS se houver falta de dados ou desvios grandes, caso contrario devolve null.'
 
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let pool: Pool | null = null
 
-  if (!supabaseUrl || !serviceRoleKey) {
+function getPool(): Pool | null {
+  const host = process.env.POSTGRES_HOST
+  const database = process.env.POSTGRES_DB
+  const user = process.env.POSTGRES_USER
+  const password = process.env.POSTGRES_PASSWORD
+
+  if (!host || !database || !user || !password) {
     return null
   }
 
-  return createSupabaseClient<any>(supabaseUrl, serviceRoleKey)
-}
+  if (!pool) {
+    pool = new Pool({
+      host,
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database,
+      user,
+      password,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
 
-type AdminClient = SupabaseClient<any, 'public', any>
+  return pool
+}
 
 function buildUserPayload(metricas: ResumoInterpretativoMetricas) {
   return JSON.stringify({
@@ -94,19 +108,23 @@ function getLimiteDiario() {
 }
 
 async function cotaDisponivel(
-  admin: AdminClient,
+  db: Pool,
   politicoId: string,
   diaReferencia: string,
   limiteDiario: number
 ) {
-  const { data } = await admin
-    .from('politico_resumos_ia_cotas')
-    .select('id, politico_id, dia_referencia, geracoes, limite_diario')
-    .eq('politico_id', politicoId)
-    .eq('dia_referencia', diaReferencia)
-    .maybeSingle()
+  const { rows } = await db.query<PoliticoResumoCotaLinha>(
+    `
+      SELECT id, politico_id, dia_referencia::text AS dia_referencia, geracoes, limite_diario
+      FROM politico_resumos_ia_cotas
+      WHERE politico_id = $1
+        AND dia_referencia = $2
+      LIMIT 1
+    `,
+    [politicoId, diaReferencia]
+  )
 
-  const cota = data as PoliticoResumoCotaLinha | null
+  const cota = rows[0] ?? null
 
   if (!cota) {
     return { disponivel: true, limite: limiteDiario, atual: 0 }
@@ -117,34 +135,48 @@ async function cotaDisponivel(
 }
 
 async function registrarConsumoCota(
-  admin: AdminClient,
+  db: Pool,
   politicoId: string,
   diaReferencia: string,
   limiteDiario: number
 ) {
-  const { data } = await admin
-    .from('politico_resumos_ia_cotas')
-    .select('id, politico_id, dia_referencia, geracoes, limite_diario')
-    .eq('politico_id', politicoId)
-    .eq('dia_referencia', diaReferencia)
-    .maybeSingle()
+  const { rows } = await db.query<PoliticoResumoCotaLinha>(
+    `
+      SELECT id, politico_id, dia_referencia::text AS dia_referencia, geracoes, limite_diario
+      FROM politico_resumos_ia_cotas
+      WHERE politico_id = $1
+        AND dia_referencia = $2
+      LIMIT 1
+    `,
+    [politicoId, diaReferencia]
+  )
 
-  const atual = data as PoliticoResumoCotaLinha | null
+  const atual = rows[0] ?? null
 
   if (!atual) {
-    await admin.from('politico_resumos_ia_cotas').insert({
-      politico_id: politicoId,
-      dia_referencia: diaReferencia,
-      geracoes: 1,
-      limite_diario: limiteDiario,
-    })
+    await db.query(
+      `
+        INSERT INTO politico_resumos_ia_cotas (
+          politico_id,
+          dia_referencia,
+          geracoes,
+          limite_diario
+        )
+        VALUES ($1, $2, 1, $3)
+      `,
+      [politicoId, diaReferencia, limiteDiario]
+    )
     return
   }
 
-  await admin
-    .from('politico_resumos_ia_cotas')
-    .update({ geracoes: atual.geracoes + 1 })
-    .eq('id', atual.id)
+  await db.query(
+    `
+      UPDATE politico_resumos_ia_cotas
+      SET geracoes = geracoes + 1
+      WHERE id = $1
+    `,
+    [atual.id]
+  )
 }
 
 async function gerarResumoNaOpenAI(metricas: ResumoInterpretativoMetricas): Promise<ResumoIA | null> {
@@ -213,21 +245,25 @@ export async function obterOuGerarResumo(
   politicoId: string,
   metricas: ResumoInterpretativoMetricas
 ): Promise<ResumoInterpretativoResult | ResumoInterpretativoErro | null> {
-  const admin = createAdminClient()
-  if (!admin) {
+  const db = getPool()
+  if (!db) {
     return null
   }
 
   const hashDados = stableHash(metricas)
 
   try {
-    const { data: cacheData } = await admin
-      .from('politico_resumos_ia')
-      .select('politico_id, hash_dados, conteudo_json, atualizado_em')
-      .eq('politico_id', politicoId)
-      .maybeSingle()
+    const { rows: cacheRows } = await db.query<PoliticoResumoLinha>(
+      `
+        SELECT politico_id, hash_dados, conteudo_json, atualizado_em::text AS atualizado_em
+        FROM politico_resumos_ia
+        WHERE politico_id = $1
+        LIMIT 1
+      `,
+      [politicoId]
+    )
 
-    const cached = cacheData as PoliticoResumoLinha | null
+    const cached = cacheRows[0] ?? null
 
     if (cached && cached.hash_dados === hashDados) {
       const parsedCached = resumoIASchema.safeParse(cached.conteudo_json)
@@ -243,7 +279,7 @@ export async function obterOuGerarResumo(
 
     const diaReferencia = getDiaReferenciaUtc()
     const limiteDiario = getLimiteDiario()
-    const cota = await cotaDisponivel(admin, politicoId, diaReferencia, limiteDiario)
+    const cota = await cotaDisponivel(db, politicoId, diaReferencia, limiteDiario)
 
     if (!cota.disponivel) {
       return {
@@ -259,17 +295,25 @@ export async function obterOuGerarResumo(
 
     const atualizadoEm = new Date().toISOString()
 
-    await admin.from('politico_resumos_ia').upsert(
-      {
-        politico_id: politicoId,
-        hash_dados: hashDados,
-        conteudo_json: resumoGerado,
-        atualizado_em: atualizadoEm,
-      },
-      { onConflict: 'politico_id' }
+    await db.query(
+      `
+        INSERT INTO politico_resumos_ia (
+          politico_id,
+          hash_dados,
+          conteudo_json,
+          atualizado_em
+        )
+        VALUES ($1, $2, $3::jsonb, $4)
+        ON CONFLICT (politico_id)
+        DO UPDATE SET
+          hash_dados = EXCLUDED.hash_dados,
+          conteudo_json = EXCLUDED.conteudo_json,
+          atualizado_em = EXCLUDED.atualizado_em
+      `,
+      [politicoId, hashDados, JSON.stringify(resumoGerado), atualizadoEm]
     )
 
-    await registrarConsumoCota(admin, politicoId, diaReferencia, limiteDiario)
+    await registrarConsumoCota(db, politicoId, diaReferencia, limiteDiario)
 
     return {
       resumo: resumoGerado,

@@ -27,11 +27,8 @@ related: [docs/MONOREPO.md, docs/DEPLOYMENT.md, app/package.json]
 
 | Pacote | Versão | Papel |
 |---|---|---|
-| `@supabase/supabase-js` | ^2.105.4 | Supabase client principal |
-| `@supabase/ssr` | ^0.10.3 | Supabase com suporte a SSR — `createServerClient`, `createBrowserClient` |
 | `pg` | ^8.20.0 | Driver PostgreSQL direto para Node.js — usado em route handlers admin e ETL |
 
-**Padrão de uso:** `@supabase/ssr` para Server Components e API Routes, `@supabase/supabase-js` para operações que precisam do client direto. O `pg` é usado apenas quando a query precisar de acesso direto ao banco (sem RLS ou sem passar pelo PostgREST).
 
 ---
 
@@ -178,7 +175,6 @@ Em Windows/macOS os binários corretos são baixados automaticamente pelo npm. N
 **Antes de atualizar qualquer dependência de produção:**
 
 1. Não há testes automatizados (Gap G-06) — risco de regressão sem detecção
-2. Para `next`, `@supabase/ssr`, `stripe` — verificar changelogs por breaking changes
 3. Para Tailwind v4 — qualquer upgrade pode exigir recompilação dos binários opcionais
 4. Testar em dev local com build de produção (`npm run build`) antes de mergedar
 

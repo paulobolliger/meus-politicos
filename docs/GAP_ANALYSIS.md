@@ -12,7 +12,6 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 **Análise baseada em:** arquivos estáticos locais — banco de produção NÃO consultado (Regra P0)
 **Schema identificado:** v2.12 (migration mais recente: `20260523b_ale_setup.sql`)
 
-> **Nota de governanca:** a dependencia de Supabase Auth e agora um gap
 > arquitetural conhecido. A decisao aprovada e migrar para Logto. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
@@ -45,7 +44,6 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 | G-17 | Sem `CHANGELOG.md` | **P3** | raiz | Sem histórico estruturado de versões | 30 min — Lote 8 |
 | G-18 | `app/README.md` era boilerplate `create-next-app` | **P3** | `app/README.md` | Confundia novos colaboradores sem descrever o projeto real | ✅ Resolvido — Lote 1 |
 | G-19 | Zero cobertura de File Banners nos arquivos core | **P3** | `app/src/app/` · `app/src/components/` · `app/src/lib/` | Sem cabeçalho de contexto para guiar agentes IA em edições futuras (Regra 11) | Incremental |
-| G-20 | Dependencia de Supabase Auth no codigo e schema | **P0** | `docs/auth/AUTH_MIGRATION_LOGTO.md` | Bloqueia arquitetura alvo Logto + PostgreSQL VPS; envolve `auth.users`, `auth.uid()`, `auth.jwt()`, middleware e callback Supabase | 4 sprints |
 
 ---
 
@@ -55,7 +53,6 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 
 #### G-01 · .env.example incompleto
 
-**Situação:** `.env.example` contém o subconjunto mínimo de variáveis. `app/.env.local` de produção cobre Supabase, InfinitePay, OpenAI, Resend, OAuth (Google / Twitter / LinkedIn), Postgres direto, MinIO, Portal da Transparência e subdomínios.
 
 **Consequência:** novo desenvolvedor ou pipeline de CI que use `.env.example` como base não consegue rodar o projeto — erros crípticos de autenticação e conexão.
 
@@ -135,9 +132,7 @@ related: [docs/MODERNIZATION_ROADMAP.md, docs/TODO_PRODUCTION.md, docs/SECURITY.
 
 #### README vs. Schema — Arquivo único vs. Migrations
 
-**Antigo README dizia:** `"Arquivo: supabase/001_schema.sql — versão 2.8"`
 
-**Código atual tem:** 20+ migrations em `supabase/migrations/` — versão v2.12. O `supabase/001_schema.sql` existe mas é o schema monolítico **legado** (não o atual).
 
 **Resolução:** o schema atual está nas migrations. O `001_schema.sql` é histórico. README atualizado no Lote 1.
 

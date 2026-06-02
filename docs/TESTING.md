@@ -116,8 +116,6 @@ export default defineConfig({
 
 ```ts
 import '@testing-library/jest-dom'
-// Mock do Supabase browser client (evita chamadas reais em unit tests)
-vi.mock('@/lib/supabase/client', () => ({
   createClient: vi.fn(() => ({
     auth: { getSession: vi.fn(), getUser: vi.fn() },
     from: vi.fn(() => ({ select: vi.fn(), eq: vi.fn() })),
@@ -187,16 +185,12 @@ test('valor abaixo do mínimo é rejeitado', () => {
 
 ### Fase 3 — Testes de integração de API routes
 
-**Framework:** Vitest com mocks do Supabase e Stripe.
 
 Prioridade por criticidade:
 
 | Route | Por que testar | Tipo de mock necessário |
 |---|---|---|
 | `POST /api/webhooks/stripe` | Verifica assinatura — bug aqui = doação perdida | `stripe.webhooks.constructEvent` mock |
-| `GET /api/busca` | Fallback pg.Pool — lógica ramificada | Supabase mock + pg mock |
-| `POST /api/acompanhamentos` | Auth obrigatória + unique conflict silenciado | Supabase auth mock |
-| `PATCH /api/admin/flags` | Verifica role admin — bug = feature flag pública | Supabase admin mock |
 
 **Padrão de teste para API route:**
 

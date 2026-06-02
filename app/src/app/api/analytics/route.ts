@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { Pool } from 'pg'
+import { getCurrentUser } from '@/lib/auth/current-user'
 
 /**
  * POST /api/analytics
@@ -16,6 +17,25 @@ import { createClient } from '@/lib/supabase/server'
  * Sem PII — sem email, sem IP armazenado.
  * Retorna 202 sempre (best-effort, não bloqueia o cliente).
  */
+
+let pool: Pool | null = null
+
+function getPool(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      host: process.env.POSTGRES_HOST ?? 'localhost',
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
+      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
+      user: process.env.POSTGRES_USER ?? 'postgres',
+      password: process.env.POSTGRES_PASSWORD,
+      max: 5,
+      idleTimeoutMillis: 30_000,
+    })
+  }
+
+  return pool
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
@@ -25,19 +45,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const currentUser = await getCurrentUser().catch(() => null)
 
-    // Try to get authenticated user (no error if anon)
-    const { data: { user } } = await supabase.auth.getUser()
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
-      .from('analytics_eventos')
-      .insert({
-        tipo,
-        payload: payload ?? null,
-        usuario_id: user?.id ?? null,
-      })
+    await getPool().query(
+      `
+        INSERT INTO analytics_eventos (tipo, payload, usuario_id)
+        VALUES ($1, $2::jsonb, $3)
+      `,
+      [tipo, JSON.stringify(payload ?? null), currentUser?.perfilId ?? null]
+    )
 
   } catch {
     // Silently absorb errors — analytics must never break the app

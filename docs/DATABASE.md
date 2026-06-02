@@ -2,20 +2,15 @@
 file: docs/DATABASE.md
 module: Database Schema Reference
 status: Active
-related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUTH_MIGRATION_LOGTO.md, docs/adr/ADR-001-logto-as-identity-provider.md, supabase/migrations/]
 ---
 
 # Banco de Dados — Schema v2.12
 
-**Engine:** PostgreSQL 15 (Supabase self-hosted)
 **Host produção:** `45.32.169.173` (VPS Vultr via Coolify + Docker)
-**URL pública:** `https://supabase.meuspoliticos.com.br`
 **Schema atual:** v2.12 + compat Logto — 21 migrations aplicadas (jun/2026)
 
-> ⚠️ **Regra P0:** NUNCA conectar ao banco de produção durante análise de código. Toda análise de schema deve usar os arquivos em `supabase/migrations/`.
 
 > **Nota de legado Auth:** referencias a `auth.users`, `auth.uid()`,
-> `auth.jwt()`, roles `anon/authenticated/service_role` e RLS Supabase refletem
 > o estado atual/legado. A arquitetura alvo aprovada e Logto + PostgreSQL VPS.
 > Ver `docs/auth/AUTH_MIGRATION_LOGTO.md` e
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
@@ -26,10 +21,6 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 
 | Item | Localização | Status |
 |---|---|---|
-| Schema atual | `supabase/migrations/` (20+ arquivos) | ✅ Fonte canônica |
-| Schema monolítico legado | `supabase/001_schema.sql` | ⚠️ Referência histórica apenas |
-| Seeds de desenvolvimento | `supabase/seeds/` | Seeds do glossário |
-| Tipos TypeScript gerados | `app/src/lib/supabase/types.ts` | Gerado do schema |
 
 ---
 
@@ -57,7 +48,6 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 | `20260522007000_fixes.sql` | — | 2026-05-22 | Correções gerais |
 | `20260522_proposicao_tramitacoes.sql` | — | 2026-05-22 | Tabela `proposicao_tramitacoes` |
 | `20260523b_ale_setup.sql` | — | 2026-05-23 | ALE: `ale_sessoes`, `ale_presencas`, view `v_presenca_deputado_estadual` |
-| `20260601000000_logto_identity_compat.sql` | — | 2026-06-01 | Compatibilidade Logto: `logto_sub`, `supabase_user_id`, `auth_provider`, `migrado_logto_em` |
 
 ---
 
@@ -149,7 +139,6 @@ related: [docs/ARCHITECTURE.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/auth/AUT
 
 | Tabela | RLS | Descrição |
 |---|---|---|
-| `perfis` | `auth.uid() = id` | Perfil de usuário (1:1 com `auth.users`; compatibilizado com `logto_sub`, `supabase_user_id`, `auth_provider`, `migrado_logto_em`) |
 | `acompanhamentos` | `auth.uid() = usuario_id` | Políticos seguidos por usuário |
 | `correcoes` | INSERT público / ALL admin | Fluxo de correção de dados públicos |
 | `feature_flags` | Admin only | Flags de features gerenciadas sem deploy |
@@ -295,9 +284,7 @@ A tabela `raw_senado` armazena o XML bruto da API do Senado para reprocessamento
 
 ## 11. Acesso ao banco (desenvolvimento)
 
-**Via Supabase Studio (produção):**
 ```
-https://supabase.meuspoliticos.com.br
 ```
 
 **Via SSH tunnel (ETL local):**

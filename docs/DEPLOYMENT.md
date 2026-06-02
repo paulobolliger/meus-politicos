@@ -7,7 +7,6 @@ related: [docs/ENVIRONMENT.md, docs/ARCHITECTURE.md, docs/MONOREPO.md, vercel.js
 
 # Deploy e Infraestrutura — Meus Políticos
 
-> **Nota de transicao Auth:** a topologia abaixo ainda menciona Supabase Auth
 > porque descreve o estado legado. A meta aprovada e Logto
 > (`https://auth.norotec.cloud`) + PostgreSQL VPS. Ver
 > `docs/auth/AUTH_MIGRATION_LOGTO.md` e
@@ -29,11 +28,9 @@ related: [docs/ENVIRONMENT.md, docs/ARCHITECTURE.md, docs/MONOREPO.md, vercel.js
   ┌──────▼──────┐    ┌─────────▼─────────────────┐
   │   Vercel    │    │    VPS Vultr (45.32.169.173)│
   │   (Next.js) │    │    Coolify + Docker         │
-  │             │    │    ├── Supabase self-hosted  │
   └──────┬──────┘    │    │   (Auth + DB + MinIO)  │
          │           │    ├── PostgreSQL 15         │
          └───────────┤    └── MinIO (S3 storage)   │
-         Supabase    │                              │
          client      └──────────────────────────────┘
 ```
 
@@ -71,7 +68,6 @@ Esses pacotes estão em `app/package.json` como `optionalDependencies` para gara
 
 Todas as variáveis de `app/.env.local` devem ser configuradas no Vercel Dashboard → Project Settings → Environment Variables. As variáveis `NEXT_PUBLIC_*` são automaticamente injetadas no bundle do cliente.
 
-**Atenção:** `POSTGRES_*` e `SUPABASE_DB_*` **não devem** ser configuradas na Vercel — o banco é acessado apenas pelo Supabase client (via `NEXT_PUBLIC_SUPABASE_URL` e as chaves JWT), nunca via conexão direta a partir do Vercel. A conexão direta é exclusiva dos ETLs Python rodando no próprio VPS ou via SSH tunnel local.
 
 ### Deploy automático
 
@@ -89,8 +85,6 @@ Todas as variáveis de `app/.env.local` devem ser configuradas no Vercel Dashboa
 |---|---|---|
 | VPS | Vultr | `45.32.169.173` |
 | Orquestrador | Coolify | Self-hosted PaaS — gerencia Docker Compose |
-| Banco | PostgreSQL 15 | Via Supabase self-hosted |
-| Auth | Supabase Auth | JWT + OAuth integrado |
 | Storage | MinIO | S3-compatible — logos, fotos, uploads |
 
 ### Conexão direta ao banco (ETL e manutenção)
@@ -105,20 +99,14 @@ ssh -L 5433:10.0.2.2:5432 root@45.32.169.173 -N -o ServerAliveInterval=30
 
 **Nome do container Docker (para uso interno no VPS):**
 ```
-POSTGRES_HOST=supabase-db-v2ve0851flv0yljb0fy1r9oq
 ```
 
 ### Aplicar migrations
 
 ```bash
-# Via Supabase CLI (requer conexão ativa)
-supabase db push --db-url postgres://postgres:<senha>@localhost:5433/meuspoliticos_db
 
-# Ou via Supabase Studio:
-# https://supabase.meuspoliticos.com.br → SQL Editor
 ```
 
-As migrations estão em `supabase/migrations/` — **sempre commitar novas migrations antes de aplicar em produção.**
 
 ---
 
@@ -172,7 +160,6 @@ python collect_emendas.py
 | `meuspoliticos.com.br` | CNAME | Vercel |
 | `app.meuspoliticos.com.br` | CNAME | Vercel |
 | `painel.meuspoliticos.com.br` | CNAME | Vercel |
-| `supabase.meuspoliticos.com.br` | A | `45.32.169.173` (VPS) |
 | `meuspoliticos.com` | REDIRECT | `meuspoliticos.com.br` |
 
 **SPF/DKIM:** configurado no Cloudflare para domínio `meuspoliticos.com.br` (Resend).
@@ -228,7 +215,6 @@ python-dateutil==2.8.2
 unidecode==1.3.8
 ```
 
-Os scripts ETL leem variáveis de ambiente de `app/.env.local` via `python-dotenv` (ou equivalente), conectando-se diretamente ao PostgreSQL pelas variáveis `POSTGRES_*` ou `SUPABASE_DB_*`.
 
 ---
 
@@ -243,10 +229,7 @@ Os scripts ETL leem variáveis de ambiente de `app/.env.local` via `python-doten
 
 ### Nova migration
 
-- [ ] Criar arquivo em `supabase/migrations/` com timestamp e nome descritivo
-- [ ] Testar localmente via SSH tunnel + Supabase Studio
 - [ ] Commitar a migration no git
-- [ ] Aplicar em produção via `supabase db push` ou SQL Editor
 
 ### Promoção de feature para produção
 

@@ -267,7 +267,6 @@ O sistema usa OpenAI para:
 |---|---|---|
 | CEP do usuário | Nunca persistido | Usado apenas server-side para "quem me representa"; descartado após a query |
 | CPF | Apenas no ETL | Usado como âncora para entity resolution; nunca inserido em nenhuma tabela do banco público |
-| E-mail | Somente em `auth.users` | Gerenciado pelo Supabase Auth; não exposto via RLS público |
 | Nome do usuário | `perfis.nome` | RLS: `auth.uid() = id` — acessível apenas pelo próprio usuário |
 
 ---

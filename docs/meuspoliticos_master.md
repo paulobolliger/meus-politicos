@@ -1,6 +1,5 @@
 # meuspoliticos.com — Master Doc
 > "Transparência para decidir melhor."
-> Status: **em desenvolvimento ativo** · Infra: **Supabase self-hosted (VPS Vultr)**
 > Documento vivo — atualizado em maio de 2026 (v2.0)
 
 ---
@@ -130,8 +129,6 @@ Contato: contato@meuspoliticos.com.br
 | Client ID | `628132097975-t97ai1p9tnat7pfaubnj4c07oe4c3i1t.apps.googleusercontent.com` |
 | Client Secret | **Ver Google Cloud Console** |
 | Origens JS autorizadas | `https://meuspoliticos.com.br` · `http://localhost:3000` |
-| URI de redirecionamento | `https://ldgfmrvaluwidpghafke.supabase.co/auth/v1/callback` |
-| Configurado em | Supabase → Authentication → Providers → Google |
 
 ### Auth — X (Twitter) OAuth
 
@@ -140,7 +137,6 @@ Contato: contato@meuspoliticos.com.br
 | Provedor | X (Twitter) / console.x.com |
 | Client ID | `QVZHU1lVWFY4ajFrVTN5TjZXZk46MTpjaQ` |
 | Client Secret | **Ver .env.local** |
-| Configurado em | Supabase → Authentication → Providers → Twitter |
 
 ### Google Search Console
 
@@ -153,12 +149,10 @@ Contato: contato@meuspoliticos.com.br
 | Campo | Valor |
 |---|---|
 | Hosting | **Self-hosted — VPS Vultr (45.32.169.173)** |
-| Stack | Supabase via Coolify + Docker |
 | DB name | `meuspoliticos_db` |
 | DB host | `45.32.169.173` (acesso via SSH tunnel: `ssh -L 5432:10.0.2.2:5432 root@45.32.169.173 -N`) |
 | DB port | `5432` |
 | DB user | `postgres` |
-| Supabase URL | `http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io` |
 | Schema versão | v2.12 (migrations aplicadas em maio/2026) |
 | Database password | **Ver .env.local** — não armazenar aqui |
 
@@ -257,19 +251,9 @@ Rate limit: 400 req/min diurno · 700 req/min madrugada
 ### `.env.local` completo
 
 ```env
-# Supabase self-hosted (VPS Vultr)
-NEXT_PUBLIC_SUPABASE_URL=http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io
-NEXT_PUBLIC_SUPABASE_ANON_KEY=          ← ver .env.local real
-SUPABASE_SERVICE_ROLE_KEY=              ← ver .env.local real
-SUPABASE_URL=http://supabasekong-v2ve0851flv0yljb0fy1r9oq.45.32.169.173.sslip.io
 
 # ETL Python (acesso direto ao banco via SSH tunnel)
 # Tunnel: ssh -L 5432:10.0.2.2:5432 root@45.32.169.173 -N -o ServerAliveInterval=30
-SUPABASE_DB_HOST=localhost              ← usar com tunnel ativo
-SUPABASE_DB_PORT=5432
-SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=                   ← ver gerenciador de senhas
-SUPABASE_DB_NAME=meuspoliticos_db
 
 # App
 NEXT_PUBLIC_SITE_URL=https://meuspoliticos.com.br
@@ -365,9 +349,6 @@ Criado por uma advogada e um programador. Foco em emendas PIX, cota parlamentar 
 | Camada | Tecnologia | Custo |
 |---|---|---|
 | Frontend | Next.js 15 + TypeScript | Grátis (Vercel) |
-| Banco de dados | Supabase (PostgreSQL) | Grátis até 500MB |
-| Autenticação | Supabase Auth | Grátis |
-| Backend/API | Supabase Edge Functions | Grátis |
 | Coleta de dados | Python scripts via GitHub Actions | Grátis |
 | Deploy frontend | Vercel | Grátis |
 | CI/CD | GitHub Actions | Grátis |
@@ -387,10 +368,7 @@ lucide-react       ← ícones
 clsx + tailwind-merge ← utilitários de classes
 ```
 
-**Supabase:**
 ```
-@supabase/supabase-js  ← client principal
-@supabase/ssr          ← SSR/Server Components
 ```
 
 **Formulários e validação:**
@@ -744,7 +722,6 @@ precisar deles. Zero latência para o usuário. Custo controlado.
 
 ```
 API Câmara → ementa crua → Python → OpenAI API
-→ descricao_simples + tema → Supabase
 → frontend exibe diretamente (sem chamada extra)
 ```
 
@@ -796,10 +773,8 @@ Se a OpenAI falhar ou retornar JSON inválido:
 ```
 Camada 1 — Coleta
   Python scripts via GitHub Actions (cron diário às 6h)
-  APIs públicas → Supabase
 
 Camada 2 — Banco estruturado
-  Supabase PostgreSQL
   Todo registro com link_fonte para origem oficial
 
 Camada 3 — IA (fase 2)
@@ -1153,7 +1128,6 @@ Arquivo completo: `001_schema.sql`
 | `gastos` | Câmara / Portal Transparência | MVP |
 | `presenca` | Calculada dos eventos da Câmara | MVP |
 | `emendas` | Portal da Transparência | Fase 2 |
-| `perfis` | Supabase Auth | MVP |
 | `acompanhamentos` | Gerado pelo usuário | MVP |
 
 Views prontas: `feed_usuario` · `resumo_politico`
@@ -1165,7 +1139,6 @@ RLS configurado: dados públicos abertos, dados do usuário privados.
 
 | Dias | Entrega |
 |---|---|
-| 1–2 | Setup: GitHub + Supabase (schema) + Vercel |
 | 3–4 | Scripts Python: 513 deputados no banco |
 | 5–6 | Scripts Python: votações + gastos + presença |
 | 7–8 | Frontend: home + busca |
@@ -1205,7 +1178,6 @@ meuspoliticos/
 │   │   └── presenca.py
 │   └── seed/
 │       └── initial_load.py
-├── supabase/
 │   └── migrations/
 │       └── 001_schema.sql
 └── .github/
@@ -1550,7 +1522,6 @@ Visão de longo prazo — unir em um só lugar: trajetória, atuação, históri
 | Arquivo | Conteúdo |
 |---|---|
 | `meuspoliticos_master.md` | Este documento — visão geral completa |
-| `001_schema.sql` | Schema completo do banco Supabase (v2.8) |
 | `load_senado.py` | Loader Python — Senado Federal (Fase 2 ✅) |
 | `wireframes_meuspoliticos.md` | Wireframes de todas as telas |
 | `branding_meus_politicos_manifesto_identidade.md` | Manifesto e identidade visual completos |
@@ -1565,16 +1536,12 @@ Painel interno para monitoramento e controle operacional da plataforma. **Não �
 ### Acesso
 - Rota protegida: `/admin`
 - Autenticação: login com e-mail + senha admin
-- Role `admin` configurado no Supabase Auth
 - Separado completamente da área do usuário comum
 
 ### Acesso
 - Rota: `/admin` — protegida por senha
-- Autenticação: e-mail + senha com role `admin` no Supabase Auth
-- Sem formulário público — usuário admin criado diretamente no Supabase
 - Escopo: equipe interna, crescendo com o projeto
 
-### O que o Supabase Studio já resolve (não construir)
 - Editar dados brutos nas tabelas
 - Queries manuais de diagnóstico
 - Ver logs de banco detalhados
@@ -1643,7 +1610,6 @@ Níveis: erro (vermelho) · aviso (âmbar) · info (verde).
 
 ### Stack
 - Next.js — mesma codebase, pasta `/app/admin`
-- Supabase Auth — verificação de role `admin` em cada rota
 - Server Components + Server Actions — zero backend extra
 - Wireframe aprovado ✅
 
@@ -1934,14 +1900,12 @@ Esforço: 1 hora. Impacto: retenção + SEO (reduz bounce).
 
 ### Desenvolvimento — iniciar agora
 12. ✅ Criar repositório no GitHub (monorepo)
-13. ✅ Criar projeto no Supabase → schema v2.11 rodando (33 tabelas)
 14. ✅ Criar projeto no Vercel → meuspoliticos.com.br no ar
 15. ✅ Obter API Key do Portal da Transparência (gov.br)
 16. ✅ Obter API Key OpenAI
 17. ✅ Configurar Resend — domínio verificado
 18. ✅ Cloudflare + DNS propagado
 19. ✅ Next.js 15 inicializado + dependências instaladas
-20. ⬜ Configurar cliente Supabase no Next.js (`lib/supabase/`)
 21. ⬜ Scripts Python de coleta — deputados, votações, gastos, presença (Câmara)
 22. ⬜ Construir frontend — home, busca, perfil, CEP
 23. ⬜ Construir `/admin`

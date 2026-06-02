@@ -15,7 +15,6 @@ Todos os endpoints são implementados como Next.js Route Handlers em `app/src/ap
 
 | Aspecto | Padrão |
 |---|---|
-| Autenticação | `supabase.auth.getUser()` — verificado antes de qualquer operação |
 | Admin | Verificação de `perfis.role = 'admin'` via `createAdminClient()` |
 | Erros | `NextResponse.json({ error: '...' }, { status: N })` |
 | Sucesso | `NextResponse.json({ ok: true })` ou payload específico |
@@ -74,7 +73,6 @@ Busca paginada de políticos com filtros. Pública.
 }
 ```
 
-**Implementação:** usa Supabase client por padrão. Quando filtro de partido está ativo **ou** quando o Supabase retorna `42501` (RLS bloqueou), faz fallback para query direta via `pg.Pool` usando `POSTGRES_*` vars. O pool é singleton (max 3 conexões, idle 30s).
 
 ---
 
@@ -315,7 +313,6 @@ Match manual de emendas com políticos (via `codigo_siafi`). Detalhes de impleme
 
 ### `GET /auth/callback`
 
-Callback OAuth do Supabase. Troca `code` por sessão e redireciona para `/painel`.
 
 **Implementado em:** `app/src/app/(auth)/auth/callback/route.ts`
 

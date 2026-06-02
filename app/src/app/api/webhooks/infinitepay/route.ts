@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const tipo = order_nsu.startsWith('apoio-mensal') ? 'mensal' : 'unica'
 
     // TODO: registrar doação no banco de dados
-    // await supabase.from('doacoes').upsert({
+    // await db.from('doacoes').upsert({
     //   order_nsu,
     //   transaction_nsu,
     //   invoice_slug,

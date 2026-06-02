@@ -25,7 +25,6 @@ O redesign-2026 entregou:
 
 O que **falta para o go-live** está detalhado em `docs/TODO_PRODUCTION.md`. Este documento trata do que vem **depois** do lançamento.
 
-> **Identity roadmap:** a migracao Supabase Auth -> Logto e uma frente de
 > modernizacao aprovada. O plano operacional esta em
 > `docs/auth/AUTH_MIGRATION_LOGTO.md`; a decisao arquitetural esta em
 > `docs/adr/ADR-001-logto-as-identity-provider.md`.
@@ -214,10 +213,8 @@ Wireframes aprovados: `app_partidos_page.tsx` (índice geral) + `app_partidos_si
 | Item | Quando |
 |---|---|
 | Avaliar Turborepo para orquestração de build (G-11) | Quando houver >2 packages no monorepo |
-| Cache de queries Supabase (ISR / `revalidate`) | Quando tráfego crescer |
 | CDN para assets estáticos do MinIO | Quando storage crescer |
 | Read replica para queries analíticas pesadas | Quando latência de DB > 200ms |
-| Supabase Cloud (migração do self-hosted) | Quando custo de operação VPS superar benefit |
 
 ### Testes e CI (Gap G-06)
 
@@ -265,7 +262,6 @@ Estas decisões precisam ser tomadas **antes** de implementar as features relaci
 | **Pagamentos ativos** | Stripe ou InfinitePay? | InfinitePay permanece ativo; Stripe foi removido |
 | **Modelo de acesso ao app analítico** | Free / donate-to-access / subscription | Define todo o fluxo de autenticação e payment do (app)/ |
 | **ETL automático: GitHub Actions vs. Coolify cron** | GH Actions (mais simples) vs. job no próprio Coolify | GitHub Actions preferível — CI/CD já na plataforma |
-| **Supabase self-hosted vs. Supabase Cloud** | Self-hosted (atual) vs. migrar para cloud | Migrar quando custo de operação VPS > ~$50/mês ou disponibilidade for problema |
 | **Turborepo** | Adotar agora ou depois | Só faz sentido com ≥2 packages no workspace — adiar |
 
 ---

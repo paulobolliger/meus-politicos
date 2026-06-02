@@ -29,7 +29,7 @@ export function buildCurrentUserFromLogto(session: LogtoContext): CurrentUser | 
     name,
     role: 'user',
     logtoSub: sub,
-    supabaseUserId: null,
+    legacyAuthUserId: null,
     profile: null,
   }
 }

@@ -25,7 +25,6 @@ Estes itens desbloqueiam todos os outros. Não há como desenvolver em equipe ou
 
 - [ ] Copiar todas as 30+ variáveis de `app/.env.local` para `.env.example` (apenas placeholders — nunca valores reais)
 - [ ] Referência completa disponível em `docs/ENVIRONMENT.md §1–9`
-- [ ] Validar que o template cobre: Supabase, DB direto, URLs de subdomínios, InfinitePay, OpenAI, Resend, OAuth (Google/Twitter/LinkedIn), Portal Transparência, MinIO
 
 **Critério de conclusão:** novo desenvolvedor consegue rodar `npm run dev` a partir do `.env.example` + instruções do README sem acessar o `.env.local` de produção.
 
@@ -39,8 +38,6 @@ Bloqueio legal e de confiança. Pagamentos processados sem registro = sem histó
 
 **Pré-requisito para G-02 e G-03**
 
-- [ ] Verificar se `doacoes` já existe no schema v2.12 (consultar `supabase/migrations/`)
-- [ ] Se não existir, criar migration em `supabase/migrations/YYYYMMDD_doacoes.sql`:
 
 ```sql
 CREATE TABLE doacoes (
@@ -147,7 +144,6 @@ Sem dados atualizados, a plataforma exibe informações desatualizadas ou vazias
 
 - [ ] `git add app/public/partidos/`
 - [ ] Verificar tamanho total antes de commitar (logos PNG podem ser grandes)
-- [ ] Se >10MB: avaliar hospedagem no MinIO/Supabase Storage em vez do repositório
 
 ---
 
@@ -233,7 +229,6 @@ jobs:
 - [ ] Criar conta gratuita em UptimeRobot (50 monitores, check a cada 5 min)
 - [ ] Adicionar monitores para:
   - `https://meuspoliticos.com.br` (site público)
-  - `https://supabase.meuspoliticos.com.br` (Supabase)
   - `https://app.meuspoliticos.com.br` (app analítico)
 - [ ] Configurar alerta de e-mail/SMS para downtime
 
@@ -250,13 +245,11 @@ O Next.js não adiciona headers de segurança por padrão. Adicionar em `app/nex
 - [ ] `Strict-Transport-Security` (HSTS)
 - [ ] `X-Content-Type-Options: nosniff`
 - [ ] `X-Frame-Options: DENY`
-- [ ] `Content-Security-Policy` — cuidado: Stripe Elements e Supabase têm domínios específicos que precisam estar no CSP
 - [ ] `Referrer-Policy: strict-origin-when-cross-origin`
 
 ### 6.2 · Rotação de credenciais
 
 - [ ] Revisar se alguma credencial de produção foi exposta acidentalmente (rodar `git log --all -S "sk_live_"` e equivalentes)
-- [ ] Confirmar que Supabase service role key e senhas de DB não estão em nenhum commit no histórico
 - [ ] Agendar rotação periódica trimestral das chaves de API (ver `docs/SECURITY.md §rotação`)
 
 ### 6.3 · Modo produção Stripe (histórico)

@@ -1,7 +1,6 @@
 # Data Source Master — meuspoliticos.com
 > Documento vivo — versão 2.0 — maio 2026
 > Referência central para todas as decisões de coleta, ingestão e qualidade de dados
-> Atualizado após análise competitiva + migração para Supabase self-hosted (VPS Vultr)
 
 ---
 
@@ -193,7 +192,6 @@ API / CSV
   ↓ validar schema (JSON Schema)
   ↓ normalizar (tipos, encoding UTF-8, datas UTC)
   ↓ entity resolution (CPF → politico_id)
-  ↓ upsert no Supabase (ON CONFLICT → UPDATE)
   ↓ registrar em coletas_log (status, registros, duração)
   ↓ se erro → registrar + continuar (nunca travar tudo)
 ```
@@ -493,7 +491,6 @@ for chunk in reader:
     chunk.columns = [c.lower() for c in chunk.columns]
     chunk = chunk.replace({'#NULO#': None, '#NE#': None})
     chunk['valor_bem'] = chunk['valor_bem'].str.replace(',', '.').astype(float)
-    # upsert no Supabase via on_conflict(SQ_CANDIDATO)
 ```
 
 **Staging table:** carregar bruto em tabela de staging → transformar via SQL no PostgreSQL (significativamente mais rápido do que transformar em Python para volumes acima de 1M de linhas).
@@ -625,9 +622,7 @@ CSV comprimido com colunas `CD_MUNICIPIO_TSE` ↔ `CD_MUNICIPIO_IBGE`. Usar para
 
 ```python
 import requests
-from supabase import create_client
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def ingest_municipios():
     resp = requests.get(
@@ -646,9 +641,7 @@ def ingest_municipios():
         for m in municipios
     ]
 
-    # Inserir em batches de 500 — evita timeout no Supabase
     for i in range(0, len(payload), 500):
-        supabase.table("municipios").insert(payload[i:i+500]).execute()
         print(f"{min(i+500, len(payload))}/{len(municipios)} municípios inseridos")
 ```
 
@@ -869,7 +862,6 @@ class PortalTransparenciaETL:
 
 ---
 
-#### Recomendações para o Supabase
 
 - **`pg_trgm`:** habilitar extensão para fuzzy match de nomes entre Câmara e Portal — `CREATE EXTENSION pg_trgm;`
 - **Materialized views:** pré-calcular totais de emendas por parlamentar por ano — garante carregamento do perfil em milissegundos no Next.js
@@ -1168,7 +1160,6 @@ Tabelas de resolução:
 - `politico_ids` — mapeia IDs Câmara v1 ↔ v2 (mesmo deputado, duas versões da API)
 - `politico_senado_ids` — mapeia Senado ↔ `politicos` (âncora: CPF)
 
-**Camadas de segurança (RLS no Supabase):**
 - Camada Silver (`senadores`, `senado_votacoes`, etc.): leitura pública permitida
 - Camada Bronze (`raw_senado`): acesso restrito — apenas service role admin
 
@@ -2256,7 +2247,6 @@ collected_at       timestamptz  -- quando foi coletado
 | Erros | Sentry |
 | Cache | Redis (fase 2+) |
 
-**Para MVP:** GitHub Actions (cron) + `coletas_log` no Supabase resolvem tudo.
 
 ---
 
@@ -2358,7 +2348,6 @@ CSV do TSE ou IBGE
                │
 ┌──────────────▼──────────────────────┐
 │       CURATED POSTGRES              │
-│       (Supabase — schema v2.3)      │
 └──────┬───────────────────┬──────────┘
        │                   │
     VIEWS                ADMIN
@@ -2396,7 +2385,6 @@ CSV do TSE ou IBGE
 |---|---|---|
 | Onde rodar os scripts | GitHub Actions / VPS / local | GitHub Actions (grátis, auditável) |
 | Linguagem dos scripts | Python / TypeScript | Python (pandas, requests — padrão para ETL) |
-| Armazenar RAW | Supabase Storage / S3 / ignorar | Supabase Storage para MVP (evitar perda) |
 | Geração de slug | Automática no script / trigger | Script Python (mais controle) |
 | Deduplicação | Por id_camara / hash | Por id_camara (único e estável) |
 | Ordem de carga | IBGE → Partidos → Deputados → Dados | Conforme etapas desta seção |
@@ -2585,7 +2573,6 @@ Padrão de cache que entrega o dado existente imediatamente e atualiza em backgr
 
 | Camada | TTL | Tecnologia |
 |---|---|---|
-| Supabase (banco) | Fonte primária | Sempre atualizado pelo cron |
 | Next.js ISR | 60–300 seg | `revalidate` por página |
 | Vercel Edge Cache | 60 seg | Automático |
 | Redis (fase 2) | Configurável | Queries frequentes |
@@ -3363,7 +3350,6 @@ Para processar 600 políticos mensalmente contra bases de terabytes:
 |---|---|---|
 | RAM | 32 GB | 64 GB |
 | Storage | 500 GB SSD NVMe | 1 TB |
-| PostgreSQL | Supabase Pro | Instância dedicada |
 | Grafo | Apache AGE (extensão PostgreSQL) | Neo4j separado |
 
 **Apache AGE vs Neo4j:**

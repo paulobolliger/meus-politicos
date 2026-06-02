@@ -107,7 +107,6 @@ Configuração mínima:
 
 ### 3.2 Alertas de uptime
 
-Nenhum serviço monitora se `meuspoliticos.com.br`, `supabase.meuspoliticos.com.br` ou o VPS estão respondendo.
 
 **Serviços gratuitos adequados:**
 - UptimeRobot (free — 50 monitores, checks a cada 5 min)
@@ -130,7 +129,6 @@ HAVING MAX(iniciado_em) < NOW() - INTERVAL '48 hours'
 
 ### 3.4 Monitoramento de performance do banco
 
-Nenhuma query lenta é rastreada ou alertada. O Supabase self-hosted não inclui pg_stat_statements habilitado por padrão no dashboard.
 
 ---
 
@@ -150,7 +148,6 @@ Nenhuma query lenta é rastreada ou alertada. O Supabase self-hosted não inclui
 | Recurso | URL |
 |---|---|
 | Vercel Function Logs | Vercel Dashboard → Project → Functions |
-| Supabase Studio | `https://supabase.meuspoliticos.com.br` |
 | Status de coletas ETL | `meuspoliticos.com.br/admin` → seção ETL |
 | Admin logs | `meuspoliticos.com.br/admin/dados` |
 
