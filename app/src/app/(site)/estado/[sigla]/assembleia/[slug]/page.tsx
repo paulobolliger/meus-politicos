@@ -14,7 +14,7 @@ let _pool: Pool | null = null
 function getPool(): Pool {
   if (!_pool) _pool = new Pool({
     host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5433),
+    port:     Number(process.env.POSTGRES_PORT ?? 5432),
     database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
     user:     process.env.POSTGRES_USER     ?? 'postgres',
     password: process.env.POSTGRES_PASSWORD,
@@ -79,12 +79,7 @@ function fmtMoeda(v: string | null): string | null {
 
 // ─── Static params ─────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
-  const pool = getPool()
-  const result = await pool.query<{ slug: string; uf: string }>(
-    `SELECT slug, LOWER(uf) AS uf FROM politicos
-     WHERE cargo = 'deputado_estadual' AND removido_em IS NULL`
-  )
-  return result.rows.map((r) => ({ sigla: r.uf, slug: r.slug }))
+  return []
 }
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ let _pool: Pool | null = null
 function getPool(): Pool {
   if (!_pool) _pool = new Pool({
     host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? '5433'),
+    port:     Number(process.env.POSTGRES_PORT ?? 5432),
     user:     process.env.POSTGRES_USER     ?? 'postgres',
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
