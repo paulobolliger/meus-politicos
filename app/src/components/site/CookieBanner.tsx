@@ -38,12 +38,12 @@ export function CookieBanner() {
           style={{
             maxWidth: 900,
             width: '100%',
-            background: 'rgba(255,255,255,0.88)',
+            background: 'rgba(30, 41, 59, 0.95)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             border: '1px solid var(--line)',
             borderRadius: 16,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
             padding: '16px 20px',
             display: 'flex',
             alignItems: 'center',
@@ -56,7 +56,7 @@ export function CookieBanner() {
         >
           <p style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.55, flex: 1, margin: 0, minWidth: 220 }}>
             Utilizamos cookies para melhorar sua experiência, conforme nossa{' '}
-            <Link href="/privacidade" style={{ color: 'var(--brand-2)', fontWeight: 600 }}>
+            <Link href="/privacidade" style={{ color: 'var(--brand)', fontWeight: 600 }}>
               Política de Privacidade
             </Link>
             .
@@ -85,10 +85,10 @@ export function CookieBanner() {
                 height: 40,
                 padding: '0 24px',
                 borderRadius: 8,
-                background: 'var(--ink)',
+                background: 'var(--brand)',
                 border: 'none',
                 cursor: 'pointer',
-                color: 'white',
+                color: '#ffffff',
                 fontSize: 13,
                 fontWeight: 700,
               }}
