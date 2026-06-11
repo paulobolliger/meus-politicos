@@ -8,19 +8,13 @@ type Props = {
   termo: string
   /** Slug to link to /glossario/[slug] */
   slug: string
-  /** Short definition shown in tooltip — fetch lazily */
+  /** Short definition shown in tooltip */
   definicaoSimples?: string
   children?: React.ReactNode
 }
 
 /**
- * GlossarioTooltip — wraps any jargon word with an underline + popover.
- *
- * Usage:
- *   <GlossarioTooltip termo="CEAP" slug="ceap">CEAP</GlossarioTooltip>
- *   <GlossarioTooltip termo="Emenda parlamentar" slug="emenda-parlamentar" definicaoSimples="..." />
- *
- * When definicaoSimples is not provided, it fetches on first hover via /api/glossario/[slug].
+ * GlossarioTooltip — wraps a word with dotted underline and displays a hover popover card.
  */
 export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, children }: Props) {
   const [open, setOpen] = useState(false)
@@ -29,7 +23,7 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
   const ref = useRef<HTMLSpanElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Lazy fetch if no initial definition
+  // Lazy fetch if no initial definition is passed
   const fetchDef = async () => {
     if (def || loading) return
     setLoading(true)
@@ -47,6 +41,7 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
   }
 
   const handleMouseEnter = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
       setOpen(true)
       fetchDef()
@@ -55,7 +50,9 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
 
   const handleMouseLeave = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    setOpen(false)
+    timerRef.current = setTimeout(() => {
+      setOpen(false)
+    }, 150)
   }
 
   const handleFocus = () => {
@@ -63,7 +60,7 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
     fetchDef()
   }
 
-  // Close on outside click
+  // Close on click outside
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -74,92 +71,71 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
   return (
     <span
       ref={ref}
-      style={{ position: 'relative', display: 'inline' }}
+      className="relative inline"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
       onBlur={() => setOpen(false)}
     >
-      {/* Underlined trigger */}
-      <span
+      {/* Trigger word with dotted underline */}
+      <Link
+        href={`/glossario/${slug}`}
         tabIndex={0}
         role="button"
         aria-describedby={open ? `tooltip-${slug}` : undefined}
-        style={{
-          cursor: 'help',
-          borderBottom: '1px dashed var(--brand)',
-          color: 'inherit',
-          outline: 'none',
-        }}
+        className="cursor-help border-b border-dotted border-indigo-400 font-medium hover:text-indigo-400 transition-colors focus:outline-none"
       >
         {children ?? termo}
-      </span>
+      </Link>
 
-      {/* Tooltip popover */}
+      {/* Popover overlay */}
       {open && (
         <span
           id={`tooltip-${slug}`}
           role="tooltip"
-          style={{
-            position: 'absolute',
-            bottom: 'calc(100% + 8px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 200,
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderRadius: 8,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.14)',
-            padding: '10px 14px',
-            minWidth: 220,
-            maxWidth: 300,
-            pointerEvents: 'auto',
+          onMouseEnter={() => {
+            if (timerRef.current) clearTimeout(timerRef.current)
+            setOpen(true)
           }}
+          onMouseLeave={handleMouseLeave}
+          className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-[250] bg-slate-950/95 border border-slate-800 text-slate-100 rounded-xl shadow-xl shadow-black/40 p-3.5 min-w-[240px] max-w-[320px] pointer-events-auto block animate-in fade-in slide-in-from-bottom-1 duration-150"
         >
-          {/* Arrow */}
-          <span style={{
-            position: 'absolute',
-            bottom: -5,
-            left: '50%',
-            transform: 'translateX(-50%) rotate(45deg)',
-            width: 8, height: 8,
-            background: 'var(--panel)',
-            border: '1px solid var(--line)',
-            borderTop: 'none', borderLeft: 'none',
-          }} />
+          {/* Arrow indicator */}
+          <span className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 rotate-45 w-2 h-2 bg-slate-950 border border-slate-800 border-t-0 border-l-0" />
 
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', marginBottom: 5, letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+          {/* Header */}
+          <div className="text-[10px] font-mono font-bold text-indigo-400 mb-1.5 uppercase tracking-wider">
             {termo}
           </div>
 
+          {/* Definition */}
           {loading ? (
-            <div style={{ fontSize: 12, color: 'var(--mute)' }}>Carregando...</div>
+            <div className="text-xs text-slate-500 animate-pulse font-mono">Carregando explicação...</div>
           ) : def ? (
-            <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+            <div className="text-xs text-slate-300 leading-relaxed font-sans">
               {def.length > 140 ? def.slice(0, 137) + '…' : def}
             </div>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--mute)', fontStyle: 'italic' }}>
-              Definição não encontrada.
+            <div className="text-xs text-slate-500 italic font-sans">
+              Definição indisponível no momento.
             </div>
           )}
 
-          <Link
-            href={`/glossario/${slug}`}
-            style={{
-              display: 'inline-block',
-              marginTop: 8,
-              fontSize: 11,
-              color: 'var(--brand-2)',
-              textDecoration: 'none',
-              fontWeight: 600,
-            }}
-          >
-            Ver definição completa →
-          </Link>
+          {/* Footer Link */}
+          <span className="block mt-2.5 pt-2 border-t border-slate-800/60">
+            <span className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 font-sans inline-flex items-center gap-1">
+              Ver verbete completo <span>→</span>
+            </span>
+          </span>
         </span>
       )}
     </span>
@@ -168,7 +144,7 @@ export function GlossarioTooltip({ termo, slug, definicaoSimples: initialDef, ch
 
 /**
  * Static list of common political jargon for quick reference.
- * Use this to wrap hardcoded terms throughout the site.
+ * Exposing this to support legacy references on other pages.
  */
 export const TERMOS_GLOSSARIO: Record<string, { slug: string; definicaoSimples: string }> = {
   'CEAP': {
@@ -212,3 +188,4 @@ export const TERMOS_GLOSSARIO: Record<string, { slug: string; definicaoSimples: 
     definicaoSimples: 'Tribunal Superior Eleitoral — responsável por organizar as eleições, registrar candidatos e partidos, e julgar disputas eleitorais no Brasil.',
   },
 }
+

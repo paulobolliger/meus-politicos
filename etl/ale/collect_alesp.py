@@ -36,7 +36,7 @@ from .base import (
 
 log = logging.getLogger(__name__)
 
-BASE_URL = 'https://www.al.sp.gov.br/repositorio/api'
+BASE_URL = 'https://www.al.sp.gov.br/dados-abertos/api'
 FONTE = 'alesp'
 UF = 'SP'
 ANO_ATUAL = date.today().year
@@ -57,10 +57,10 @@ PARTIDOS_ALESP = [
 def collect_deputados_xml(conn) -> int:
     """
     Baixa o XML bulk de deputados e atualiza id_ale no banco.
-    URL: https://www.al.sp.gov.br/repositorio/publicacao/deputados/deputados.xml
+    URL: https://www.al.sp.gov.br/repositorioDados/deputados/deputados.xml
     """
     log.info("[ALESP] Baixando XML bulk de deputados...")
-    url = 'https://www.al.sp.gov.br/repositorio/publicacao/deputados/deputados.xml'
+    url = 'https://www.al.sp.gov.br/repositorioDados/deputados/deputados.xml'
 
     try:
         r = requests.get(url, timeout=60,
@@ -111,7 +111,7 @@ def collect_deputados_rest(conn) -> int:
 
     with conn.cursor() as cur:
         for partido in PARTIDOS_ALESP:
-            dados = get_json(f'{BASE_URL}/deputado/{partido}')
+            dados = get_json(f'{BASE_URL}/deputado', params={'partido': partido})
             if not dados:
                 continue
 
@@ -171,7 +171,7 @@ def collect_presencas(conn, anos: list[int]) -> int:
     total = 0
 
     for id_ale, politico_id in deputados:
-        dados = get_json(f'{BASE_URL}/deputadoPresenca/{id_ale}')
+        dados = get_json(f'{BASE_URL}/deputadoPresenca', params={'deputado': id_ale})
         if not dados:
             time.sleep(0.5)
             continue
@@ -240,90 +240,133 @@ def collect_presencas(conn, anos: list[int]) -> int:
 
 def collect_despesas(conn, anos: list[int]) -> int:
     """
-    GET /repositorio/api/despesa/{ano}/{mes}
-    Retorna todas as despesas do mês paginadas.
+    Baixa o XML bulk de despesas de gabinete e faz a ingestão.
+    URL: https://www.al.sp.gov.br/repositorioDados/deputados/despesas_gabinetes.xml
     """
-    log.info(f"[ALESP] Coletando despesas para {anos}...")
+    import hashlib
+    log.info(f"[ALESP] Coletando despesas para {anos} via XML bulk...")
 
+    # 1. Carregar mapeamento id_ale (IdDeputado) -> politico_uuid do banco
     with conn.cursor() as cur:
-        mapa_por_nome = {}
-        cur.execute("""
-            SELECT id_ale, id, nome_eleitoral FROM politicos
-            WHERE cargo = 'deputado_estadual' AND uf = %s AND removido_em IS NULL
-        """, (UF,))
-        for id_ale, uuid, nome_el in cur.fetchall():
-            if id_ale:
-                mapa_por_nome[str(id_ale)] = uuid
-            if nome_el:
-                mapa_por_nome[nome_el.lower().strip()] = uuid
+        mapa_id_ale = buscar_mapa_deputados_uf(cur, UF)
 
+    # 2. Baixar deputados.xml para mapear Matricula -> IdDeputado
+    url_deps = 'https://www.al.sp.gov.br/repositorioDados/deputados/deputados.xml'
+    log.info("[ALESP] Buscando deputados para mapeamento de Matricula...")
+    try:
+        r = requests.get(url_deps, timeout=60, headers={'User-Agent': 'MeusPoliticosBR/1.0'})
+        r.raise_for_status()
+        root_deps = ET.fromstring(r.content)
+    except Exception as e:
+        log.error(f"[ALESP] Falha ao buscar deputados: {e}")
+        return 0
+
+    mapa_matricula = {}
+    for dep in root_deps.findall('.//Deputado'):
+        mat = (dep.findtext('Matricula') or '').strip()
+        id_ale = (dep.findtext('IdDeputado') or '').strip()
+        if mat and id_ale:
+            mapa_matricula[mat] = id_ale
+
+    # Mapear Matricula -> politico_uuid
+    mapa_deputados = {}
+    for mat, id_ale in mapa_matricula.items():
+        if id_ale in mapa_id_ale:
+            mapa_deputados[mat] = mapa_id_ale[id_ale]
+
+    # Fallback por nome
+    with conn.cursor() as cur:
+        for dep in root_deps.findall('.//Deputado'):
+            mat = (dep.findtext('Matricula') or '').strip()
+            if mat and mat not in mapa_deputados:
+                nome = (dep.findtext('NomeParlamentar') or dep.findtext('Nome') or '').strip()
+                if nome:
+                    uuid = buscar_politico_por_nome(cur, nome, UF)
+                    if uuid:
+                        mapa_deputados[mat] = uuid
+
+    # 3. Baixar despesas_gabinetes.xml
+    url_desp = 'https://www.al.sp.gov.br/repositorioDados/deputados/despesas_gabinetes.xml'
+    log.info(f"[ALESP] Baixando XML de despesas ({url_desp})...")
+    try:
+        r = requests.get(url_desp, timeout=120, headers={'User-Agent': 'MeusPoliticosBR/1.0'})
+        r.raise_for_status()
+        root_desp = ET.fromstring(r.content)
+    except Exception as e:
+        log.error(f"[ALESP] Falha ao baixar despesas: {e}")
+        return 0
+
+    # 4. Processar despesas
     total = 0
+    batch = []
+    
+    for desp in root_desp.findall('.//despesa'):
+        try:
+            ano = int(desp.findtext('Ano') or '0')
+            if ano not in anos:
+                continue
 
-    for ano in anos:
-        for mes in range(1, 13):
-            if date(ano, mes, 1) > date.today().replace(day=1):
-                break
+            mes = int(desp.findtext('Mes') or '0')
+            if not (1 <= mes <= 12):
+                continue
 
-            pagina = 1
-            while True:
-                dados = get_json(f'{BASE_URL}/despesa/{ano}/{mes}',
-                                  params={'pagina': pagina, 'quantidade': 200})
-                if not dados:
-                    break
+            matricula = (desp.findtext('Matricula') or '').strip()
+            politico_id = mapa_deputados.get(matricula)
+            if not politico_id:
+                continue
 
-                itens = dados if isinstance(dados, list) else dados.get('data', dados.get('despesas', []))
-                if not itens:
-                    break
+            valor_str = (desp.findtext('Valor') or '0').strip()
+            valor = float(valor_str)
+            if valor <= 0:
+                continue
 
+            cnpj = (desp.findtext('CNPJ') or '').strip()
+            if not cnpj or cnpj == '0':
+                cnpj = None
+
+            categoria = (desp.findtext('Tipo') or 'outros')[:100]
+            fornecedor = (desp.findtext('Fornecedor') or '')[:200]
+
+            # Gerar source_record_id estável via sha256
+            raw_id = f"{matricula}_{ano}_{mes}_{valor}_{cnpj or ''}_{fornecedor}_{categoria}"
+            source_rec = hashlib.sha256(raw_id.encode('utf-8')).hexdigest()
+
+            batch.append((
+                politico_id, ano, mes, valor,
+                categoria, fornecedor, cnpj,
+                FONTE, source_rec
+            ))
+
+            if len(batch) >= 500:
+                with conn.cursor() as cur:
+                    cur.executemany("""
+                        INSERT INTO gastos
+                            (politico_id, ano, mes, valor, categoria,
+                             fornecedor, cnpj_cpf, source_id, source_record_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (source_id, source_record_id) DO UPDATE SET
+                            valor = EXCLUDED.valor
+                    """, batch)
+                conn.commit()
+                total += len(batch)
                 batch = []
-                for item in itens:
-                    # Match por id_ale ou nome
-                    id_dep = str(item.get('idDeputado') or item.get('id') or '')
-                    nome_dep = (item.get('nomeParlamentar') or item.get('nome') or '').lower().strip()
+        except Exception as e:
+            log.warning(f"Erro ao processar despesa: {e}")
 
-                    politico_id = mapa_por_nome.get(id_dep) or mapa_por_nome.get(nome_dep)
-                    if not politico_id:
-                        continue
+    if batch:
+        with conn.cursor() as cur:
+            cur.executemany("""
+                INSERT INTO gastos
+                    (politico_id, ano, mes, valor, categoria,
+                     fornecedor, cnpj_cpf, source_id, source_record_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (source_id, source_record_id) DO UPDATE SET
+                    valor = EXCLUDED.valor
+            """, batch)
+        conn.commit()
+        total += len(batch)
 
-                    valor_str = str(item.get('valorReembolsado') or item.get('valor') or '0')
-                    try:
-                        valor = float(valor_str.replace(',', '.').replace('R$', '').strip())
-                    except ValueError:
-                        continue
-                    if valor <= 0:
-                        continue
-
-                    categoria = (item.get('descricao') or item.get('tipo') or item.get('categoria') or 'outros')[:100]
-                    fornecedor = (item.get('fornecedor') or item.get('empresa') or '')[:200]
-                    cnpj = (item.get('cnpj') or item.get('cpfCnpj') or '')[:20] or None
-                    id_item = str(item.get('id') or item.get('idDespesa') or '')
-                    source_rec = f'alesp_{ano}_{mes}_{id_dep}_{id_item}'
-
-                    batch.append((
-                        politico_id, ano, mes, valor,
-                        categoria, fornecedor, cnpj,
-                        FONTE, source_rec
-                    ))
-
-                if batch:
-                    with conn.cursor() as cur:
-                        cur.executemany("""
-                            INSERT INTO gastos
-                                (politico_id, ano, mes, valor, categoria,
-                                 fornecedor, cnpj_cpf, source_id, source_record_id)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (source_id, source_record_id) DO UPDATE SET
-                                valor = EXCLUDED.valor
-                        """, batch)
-                        conn.commit()
-                        total += len(batch)
-
-                if len(itens) < 200:
-                    break
-                pagina += 1
-                time.sleep(0.3)
-
-    log.info(f"[ALESP] Total despesas: {total}")
+    log.info(f"[ALESP] Total despesas salvas: {total}")
     return total
 
 

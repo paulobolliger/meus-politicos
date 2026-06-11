@@ -1,23 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
-
-// Singleton — evita criar/destruir pool a cada request
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? '5432'),
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      ssl: false,
-      max: 3,
-      idleTimeoutMillis: 30000,
-    })
-  }
-  return _pool
-}
+import { getPgPool } from '@/lib/db/pool'
+import { isFeatureActive } from '@/lib/flags'
 
 type PoliticoBusca = {
   id: string
@@ -49,7 +32,7 @@ type PoliticoPgRow = {
   partido_sigla: string | null
 }
 
-const POR_PAGINA = 20
+const POR_PAGINA = 15
 const CARGOS_VALIDOS = [
   'presidente',
   'vice_presidente',
@@ -81,7 +64,7 @@ function parseIntSafe(raw: string | null, fallback: number) {
 }
 
 async function countIndexados() {
-  const pool = getPool()
+  const pool = getPgPool()
   const result = await pool.query<{ total: string }>(
     `SELECT COUNT(*)::text AS total
      FROM politicos
@@ -100,7 +83,7 @@ async function buscarPoliticos(
   ordem: string,
   pagina: number
 ): Promise<{ data: PoliticoBusca[]; count: number }> {
-  const pool = getPool()
+  const pool = getPgPool()
 
   const whereParts = ["p.dado_estado = 'oficial'", 'p.removido_em IS NULL']
   const values: Array<string | number> = []
@@ -194,6 +177,30 @@ async function buscarPoliticos(
 
 export async function GET(request: NextRequest) {
   const startedAt = Date.now()
+  
+  if (!(await isFeatureActive('busca_postgres_direto'))) {
+    return NextResponse.json({
+      items: [],
+      total: 0,
+      totalPaginas: 1,
+      pagina: 1,
+      porPagina: POR_PAGINA,
+      elapsedMs: 0,
+      totalIndexados: 0,
+      chips: {
+        cargos: [
+          { id: '', label: 'Todos', total: null },
+          { id: 'deputado_federal', label: 'Dep. Federal', total: null },
+          { id: 'senador', label: 'Senador', total: null },
+          { id: 'governador', label: 'Governador', total: null },
+          { id: 'deputado_estadual', label: 'Dep. Estadual', total: null },
+        ],
+        ufs: UFS_CHIPS,
+        partidos: PARTIDOS_CHIPS,
+      },
+    })
+  }
+
   const url = new URL(request.url)
 
   const q = (url.searchParams.get('q') ?? '').trim()

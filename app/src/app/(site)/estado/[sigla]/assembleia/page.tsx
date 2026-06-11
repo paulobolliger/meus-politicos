@@ -33,7 +33,7 @@ const BANDEIRAS: Record<string, string> = {
   GO: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Flag_of_Goi%C3%A1s.svg',
   MA: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Bandeira_do_Maranh%C3%A3o.svg',
   MG: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/Bandeira_de_Minas_Gerais.svg',
-  MS: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Bandeira_do_Mato_Grosso_do_Sul.svg',
+  MS: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Bandeira_de_Mato_Grosso_do_Sul.svg',
   MT: 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Bandeira_de_Mato_Grosso.svg',
   PA: 'https://upload.wikimedia.org/wikipedia/commons/0/02/Bandeira_do_Par%C3%A1.svg',
   PB: 'https://upload.wikimedia.org/wikipedia/commons/b/bb/Bandeira_da_Para%C3%ADba.svg',
@@ -41,9 +41,9 @@ const BANDEIRAS: Record<string, string> = {
   PI: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Bandeira_do_Piau%C3%AD.svg',
   PR: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Bandeira_do_Paran%C3%A1.svg',
   RJ: 'https://upload.wikimedia.org/wikipedia/commons/7/73/Bandeira_do_estado_do_Rio_de_Janeiro.svg',
-  RN: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Bandeira_do_Rio_Grande_do_Norte.svg',
+  RN: 'https://upload.wikimedia.org/wikipedia/commons/3/30/Bandeira_do_Rio_Grande_do_Norte.svg',
   RO: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Bandeira_de_Rond%C3%B4nia.svg',
-  RR: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Bandeira_de_Roraima.svg',
+  RR: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Bandeira_de_Roraima.svg',
   RS: 'https://upload.wikimedia.org/wikipedia/commons/6/63/Bandeira_do_Rio_Grande_do_Sul.svg',
   SC: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Bandeira_de_Santa_Catarina.svg',
   SE: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Bandeira_de_Sergipe.svg',
@@ -119,23 +119,31 @@ function computeHemicicloDots(
   })
 
   const CX = 200, CY = 196
-  const dots: HemiDot[] = []
+  const coords: { cx: number; cy: number; angle: number }[] = []
   let idx = 0
 
   for (const row of rows) {
     const n = Math.min(row.count, seats.length - idx)
     for (let i = 0; i < n; i++) {
       const angle = Math.PI - (n === 1 ? Math.PI / 2 : (i / (n - 1)) * Math.PI)
-      dots.push({
+      coords.push({
         cx: Number((CX + row.r * Math.cos(angle)).toFixed(1)),
         cy: Number((CY - row.r * Math.sin(angle)).toFixed(1)),
-        color: seats[idx].color,
-        sigla: seats[idx].sigla,
+        angle,
       })
       idx++
     }
   }
-  return dots
+
+  // Ordenar por ângulo decrescente (do mais à esquerda: Math.PI ao mais à direita: 0)
+  coords.sort((a, b) => b.angle - a.angle)
+
+  return coords.map((c, i) => ({
+    cx: c.cx,
+    cy: c.cy,
+    color: seats[i]?.color ?? '#94a3b8',
+    sigla: seats[i]?.sigla ?? 'Outros',
+  }))
 }
 
 // ─── Static params ────────────────────────────────────────────────────────────
@@ -237,15 +245,14 @@ export default async function AssembleiaPage({
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         .dep-card { transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
-        .dep-card:hover { border-color: #0051d5; box-shadow: 0 8px 24px rgba(0,0,0,0.10); transform: translateY(-2px); }
+        .dep-card:hover { border-color: var(--brand); box-shadow: 0 8px 24px rgba(0,0,0,0.20); transform: translateY(-2px); }
         .dep-avatar { transition: transform 0.3s; }
         .dep-card:hover .dep-avatar { transform: scale(1.05); }
         .hemi-dot { transition: r 0.15s; cursor: pointer; }
         .hemi-dot:hover { filter: drop-shadow(0 0 4px currentColor); }
         .partido-bar-fill { transition: width 0.6s ease; }
-        .filter-btn { transition: background 0.15s, color 0.15s; }
-        .filter-btn:hover { background: #f3f4f6; }
-        .filter-btn.active { background: #111827; color: white; }
+        .filter-btn { transition: background 0.15s, color 0.15s, border-color 0.15s; }
+        .filter-btn:hover { background: var(--line); color: var(--ink); }
       ` }} />
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
@@ -253,7 +260,7 @@ export default async function AssembleiaPage({
         <div style={{
           position: 'relative', height: 360,
           borderRadius: 16, overflow: 'hidden',
-          background: `linear-gradient(135deg, ${cor} 0%, ${cor}cc 40%, #111827 100%)`,
+          background: `linear-gradient(135deg, ${cor} 0%, ${cor}cc 40%, #0F172A 100%)`,
         }}>
           {/* Bandeira como marca d'água */}
           {bandeira && (
@@ -338,21 +345,21 @@ export default async function AssembleiaPage({
         }}>
           {/* Card 1: Total deputados */}
           <div style={{
-            background: 'white', border: '1px solid #e5e7eb',
+            background: 'var(--panel)', border: '1px solid var(--line)',
             borderRadius: 14, padding: '20px 24px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
           }}>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#9ca3af', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-3)', margin: '0 0 6px' }}>
                 DEPUTADOS ATUAIS
               </p>
-              <h3 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
-                {total} <span style={{ fontSize: 14, fontWeight: 400, color: '#6b7280' }}>Titulares</span>
+              <h3 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                {total} <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink-3)' }}>Titulares</span>
               </h3>
             </div>
             <div style={{
-              background: '#f0f4ff', padding: 12, borderRadius: '50%',
+              background: 'var(--bg)', padding: 12, borderRadius: '50%',
               width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 24, flexShrink: 0,
             }}>
@@ -362,24 +369,24 @@ export default async function AssembleiaPage({
 
           {/* Card 2: Partidos e gênero */}
           <div style={{
-            background: 'white', border: '1px solid #e5e7eb',
+            background: 'var(--panel)', border: '1px solid var(--line)',
             borderRadius: 14, padding: '20px 24px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
           }}>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#9ca3af', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-3)', margin: '0 0 6px' }}>
                 COMPOSIÇÃO
               </p>
-              <h3 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
                 {alePartidos.length} Partidos
               </h3>
-              <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)' }}>
                 {feminino} mulheres · {masculino} homens
               </p>
             </div>
             <div style={{
-              background: '#fdf4ff', padding: 12, borderRadius: '50%',
+              background: 'var(--bg)', padding: 12, borderRadius: '50%',
               width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 24, flexShrink: 0,
             }}>
@@ -389,17 +396,17 @@ export default async function AssembleiaPage({
 
           {/* Card 3: Mandato */}
           <div style={{
-            background: 'white', border: `1px solid #e5e7eb`,
+            background: 'var(--panel)', border: `1px solid var(--line)`,
             borderLeft: `4px solid ${cor}`,
             borderRadius: 14, padding: '20px 24px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
           }}>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#9ca3af', margin: '0 0 6px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-3)', margin: '0 0 6px' }}>
                 LEGISLATURA
               </p>
-              <h3 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
                 2023–2026
               </h3>
               <p style={{ margin: 0, fontSize: 12, color: cor, fontWeight: 600 }}>
@@ -407,7 +414,7 @@ export default async function AssembleiaPage({
               </p>
             </div>
             <div style={{
-              background: `${cor}18`, padding: 12, borderRadius: '50%',
+              background: 'var(--bg)', padding: 12, borderRadius: '50%',
               width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 24, flexShrink: 0,
             }}>
@@ -421,17 +428,16 @@ export default async function AssembleiaPage({
           display: 'grid', gridTemplateColumns: '7fr 5fr',
           gap: 20, marginTop: 40,
         }}>
-          {/* Hemiciclo */}
           <div style={{
-            background: 'white', border: '1px solid #e5e7eb',
+            background: 'var(--panel)', border: '1px solid var(--line)',
             borderRadius: 14, padding: '28px 32px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
               <div>
-                <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#111827' }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>
                   Composição do Hemiciclo
                 </h2>
-                <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)' }}>
                   Distribuição das {total} cadeiras por partido — legislatura 2023–2026
                 </p>
               </div>
@@ -444,9 +450,9 @@ export default async function AssembleiaPage({
                   <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 480 }}>
                     {/* Arco base */}
                     <path
-                      d="M 50 196 Q 200 10 350 196"
-                      fill="none" stroke="#f3f4f6"
-                      strokeWidth="1" strokeDasharray="4,4"
+                       d="M 50 196 Q 200 10 350 196"
+                       fill="none" stroke="var(--line)"
+                       strokeWidth="1" strokeDasharray="4,4"
                     />
                     {/* Dots */}
                     {dots.map((dot, i) => (
@@ -463,12 +469,12 @@ export default async function AssembleiaPage({
                     ))}
                     {/* Centro: total */}
                     <text x="200" y="190" textAnchor="middle"
-                      fontSize="18" fontWeight="800" fill="#111827"
-                      fontFamily="monospace">
+                      fontSize="18" fontWeight="800" fill="var(--ink)"
+                      fontFamily="var(--font-mono)">
                       {total}
                     </text>
                     <text x="200" y="200" textAnchor="middle"
-                      fontSize="8" fill="#9ca3af" fontFamily="monospace">
+                      fontSize="8" fill="var(--ink-3)" fontFamily="var(--font-mono)">
                       CADEIRAS
                     </text>
                   </svg>
@@ -479,15 +485,15 @@ export default async function AssembleiaPage({
                   {alePartidos.map((p) => (
                     <div key={p.sigla} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       <div style={{ width: 10, height: 10, borderRadius: 2, background: p.cor, flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: '#374151', fontFamily: 'var(--font-mono)' }}>
-                        {p.sigla} <span style={{ color: '#9ca3af' }}>{p.qtd}</span>
+                      <span style={{ fontSize: 12, color: 'var(--ink-2)', fontFamily: 'var(--font-mono)' }}>
+                        {p.sigla} <span style={{ color: 'var(--ink-3)' }}>{p.qtd}</span>
                       </span>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              <div style={{ padding: '48px 0', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
+              <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--ink-3)', fontSize: 13 }}>
                 Dados de composição indisponíveis.
               </div>
             )}
@@ -498,10 +504,10 @@ export default async function AssembleiaPage({
 
             {/* Barras por partido */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 14, padding: '24px 28px', flex: 1,
             }}>
-              <h2 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#111827' }}>
+              <h2 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>
                 Distribuição por Partido
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -510,10 +516,10 @@ export default async function AssembleiaPage({
                   return (
                     <div key={p.sigla}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12 }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', color: '#374151', fontWeight: 600 }}>{p.sigla}</span>
-                        <span style={{ color: '#6b7280' }}>{p.qtd} dep. · {pct}%</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-2)', fontWeight: 600 }}>{p.sigla}</span>
+                        <span style={{ color: 'var(--ink-3)' }}>{p.qtd} dep. · {pct}%</span>
                       </div>
-                      <div style={{ height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: 6, background: 'var(--bg)', borderRadius: 99, overflow: 'hidden' }}>
                         <div className="partido-bar-fill"
                           style={{ width: `${pct}%`, height: '100%', background: p.cor, borderRadius: 99 }} />
                       </div>
@@ -521,7 +527,7 @@ export default async function AssembleiaPage({
                   )
                 })}
                 {alePartidos.length > 10 && (
-                  <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right', margin: 0 }}>
+                  <p style={{ fontSize: 11, color: 'var(--ink-3)', textAlign: 'right', margin: 0 }}>
                     +{alePartidos.length - 10} partidos com 1 dep. cada
                   </p>
                 )}
@@ -530,27 +536,27 @@ export default async function AssembleiaPage({
 
             {/* Stats de gênero */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 14, padding: '20px 24px',
             }}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#9ca3af', margin: '0 0 12px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--ink-3)', margin: '0 0 12px' }}>
                 REPRESENTAÇÃO POR GÊNERO
               </p>
               {/* Barra segmentada */}
               <div style={{ display: 'flex', height: 10, borderRadius: 99, overflow: 'hidden', marginBottom: 10, gap: 1 }}>
                 <div style={{ width: `${(feminino / total) * 100}%`, background: '#ec4899', minWidth: feminino > 0 ? 2 : 0 }} />
-                <div style={{ flex: 1, background: '#0051d5' }} />
+                <div style={{ flex: 1, background: '#6366F1' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ec4899', display: 'inline-block' }} />
-                  <span style={{ color: '#374151' }}>Mulheres <strong>{feminino}</strong></span>
-                  <span style={{ color: '#9ca3af' }}>({Math.round((feminino / total) * 100)}%)</span>
+                  <span style={{ color: 'var(--ink-2)' }}>Mulheres <strong>{feminino}</strong></span>
+                  <span style={{ color: 'var(--ink-3)' }}>({Math.round((feminino / total) * 100)}%)</span>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0051d5', display: 'inline-block' }} />
-                  <span style={{ color: '#374151' }}>Homens <strong>{masculino}</strong></span>
-                  <span style={{ color: '#9ca3af' }}>({Math.round((masculino / total) * 100)}%)</span>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', display: 'inline-block' }} />
+                  <span style={{ color: 'var(--ink-2)' }}>Homens <strong>{masculino}</strong></span>
+                  <span style={{ color: 'var(--ink-3)' }}>({Math.round((masculino / total) * 100)}%)</span>
                 </span>
               </div>
             </div>
@@ -565,10 +571,10 @@ export default async function AssembleiaPage({
             marginBottom: 24, flexWrap: 'wrap', gap: 16,
           }}>
             <div>
-              <h2 style={{ margin: '0 0 4px', fontSize: 26, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)' }}>
+              <h2 style={{ margin: '0 0 4px', fontSize: 26, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                 Deputados Estaduais
               </h2>
-              <p style={{ margin: 0, fontSize: 14, color: '#6b7280' }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-3)' }}>
                 {partidoFiltro
                   ? `${deputadosFiltrados.length} deputado${deputadosFiltrados.length !== 1 ? 's' : ''} do ${partidoFiltro}`
                   : `Acompanhe os ${total} parlamentares da legislatura 2023–2026`
@@ -582,9 +588,9 @@ export default async function AssembleiaPage({
                 className="filter-btn"
                 style={{
                   padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  border: '1px solid #e5e7eb', textDecoration: 'none',
-                  background: !partidoFiltro ? '#111827' : 'white',
-                  color: !partidoFiltro ? 'white' : '#374151',
+                  border: !partidoFiltro ? `1px solid ${cor}` : '1px solid var(--line)', textDecoration: 'none',
+                  background: !partidoFiltro ? `${cor}22` : 'var(--panel)',
+                  color: !partidoFiltro ? cor : 'var(--ink-2)',
                 }}>
                 Todos
               </Link>
@@ -595,10 +601,10 @@ export default async function AssembleiaPage({
                   className="filter-btn"
                   style={{
                     padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                    border: `1px solid ${partidoFiltro === p.sigla ? p.cor : '#e5e7eb'}`,
+                    border: `1px solid ${partidoFiltro === p.sigla ? p.cor : 'var(--line)'}`,
                     textDecoration: 'none',
-                    background: partidoFiltro === p.sigla ? p.cor : 'white',
-                    color: partidoFiltro === p.sigla ? 'white' : '#374151',
+                    background: partidoFiltro === p.sigla ? `${p.cor}22` : 'var(--panel)',
+                    color: partidoFiltro === p.sigla ? p.cor : 'var(--ink-2)',
                   }}>
                   {p.sigla} <span style={{ opacity: 0.7, fontSize: 11 }}>{p.qtd}</span>
                 </Link>
@@ -618,8 +624,8 @@ export default async function AssembleiaPage({
               return (
                 <Link key={dep.id} href={`/estado/${sigla.toLowerCase()}/assembleia/${dep.slug}`} style={{ textDecoration: 'none' }}>
                   <div className="dep-card" style={{
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
+                    background: 'var(--panel)',
+                    border: '1px solid var(--line)',
                     borderRadius: 14, overflow: 'hidden',
                   }}>
                     {/* Header colorido com avatar */}
@@ -631,18 +637,18 @@ export default async function AssembleiaPage({
                     }}>
                       {dep.foto_url ? (
                         <img
-                          src={dep.foto_url}
-                          alt={dep.nome_eleitoral}
-                          className="dep-avatar"
-                          style={{
-                            width: 72, height: 72, borderRadius: '50%', objectFit: 'cover',
-                            border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                          }}
+                           src={dep.foto_url}
+                           alt={dep.nome_eleitoral}
+                           className="dep-avatar"
+                           style={{
+                             width: 72, height: 72, borderRadius: '50%', objectFit: 'cover',
+                             border: '3px solid var(--panel)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                           }}
                         />
                       ) : (
                         <div className="dep-avatar" style={{
                           width: 72, height: 72, borderRadius: '50%',
-                          background: 'white', border: '3px solid white',
+                          background: 'var(--panel)', border: '3px solid var(--panel)',
                           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 28, fontWeight: 800, color: pCor,
@@ -678,7 +684,7 @@ export default async function AssembleiaPage({
                     <div style={{ padding: '14px 16px' }}>
                       <h4 style={{
                         margin: '0 0 8px', fontSize: 13, fontWeight: 700,
-                        color: '#111827', lineHeight: 1.3,
+                        color: '#F8FAFC', lineHeight: 1.3,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
@@ -686,7 +692,7 @@ export default async function AssembleiaPage({
                       }}>
                         {dep.nome_eleitoral}
                       </h4>
-                      <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                      <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>
                         Mandato 2023–2026
                       </div>
                     </div>
@@ -699,8 +705,8 @@ export default async function AssembleiaPage({
           {deputadosFiltrados.length === 0 && (
             <div style={{
               padding: '48px', textAlign: 'center',
-              border: '1px dashed #d1d5db', borderRadius: 12,
-              color: '#9ca3af', fontSize: 14,
+              border: '1px dashed var(--line)', borderRadius: 12,
+              color: 'var(--ink-3)', fontSize: 14,
             }}>
               Nenhum deputado encontrado para este filtro.
             </div>
@@ -710,7 +716,7 @@ export default async function AssembleiaPage({
         {/* ── CTA TRANSPARÊNCIA ─────────────────────────────────────── */}
         <section style={{ marginTop: 48, marginBottom: 64 }}>
           <div style={{
-            background: '#111827', color: 'white',
+            background: 'var(--panel)', border: '1px solid var(--line)', color: 'var(--ink)',
             borderRadius: 16, padding: '48px',
             display: 'flex', alignItems: 'center',
             justifyContent: 'space-between',
@@ -720,21 +726,21 @@ export default async function AssembleiaPage({
               <h2 style={{ margin: '0 0 12px', fontSize: 28, fontWeight: 800, fontFamily: 'var(--font-display)' }}>
                 Transparência em tempo real
               </h2>
-              <p style={{ margin: 0, fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7 }}>
+              <p style={{ margin: 0, fontSize: 15, color: 'var(--ink-2)', lineHeight: 1.7 }}>
                 Dados de gastos, votações e presença dos deputados estaduais de {cfg.nome}.
                 Em breve, acompanhe em tempo real via Portal da Transparência e TSE.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link href={`/estado/${sigla}`} style={{
-                background: 'white', color: '#111827',
+                background: 'var(--bg)', border: '1px solid var(--line)', color: 'var(--ink)',
                 padding: '12px 28px', borderRadius: 10,
                 fontWeight: 700, fontSize: 14, textDecoration: 'none',
               }}>
                 ← Voltar ao Estado
               </Link>
               <Link href="/busca" style={{
-                border: '1px solid rgba(255,255,255,0.3)', color: 'white',
+                background: 'var(--brand)', color: 'white',
                 padding: '12px 28px', borderRadius: 10,
                 fontWeight: 700, fontSize: 14, textDecoration: 'none',
               }}>
@@ -748,10 +754,10 @@ export default async function AssembleiaPage({
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: '#f3f4f6', padding: '8px 18px', borderRadius: 999,
-            fontSize: 12, color: '#6b7280',
+            background: 'var(--panel)', padding: '8px 18px', borderRadius: 999,
+            fontSize: 12, color: 'var(--ink-3)',
           }}>
-            ℹ️ Fonte: <strong style={{ color: '#374151' }}>TSE — Eleitos 2022</strong>.
+            ℹ️ Fonte: <strong style={{ color: 'var(--ink-2)' }}>TSE — Eleitos 2022</strong>.
             Dados atualizados periodicamente.
           </div>
         </div>

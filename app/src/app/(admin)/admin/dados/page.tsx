@@ -42,6 +42,13 @@ type PoliticoEditorRow = {
   foto_url: string | null
   codigo_siafi: string | null
   email: string | null
+  partido_id: string | null
+  situacao: string | null
+  gabinete_nome: string | null
+  gabinete_telefone: string | null
+  gabinete_email: string | null
+  uf: string
+  cargo: string
 }
 
 let pool: Pool | null = null
@@ -80,6 +87,16 @@ export default async function DadosQualidadePage({
   const params = await searchParams
   const busca = params.busca ?? ''
   const db = getPool()
+
+  // Load all parties
+  const { rows: partidosRows } = await db.query<{ id: string; sigla: string; nome: string }>(
+    'SELECT id, sigla, nome FROM partidos ORDER BY sigla ASC'
+  )
+  const partidos = partidosRows.map((p) => ({
+    id: p.id,
+    sigla: p.sigla,
+    nome: p.nome,
+  }))
 
   // Section 1: incomplete politicians
   const { rows: semFotoRows } = await db.query<CountRow>(
@@ -137,7 +154,9 @@ export default async function DadosQualidadePage({
   if (busca.length >= 2) {
     const { rows } = await db.query<PoliticoEditorRow>(
       `
-        SELECT id, nome_civil, nome_eleitoral, foto_url, codigo_siafi, email
+        SELECT id, nome_civil, nome_eleitoral, foto_url, codigo_siafi, email,
+               partido_id, situacao, gabinete_nome, gabinete_telefone, gabinete_email,
+               uf, cargo
         FROM politicos
         WHERE nome_civil ILIKE $1 OR nome_eleitoral ILIKE $1
         LIMIT 20
@@ -310,6 +329,7 @@ export default async function DadosQualidadePage({
       <PoliticoEditorSection
         busca={busca}
         results={politicosResults}
+        partidos={partidos}
       />
     </div>
   )

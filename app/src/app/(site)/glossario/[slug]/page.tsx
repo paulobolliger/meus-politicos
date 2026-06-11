@@ -1,25 +1,12 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 import Link from 'next/link'
+import { FeedbackVerbete } from '@/components/glossario/FeedbackVerbete'
+import { IAPerguntaGlossario } from '@/components/glossario/IAPerguntaGlossario'
 
 type Props = { params: Promise<{ slug: string }> }
 
-// ── Postgres ──────────────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? '5433'),
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    connectionTimeoutMillis: 4000,
-  })
-  return _pool
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 type Verbete = {
   slug: string
   termo: string
@@ -32,18 +19,16 @@ type Verbete = {
 
 type TermoRelacionado = { slug: string; termo: string }
 
-// ── Categorias ────────────────────────────────────────────────────────────────
 const CATS: Record<string, { label: string; color: string; bg: string }> = {
-  legislativo:   { label: 'Legislativo',   color: '#0051d5', bg: '#e8eeff' },
-  eleitoral:     { label: 'Eleitoral',     color: '#10B981', bg: '#e6faf4' },
-  financeiro:    { label: 'Financeiro',    color: '#D97706', bg: '#fef3e2' },
-  institucional: { label: 'Institucional', color: '#EF4444', bg: '#feeaea' },
+  legislativo:   { label: 'Legislativo',   color: '#818cf8', bg: 'rgba(99, 102, 241, 0.15)' }, // indigo
+  eleitoral:     { label: 'Eleitoral',     color: '#34d399', bg: 'rgba(16, 185, 129, 0.15)' }, // emerald
+  financeiro:    { label: 'Financeiro',    color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)' }, // amber
+  institucional: { label: 'Institucional', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.15)' }, // rose
 }
 
-// ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const pool = getPool()
+  const pool = getPgPool()
   const { rows } = await pool.query<{ termo: string; definicao_simples: string }>(
     `SELECT termo, definicao_simples FROM glossario WHERE slug = $1 LIMIT 1`,
     [slug]
@@ -55,10 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
 export default async function VerbetePage({ params }: Props) {
   const { slug } = await params
-  const pool = getPool()
+  const pool = getPgPool()
 
   const { rows } = await pool.query<Verbete>(
     `SELECT slug, termo, definicao_simples, definicao_tecnica,
@@ -80,245 +64,139 @@ export default async function VerbetePage({ params }: Props) {
 
   const cat = CATS[verbete.categoria]
 
-  return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 80px' }}>
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    'name': verbete.termo,
+    'description': verbete.definicao_simples,
+    'inDefinedTermSet': {
+      '@type': 'DefinedTermSet',
+      'name': 'Glossário Político Meus Políticos',
+      'url': 'https://meuspoliticos.com.br/glossario'
+    }
+  }
 
-        {/* ── Breadcrumbs ── */}
-        <nav style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          marginBottom: 32,
-          fontSize: 13, color: 'var(--ink-3)',
-        }}>
-          <Link href="/" style={{ color: 'var(--ink-3)', textDecoration: 'none' }}
-            className="verbete-bc-link">Início</Link>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-          <Link href="/glossario" style={{ color: 'var(--ink-3)', textDecoration: 'none' }}
-            className="verbete-bc-link">Glossário</Link>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-          <span style={{ color: 'var(--ink)', fontWeight: 600 }}>{verbete.termo}</span>
+  return (
+    <div className="bg-[#0F172A] text-slate-100 min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="max-w-7xl mx-auto px-6 py-10 md:px-8">
+
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 mb-8 text-xs text-slate-400 font-mono">
+          <Link href="/" className="hover:text-indigo-400 transition-colors">
+            Início
+          </Link>
+          <span className="text-slate-600">/</span>
+          <Link href="/glossario" className="hover:text-indigo-400 transition-colors">
+            Glossário
+          </Link>
+          <span className="text-slate-600">/</span>
+          <span className="text-slate-200 font-semibold">{verbete.termo}</span>
         </nav>
 
-        {/* ── Grid ── */}
-        <div className="verbete-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 340px',
-          gap: 48,
-          alignItems: 'start',
-        }}>
+        {/* Grid Principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
 
-          {/* ════════════ LEFT COLUMN ════════════ */}
-          <div>
+          {/* Coluna Esquerda (Conteúdo) */}
+          <div className="lg:col-span-2 space-y-8">
 
-            {/* Header */}
-            <header style={{ marginBottom: 28 }}>
-              <h1 style={{
-                margin: '0 0 16px',
-                fontSize: 'clamp(32px, 4vw, 48px)',
-                fontWeight: 800, lineHeight: 1.1,
-                letterSpacing: '-0.025em', color: 'var(--ink)',
-              }}>
+            {/* Cabeçalho do Verbete */}
+            <header className="border-b border-slate-800/80 pb-6">
+              <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest block mb-2">
+                Verbete do Glossário
+              </span>
+              <h1 className="text-4xl md:text-5xl font-black text-white leading-tight mb-4">
                 {verbete.termo}
               </h1>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {cat && (
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '4px 14px', borderRadius: 999,
-                    background: cat.bg,
-                    fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                    color: cat.color, fontFamily: 'var(--font-mono)',
-                    textTransform: 'uppercase',
-                  }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: cat.color }} />
-                    {cat.label}
-                  </span>
-                )}
-              </div>
+              {cat && (
+                <span
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase font-mono border border-transparent"
+                  style={{ color: cat.color, background: cat.bg, borderColor: `${cat.color}20` }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: cat.color }} />
+                  {cat.label}
+                </span>
+              )}
             </header>
 
-            {/* ── Highlight box: O que é ── */}
-            <section style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: 16,
-              padding: '24px 28px',
-              marginBottom: 28,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-            }}>
-              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                {/* Lightbulb icon */}
-                <div style={{
-                  width: 40, height: 40, flexShrink: 0,
-                  borderRadius: 10,
-                  background: '#f0f5ff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="#0051d5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
-                    <path d="M9 18h6"/><path d="M10 22h4"/>
-                  </svg>
-                </div>
+            {/* Destaque: O que é em poucas palavras */}
+            <section className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 md:p-8 shadow-md">
+              <div className="flex gap-4 items-start">
+                <span className="text-2xl mt-0.5 bg-indigo-500/10 border border-indigo-500/20 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-indigo-400">
+                  💡
+                </span>
                 <div>
-                  <h2 style={{
-                    margin: '0 0 10px',
-                    fontSize: 16, fontWeight: 700,
-                    color: 'var(--ink)',
-                  }}>
+                  <h2 className="text-slate-200 font-bold text-base mb-2">
                     O que é, em poucas palavras
                   </h2>
-                  <p style={{
-                    margin: 0,
-                    fontSize: 15, lineHeight: 1.75,
-                    color: 'var(--ink-2)',
-                  }}>
+                  <p className="text-slate-300 text-sm md:text-base leading-relaxed">
                     {verbete.definicao_simples}
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* ── Como funciona na prática (exemplo) ── */}
+            {/* Como funciona na prática */}
             {verbete.exemplo && (
-              <section style={{ marginBottom: 28 }}>
-                <h3 style={{
-                  margin: '0 0 16px',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  fontSize: 20, fontWeight: 700, color: 'var(--ink)',
-                }}>
-                  {/* Analytics icon */}
-                  <span style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: '#f0f5ff',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                      stroke="#0051d5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                      <line x1="6" y1="20" x2="6" y2="14"/>
-                    </svg>
+              <section className="space-y-3">
+                <h3 className="text-slate-200 font-bold text-lg flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-sm">
+                    ⚡
                   </span>
                   Como funciona na prática
                 </h3>
-                <div style={{
-                  background: '#f8f9ff',
-                  border: '1px solid #dce9ff',
-                  borderRadius: 12,
-                  padding: '20px 24px',
-                }}>
-                  <p style={{
-                    margin: 0,
-                    fontSize: 14, lineHeight: 1.75,
-                    color: 'var(--ink-2)',
-                    fontStyle: 'italic',
-                  }}>
-                    {verbete.exemplo}
+                <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-5 md:p-6">
+                  <p className="text-slate-400 text-xs md:text-sm leading-relaxed italic">
+                    "{verbete.exemplo}"
                   </p>
                 </div>
               </section>
             )}
 
-            {/* ── Por que isso importa (definição técnica) ── */}
+            {/* Por que isso importa */}
             {verbete.definicao_tecnica && (
-              <section style={{
-                background: '#f8f9ff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 16,
-                padding: '24px 28px',
-                position: 'relative', overflow: 'hidden',
-              }}>
-                <h3 style={{
-                  margin: '0 0 14px',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  fontSize: 20, fontWeight: 700, color: 'var(--ink)',
-                }}>
-                  {/* Shield icon */}
-                  <span style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: '#e8eeff',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                      stroke="#0051d5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
+              <section className="bg-indigo-950/20 border border-indigo-500/15 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+                <h3 className="text-slate-200 font-bold text-lg flex items-center gap-2 mb-4">
+                  <span className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-sm">
+                    ⚖️
                   </span>
                   Por que isso importa?
                 </h3>
-                <p style={{
-                  margin: 0,
-                  fontSize: 14, lineHeight: 1.8,
-                  color: 'var(--ink-2)',
-                }}>
+                <p className="text-slate-300 text-xs md:text-sm leading-relaxed relative z-10">
                   {verbete.definicao_tecnica}
                 </p>
-                {/* Decorative blob */}
-                <div style={{
-                  position: 'absolute', right: -40, bottom: -40,
-                  width: 140, height: 140, borderRadius: '50%',
-                  background: 'rgba(0,81,213,0.05)',
-                  pointerEvents: 'none',
-                }} />
+                <div className="absolute -right-10 -bottom-10 w-36 h-36 rounded-full bg-indigo-500/5 pointer-events-none" />
               </section>
             )}
 
           </div>
 
-          {/* ════════════ RIGHT SIDEBAR ════════════ */}
-          <aside style={{
-            position: 'sticky', top: 24,
-            display: 'flex', flexDirection: 'column', gap: 20,
-          }}>
+          {/* Coluna Direita (Sidebar) */}
+          <aside className="space-y-6 lg:sticky lg:top-8">
+
+            {/* Inteligência Cívica Chat Box */}
+            <IAPerguntaGlossario termoSlug={verbete.slug} termoNome={verbete.termo} />
 
             {/* Termos Relacionados */}
             {relacionados.length > 0 && (
-              <div style={{
-                background: '#f8f9ff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 16,
-                padding: '20px 20px',
-              }}>
-                <div style={{
-                  fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
-                  color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
-                  textTransform: 'uppercase', marginBottom: 14,
-                }}>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase mb-3.5">
                   Termos Relacionados
                 </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <ul className="space-y-2">
                   {relacionados.map((r) => (
                     <li key={r.slug}>
-                      <Link href={`/glossario/${r.slug}`}
-                        className="verbete-rel-item"
-                        style={{
-                          display: 'flex', alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '10px 14px',
-                          background: 'white',
-                          borderRadius: 10,
-                          border: '1px solid transparent',
-                          textDecoration: 'none',
-                          transition: 'border-color 0.15s, color 0.15s',
-                        }}>
-                        <span style={{
-                          fontSize: 14, fontWeight: 600,
-                          color: 'var(--ink)',
-                        }}>
-                          {r.termo}
+                      <Link
+                        href={`/glossario/${r.slug}`}
+                        className="flex items-center justify-between p-3 bg-slate-950/60 hover:bg-slate-900 border border-slate-800/40 hover:border-indigo-500/30 rounded-xl transition-all duration-200 group text-slate-300 hover:text-indigo-400"
+                      >
+                        <span className="text-xs font-semibold">{r.termo}</span>
+                        <span className="text-slate-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all text-xs font-bold font-mono">
+                          →
                         </span>
-                        {/* Arrow icon */}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                          stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="verbete-rel-arrow">
-                          <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
                       </Link>
                     </li>
                   ))}
@@ -326,185 +204,67 @@ export default async function VerbetePage({ params }: Props) {
               </div>
             )}
 
-            {/* Contexto Legal — placeholder estático */}
-            <div style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: 16,
-              padding: '20px 20px',
-            }}>
-              <div style={{
-                fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
-                color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
-                textTransform: 'uppercase', marginBottom: 16,
-              }}>
+            {/* Contexto Legal */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase mb-4">
                 Contexto Legal
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{
-                    fontSize: 18, flexShrink: 0, marginTop: 1,
-                    color: '#D97706',
-                  }}>⚖️</span>
-                  <div style={{ fontSize: 13, lineHeight: 1.55 }}>
-                    <div style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 2 }}>Constituição Federal</div>
-                    <div style={{ color: 'var(--ink-3)' }}>Base legal para termos do direito público e eleitoral brasileiro.</div>
-                    <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"
-                      target="_blank" rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        marginTop: 6, fontSize: 12, fontWeight: 600,
-                        color: 'var(--brand-2)', textDecoration: 'none',
-                      }}
-                      className="verbete-ext-link">
+              <div className="space-y-4">
+                <div className="flex gap-3 items-start text-slate-300">
+                  <span className="text-base mt-0.5 flex-shrink-0">⚖️</span>
+                  <div className="text-xs leading-normal">
+                    <div className="font-bold text-slate-200 mb-0.5">Constituição Federal</div>
+                    <div className="text-slate-400 mb-2">Base constitucional para a estrutura administrativa e direito público.</div>
+                    <a
+                      href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:underline"
+                    >
                       Ver no Planalto
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                      </svg>
+                      <span className="text-[10px]">↗</span>
                     </a>
                   </div>
                 </div>
-                <hr style={{ border: 'none', borderTop: '1px solid #f3f4f6', margin: 0 }} />
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>🏛️</span>
-                  <div style={{ fontSize: 13, lineHeight: 1.55 }}>
-                    <div style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 2 }}>Portal do TSE</div>
-                    <div style={{ color: 'var(--ink-3)' }}>Glossário e definições técnicas do Tribunal Superior Eleitoral.</div>
-                    <a href="https://www.tse.jus.br"
-                      target="_blank" rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        marginTop: 6, fontSize: 12, fontWeight: 600,
-                        color: 'var(--brand-2)', textDecoration: 'none',
-                      }}
-                      className="verbete-ext-link">
-                      Acessar Portal do TSE
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                      </svg>
+                
+                <hr className="border-slate-800" />
+
+                <div className="flex gap-3 items-start text-slate-300">
+                  <span className="text-base mt-0.5 flex-shrink-0">🏛️</span>
+                  <div className="text-xs leading-normal">
+                    <div className="font-bold text-slate-200 mb-0.5">Portal do TSE / Congresso</div>
+                    <div className="text-slate-400 mb-2">Glossários legislativos e resoluções do Tribunal Superior Eleitoral.</div>
+                    <a
+                      href="https://www.tse.jus.br"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:underline"
+                    >
+                      Acessar Portais
+                      <span className="text-[10px]">↗</span>
                     </a>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Feedback Widget */}
-            <div style={{
-              background: '#f0f5ff',
-              border: '1px solid #dce9ff',
-              borderRadius: 16,
-              padding: '20px',
-              textAlign: 'center',
-            }}>
-              <p style={{
-                margin: '0 0 16px',
-                fontSize: 13, color: 'var(--ink-2)', fontWeight: 500,
-                lineHeight: 1.5,
-              }}>
-                Esta explicação foi clara para você?
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
-                <button
-                  className="verbete-feedback-btn"
-                  data-label="Sim"
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  }}>
-                  <span style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: 'white', border: '1px solid #e5e7eb',
-                    fontSize: 18,
-                    transition: 'background 0.15s',
-                  }} className="verbete-feedback-icon">👍</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                    color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
-                    textTransform: 'uppercase',
-                  }} className="verbete-feedback-label">Sim</span>
-                </button>
-                <button
-                  className="verbete-feedback-btn"
-                  data-label="Não"
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  }}>
-                  <span style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: 'white', border: '1px solid #e5e7eb',
-                    fontSize: 18,
-                    transition: 'background 0.15s',
-                  }} className="verbete-feedback-icon">👎</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                    color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
-                    textTransform: 'uppercase',
-                  }} className="verbete-feedback-label">Não</span>
-                </button>
-              </div>
-            </div>
+            {/* Feedback React Component */}
+            <FeedbackVerbete />
 
-            {/* Back link */}
-            <Link href="/glossario" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 13, color: 'var(--brand-2)',
-              textDecoration: 'none', fontWeight: 600,
-            }}
-              className="verbete-back-link">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Ver todos os termos
-            </Link>
+            {/* Botão Voltar */}
+            <div className="pt-2">
+              <Link
+                href="/glossario"
+                className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
+              >
+                <span>←</span> Voltar para todos os termos
+              </Link>
+            </div>
 
           </aside>
 
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .verbete-bc-link:hover { color: var(--brand-2) !important; }
-
-        .verbete-rel-item:hover {
-          border-color: var(--brand-2) !important;
-        }
-        .verbete-rel-item:hover span { color: var(--brand-2) !important; }
-        .verbete-rel-item:hover .verbete-rel-arrow { stroke: var(--brand-2); }
-
-        .verbete-ext-link:hover { text-decoration: underline !important; }
-        .verbete-back-link:hover { text-decoration: underline !important; }
-
-        @media (max-width: 960px) {
-          .verbete-grid { grid-template-columns: 1fr !important; }
-          aside { position: static !important; }
-        }
-        @media (max-width: 600px) {
-          .verbete-grid { padding: 0; }
-        }
-      ` }} />
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        document.querySelectorAll('.verbete-feedback-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const label = btn.querySelector('.verbete-feedback-label');
-            const icon  = btn.querySelector('.verbete-feedback-icon');
-            label.textContent = 'Obrigado!';
-            icon.style.background = '#e8eeff';
-            setTimeout(() => {
-              label.textContent = btn.dataset.label;
-              icon.style.background = 'white';
-            }, 2000);
-          });
-        });
-      ` }} />
     </div>
   )
 }

@@ -33,11 +33,11 @@ function formatMilAno(value: number | null) {
 }
 
 function socialVisual(platform: string) {
-  if (platform.includes('twitter') || platform === 'x') return { icon: '𝕏', label: 'Twitter/X', bg: '#111827', color: '#ffffff' }
-  if (platform.includes('instagram')) return { icon: '◉', label: 'Instagram', bg: '#7c3aed', color: '#ffffff' }
-  if (platform.includes('youtube')) return { icon: '▶', label: 'YouTube', bg: '#dc2626', color: '#ffffff' }
-  if (platform.includes('facebook')) return { icon: 'f', label: 'Facebook', bg: '#2563eb', color: '#ffffff' }
-  return { icon: '◎', label: 'Site oficial', bg: '#475569', color: '#ffffff' }
+  if (platform.includes('twitter') || platform === 'x') return { icon: '𝕏', label: 'Twitter/X', bg: 'var(--panel)', color: 'var(--ink)' }
+  if (platform.includes('instagram')) return { icon: '◉', label: 'Instagram', bg: 'linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%)', color: 'var(--ink)' }
+  if (platform.includes('youtube')) return { icon: '▶', label: 'YouTube', bg: 'var(--neg)', color: 'var(--ink)' }
+  if (platform.includes('facebook')) return { icon: 'f', label: 'Facebook', bg: 'var(--info)', color: 'var(--ink)' }
+  return { icon: '◎', label: 'Site oficial', bg: 'var(--line-strong)', color: 'var(--ink)' }
 }
 
 function QuestionCard({ number, tone, question, answer, explanation, children }: QuestionCardProps) {
@@ -47,8 +47,11 @@ function QuestionCard({ number, tone, question, answer, explanation, children }:
     <article
       style={{
         border: '1px solid var(--line)',
-        borderRadius: 14,
-        background: 'var(--panel)',
+        borderRadius: 16,
+        background: 'rgba(30, 41, 59, 0.45)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
         padding: 20,
       }}
     >
@@ -262,8 +265,10 @@ export function ModoCidadao({ politico }: Props) {
         <div
           style={{
             marginTop: 40,
-            padding: '20px 24px',
-            background: 'var(--ink)',
+            padding: '24px',
+            background: 'linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%)',
+            borderRadius: 16,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
             color: 'white',
             display: 'flex',
             justifyContent: 'space-between',
@@ -304,8 +309,11 @@ export function ModoCidadao({ politico }: Props) {
         <div
           style={{
             border: '1px solid var(--line)',
-            borderRadius: 14,
-            background: 'var(--panel)',
+            borderRadius: 16,
+            background: 'rgba(30, 41, 59, 0.45)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
             padding: 20,
           }}
         >

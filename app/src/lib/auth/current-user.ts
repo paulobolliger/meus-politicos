@@ -13,6 +13,7 @@ import {
   getProfileByLegacyEmailPostgres,
   getProfileByLogtoSubPostgres,
   linkLogtoProfileByLegacyEmailPostgres,
+  createProfileForLogtoUserPostgres,
 } from './profile-linking'
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -61,6 +62,12 @@ async function getCurrentLogtoUser(): Promise<CurrentUser | null> {
       profile = await linkLogtoProfileByLegacyEmailPostgres(
         logtoUser.email,
         logtoUser.logtoSub
+      )
+    } else {
+      profile = await createProfileForLogtoUserPostgres(
+        logtoUser.logtoSub,
+        logtoUser.email,
+        logtoUser.name
       )
     }
   }

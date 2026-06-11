@@ -209,35 +209,37 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
       {/* Hero Section */}
-      <section className="border-b border-[var(--line)] bg-linear-to-b from-slate-900 via-[var(--brand)] to-slate-800">
-        <div className="container-shell py-16 sm:py-24">
+      <section className="relative overflow-hidden border-b border-[var(--line)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[var(--brand-soft)]/10 to-transparent" />
+        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[var(--brand-2)]/5 blur-3xl" />
+        <div className="container-shell relative py-16 sm:py-24">
           <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-800/50 px-3 py-1 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1 shadow-sm">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
-              <span className="mono text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">Política Institucional</span>
+              <span className="mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-2)]">Política Institucional</span>
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">Política de Privacidade</h1>
-              <p className="text-lg text-slate-300 sm:text-xl">
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl md:text-6xl">Política de Privacidade</h1>
+              <p className="text-lg text-[var(--ink-2)] sm:text-xl">
                 Transparência, proteção de dados e respeito à sua privacidade.
               </p>
             </div>
 
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[var(--ink-3)]">
               O Meus Políticos é uma plataforma brasileira de transparência pública e monitoramento cívico criada para ampliar o acesso da sociedade a informações políticas de interesse público de forma organizada, acessível e tecnologicamente responsável.
             </p>
 
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[var(--ink-3)]">
               Esta Política de Privacidade descreve como coletamos, utilizamos, armazenamos e protegemos dados pessoais de usuários da plataforma, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD).
             </p>
 
             <div className="pt-2">
-              <div className="inline-flex items-center gap-2 rounded-lg bg-slate-700/50 px-3 py-2 backdrop-blur-sm">
-                <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center gap-2 rounded-lg bg-[var(--panel)] border border-[var(--line)] px-3 py-2 shadow-sm">
+                <svg className="h-4 w-4 text-[var(--ink-3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-xs font-medium text-slate-300">Última atualização: {dataAtualizacao}</span>
+                <span className="text-xs font-medium text-[var(--ink-2)]">Última atualização: {dataAtualizacao}</span>
               </div>
             </div>
           </div>

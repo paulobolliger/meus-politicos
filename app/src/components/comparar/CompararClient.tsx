@@ -430,7 +430,7 @@ export function CompararClient({
                   display: 'flex', alignItems: 'center',
                   padding: '14px 16px',
                   background: ri % 2 === 0 ? 'var(--bg-2)' : 'var(--bg)',
-                  borderRadius: 6,
+                  borderRadius: 8,
                   fontSize: 11, fontWeight: 600, color: 'var(--ink-2)',
                   fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
                 }}>
@@ -446,7 +446,7 @@ export function CompararClient({
                     <div key={p.slug} style={{
                       padding: '14px 14px 10px',
                       background: ri % 2 === 0 ? 'var(--panel)' : 'var(--bg-2)',
-                      borderRadius: 6,
+                      borderRadius: 8,
                       boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                     }}>
                       {row.render(p)}

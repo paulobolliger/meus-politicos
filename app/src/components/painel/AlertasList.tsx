@@ -19,9 +19,9 @@ const INICIAIS: Alerta[] = [
 ]
 
 function badgeCanal(canal: string, ativo: boolean) {
-  if (!ativo) return { bg: 'var(--surface)', color: 'var(--ink-2)', border: '1px solid var(--border)', label: 'OFF' }
-  if (canal.includes('RSS')) return { bg: 'var(--info)', color: '#fff', border: '1px solid var(--info)', label: canal }
-  return { bg: 'var(--brand)', color: '#fff', border: '1px solid var(--brand)', label: canal }
+  if (!ativo) return { bg: 'rgba(255, 255, 255, 0.02)', color: 'var(--ink-3)', border: '1px solid var(--line)', label: 'OFF' }
+  if (canal.includes('RSS')) return { bg: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', label: canal }
+  return { bg: 'rgba(99, 102, 241, 0.1)', color: 'var(--brand-2)', border: '1px solid rgba(99, 102, 241, 0.2)', label: canal }
 }
 
 export function AlertasList() {
@@ -41,59 +41,97 @@ export function AlertasList() {
   return (
     <Panel>
       <PanelHeader
-        title={`ALERTAS · ${ativos} ATIVOS`}
-        action={
-          <button
-            type="button"
-            style={{ border: '1px solid var(--brand)', background: 'transparent', color: 'var(--brand)', fontSize: 11, padding: '4px 8px' }}
-          >
-            + NOVO
-          </button>
-        }
+        title={`ALERTAS DE EMAIL · ${ativos} ATIVOS`}
       />
 
-      <div style={{ padding: 12, display: 'grid', gap: 8 }}>
+      <div style={{ padding: 14, display: 'grid', gap: 10 }}>
         {alertas.map((alerta) => {
           const badge = badgeCanal(alerta.canal, alerta.ativo)
           return (
-            <div key={alerta.id} style={{ border: '1px solid var(--border)', background: 'var(--surface)', padding: 10 }}>
-              <div style={{ color: 'var(--ink)', fontSize: 12, marginBottom: 8 }}>{alerta.descricao}</div>
+            <div key={alerta.id} className="alerta-item-card">
+              <div style={{ color: 'var(--ink)', fontSize: 12.5, fontWeight: 500, lineHeight: 1.4, marginBottom: 10 }}>
+                {alerta.descricao}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 10, padding: '3px 6px', background: badge.bg, color: badge.color, border: badge.border }}>
+                <span 
+                  style={{ 
+                    fontSize: 9, 
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.06em',
+                    padding: '3px 6px', 
+                    borderRadius: 4,
+                    background: badge.bg, 
+                    color: badge.color, 
+                    border: badge.border 
+                  }}
+                >
                   {badge.label}
                 </span>
+                
                 <button
                   type="button"
                   onClick={() => toggle(alerta.id)}
                   aria-label={`toggle-${alerta.id}`}
-                  style={{
-                    width: 38,
-                    height: 20,
-                    borderRadius: 999,
-                    border: `1px solid ${alerta.ativo ? 'var(--brand)' : 'var(--border)'}`,
-                    background: alerta.ativo ? 'var(--brand)' : 'var(--surface)',
-                    position: 'relative',
-                    cursor: 'pointer',
-                  }}
+                  className={`switch-control ${alerta.ativo ? 'switch-control-active' : ''}`}
                 >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 1,
-                      left: alerta.ativo ? 19 : 1,
-                      width: 16,
-                      height: 16,
-                      borderRadius: 999,
-                      background: '#fff',
-                      transition: 'left 180ms ease',
-                    }}
-                  />
+                  <span className={`switch-thumb ${alerta.ativo ? 'switch-thumb-active' : ''}`} />
                 </button>
               </div>
             </div>
           )
         })}
+        <div style={{ fontSize: 9.5, color: 'var(--ink-3)', textAlign: 'center', marginTop: 6, fontStyle: 'italic', lineHeight: 1.3 }}>
+          * Configurações demonstrativas. A persistência de preferências será ativada em breve.
+        </div>
       </div>
+
+      <style>{`
+        .alerta-item-card {
+          border: 1px solid var(--line);
+          background: rgba(30, 41, 59, 0.2);
+          padding: 12px;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+        .alerta-item-card:hover {
+          background: rgba(30, 41, 59, 0.3);
+          border-color: var(--line-strong);
+        }
+        
+        .switch-control {
+          width: 36px;
+          height: 18px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          background: rgba(255, 255, 255, 0.02);
+          position: relative;
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+        }
+        .switch-control-active {
+          border-color: var(--brand-2);
+          background: var(--brand-2);
+          box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+        }
+        .switch-thumb {
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: var(--ink-3);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .switch-control-active .switch-thumb {
+          left: 20px;
+          background: #fff;
+        }
+        .switch-control:hover .switch-thumb {
+          background: var(--ink);
+        }
+      `}</style>
     </Panel>
   )
 }

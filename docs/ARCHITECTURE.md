@@ -11,14 +11,14 @@ Este documento descreve a arquitetura real identificada no código do projeto Me
 
 ## 1. Tipo de Aplicacao
 
-O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Router, React 19, TypeScript, PostgreSQL/Supabase como banco relacional, Logto como provedor de identidade, InfinitePay para checkout e OpenAI para geracao/simplificacao de texto.
+O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Router, React 19, TypeScript, PostgreSQL (VPS) como banco relacional, Logto como provedor de identidade, InfinitePay para checkout e OpenAI para geracao/simplificacao de texto.
 
 | Dimensao | Classificacao real | Evidencia operacional |
 |---|---|---|
 | Produto | Plataforma de transparencia politica com site publico, app analitico, painel do usuario e admin interno | Grupos de rota `app/src/app/(site)`, `(app)`, `(painel)`, `(admin)`, `(checkout)` |
 | Renderizacao | Hibrida: Server Components, Client Components e Route Handlers | Paginas server-side consultam `pg`; componentes client chamam APIs internas e usam estado local |
 | Backend | Route Handlers Next.js + Server Actions | `app/src/app/api/**/route.ts`; `app/src/actions/resumo-interpretativo.ts` |
-| Banco | PostgreSQL direto via `pg`, com modelagem Supabase/PostgreSQL | Uso recorrente de `new Pool()` com `POSTGRES_*`; docs e schema apontam Supabase/PostgreSQL |
+| Banco | PostgreSQL (VPS) direto via `pg` | Uso recorrente de `new Pool()` com `POSTGRES_*`; acessa banco diretamente 100% Postgres VPS |
 | Autenticacao | Logto server-side e edge | `app/src/lib/logto/*`, `app/src/app/api/auth/logto/*`, `app/src/proxy.ts` |
 | RBAC | Role persistida em `perfis.role` | `app/src/lib/auth/current-user.ts`, endpoints admin |
 | Pagamentos | InfinitePay checkout link + webhook incompleto | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento`, `/api/webhooks/infinitepay` |
@@ -51,7 +51,7 @@ flowchart TB
   PAINEL --> API
   ADMINUI --> API
 
-  SITE --> PG[(PostgreSQL / Supabase)]
+  SITE --> PG[(PostgreSQL VPS)]
   APP --> PG
   PAINEL --> PG
   ADMINUI --> PG
@@ -79,7 +79,7 @@ O ciclo de dados e dividido em ingestao, modelagem relacional, entrega de produt
 ```mermaid
 flowchart LR
   A[Fontes publicas] --> B[ETL Python]
-  B --> C[(PostgreSQL / Supabase)]
+  B --> C[(PostgreSQL VPS)]
   C --> D[Paginas Server Components]
   C --> E[APIs internas]
   E --> F[Componentes Client]

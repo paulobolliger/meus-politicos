@@ -14,10 +14,12 @@ function getSafeRedirectPath(request: NextRequest, fallback: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const config = {
-    ...getLogtoConfig(),
-    scopes: ['openid', 'profile', 'email'],
-  }
+  const host = request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  const customBaseUrl = host ? `${proto}://${host}` : undefined
+  const connector = request.nextUrl.searchParams.get('connector')
+
+  const config = getLogtoConfig(customBaseUrl)
   const redirectUri = new URL(logtoCallbackPath, config.baseUrl)
   const postRedirectUri = new URL(getSafeRedirectPath(request, '/meus-politicos'), request.url)
 
@@ -25,5 +27,6 @@ export async function GET(request: NextRequest) {
     redirectUri,
     postRedirectUri,
     interactionMode: 'signUp',
+    directSignIn: connector ? { method: 'social' as const, target: connector } : undefined,
   })
 }

@@ -2,14 +2,14 @@
 file: docs/DATABASE.md
 module: Database Schema Reference
 status: Active
-related: [docs/BUSINESS_DOMAIN.md, docs/INVENTORY_DATABASE_USAGE.md, docs/GAP_ANALYSIS.md, docs/AUTH.md, supabase/001_schema.sql, supabase/migrations]
+related: [docs/BUSINESS_DOMAIN.md, docs/INVENTORY_DATABASE_USAGE.md, docs/GAP_ANALYSIS.md, docs/AUTH.md, db/schema.sql, db/migrations]
 ---
 
 # Database
 
 Data da consolidacao: 2026-06-02.
 
-Banco alvo identificado no codigo: PostgreSQL direto via pacote `pg`. O repositorio mantem uma estrutura Supabase (`supabase/config.toml`, migrations SQL e RLS), mas o runtime atual do app consulta Postgres diretamente por `Pool`/`pool.query`.
+Banco alvo identificado no codigo: PostgreSQL direto via pacote `pg`. O repositorio mantem uma estrutura de migrations SQL neutra em `/db`, e o runtime atual do app consulta Postgres diretamente por `Pool`/`pool.query` na VPS.
 
 Pre-flight ativo nao executado: `app/.env.local` indicou host remoto/desconhecido. Pela regra P0, nenhuma conexao ativa foi feita.
 
@@ -17,8 +17,8 @@ Pre-flight ativo nao executado: `app/.env.local` indicou host remoto/desconhecid
 
 | Fonte | Status | Observacao |
 |---|---|---|
-| `supabase/migrations/*.sql` | Fonte principal versionada | Define evolucoes incrementais |
-| `supabase/001_schema.sql` | Referencia monolitica historica/compilada | Contem schema amplo e muitas politicas |
+| `db/migrations/*.sql` | Fonte principal versionada | Define evolucoes incrementais |
+| `db/schema.sql` | Referencia monolitica historica/compilada | Contem schema amplo e muitas politicas |
 | `etl/partidos/collect_fundos_tse.py` | Cria tabela nao versionada | `partidos_fundos` aparece aqui, nao em migrations |
 | `docs/TODO_PRODUCTION.md` | Proposta futura | `doacoes` documentada como pendente |
 | Codigo app | Fonte de uso real | Consulta algumas tabelas nao encontradas no schema versionado |

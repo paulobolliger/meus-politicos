@@ -7,14 +7,14 @@ related: [vercel.json, package.json, app/package.json, docs/ENVIRONMENT.md, docs
 
 # Deployment
 
-Este documento consolida o modelo operacional de hospedagem, build e rotinas dependentes do projeto Meus Politicos em 2026-06-02. A aplicacao web roda como Next.js 16 na Vercel; o banco e PostgreSQL/Supabase acessado por `pg`; autenticacao usa Logto; pagamentos usam InfinitePay; rotinas de dados ficam em scripts Python fora do runtime web.
+Este documento consolida o modelo operacional de hospedagem, build e rotinas dependentes do projeto Meus Politicos em 2026-06-02. A aplicacao web roda como Next.js 16 na Vercel; o banco e PostgreSQL (VPS) acessado por `pg`; autenticacao usa Logto; pagamentos usam InfinitePay; rotinas de dados ficam em scripts Python fora do runtime web.
 
 ## 1. Topologia de Producao
 
 | Camada | Provedor/ambiente | Status | Observacao |
 |---|---|---|---|
 | Frontend/backend web | Vercel | Alvo operacional documentado | Next.js App Router com Route Handlers |
-| Banco relacional | PostgreSQL/Supabase | Ativo | Runtime usa `POSTGRES_*`; ETL aceita `SUPABASE_DB_*` em alguns scripts |
+| Banco relacional | PostgreSQL (VPS) | Ativo | Runtime usa `POSTGRES_*`; ETL aceita `SUPABASE_DB_*` apenas como fallback legado |
 | Identidade | Logto | Ativo | Sessao server-side/edge e RBAC por `perfis.role` |
 | Pagamentos | InfinitePay | Ativo parcial | Checkout ativo; webhook sem persistencia |
 | IA | OpenAI | Ativo condicionado | Server Action e ETL IA exigem `OPENAI_API_KEY` |
@@ -25,7 +25,7 @@ Este documento consolida o modelo operacional de hospedagem, build e rotinas dep
 flowchart TB
   GH[Git repository] --> V[Vercel build]
   V --> NEXT[Next.js 16 app]
-  NEXT --> PG[(PostgreSQL / Supabase)]
+  NEXT --> PG[(PostgreSQL VPS)]
   NEXT --> LOGTO[Logto]
   NEXT --> IPAY[InfinitePay]
   NEXT --> OPENAI[OpenAI]

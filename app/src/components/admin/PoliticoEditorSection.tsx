@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 type PoliticoResult = {
   id: string
@@ -10,14 +10,34 @@ type PoliticoResult = {
   foto_url: string | null
   codigo_siafi: string | null
   email: string | null
+  partido_id: string | null
+  situacao: string | null
+  gabinete_nome: string | null
+  gabinete_telefone: string | null
+  gabinete_email: string | null
+  uf: string
+  cargo: string
 }
 
 interface PoliticoEditorSectionProps {
   busca: string
   results: PoliticoResult[]
+  partidos: { id: string; sigla: string; nome: string }[]
 }
 
-export function PoliticoEditorSection({ busca, results }: PoliticoEditorSectionProps) {
+const inputStyle = {
+  padding: '6px 10px',
+  fontSize: 13,
+  border: '1px solid var(--line)',
+  borderRadius: 5,
+  outline: 'none',
+  fontFamily: 'var(--font-sans)',
+  background: 'var(--bg)',
+  color: 'var(--ink)',
+  width: '100%',
+}
+
+export function PoliticoEditorSection({ busca, results, partidos }: PoliticoEditorSectionProps) {
   const router = useRouter()
   const [query, setQuery] = useState(busca)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -36,10 +56,17 @@ export function PoliticoEditorSection({ busca, results }: PoliticoEditorSectionP
     setSaving(true)
     setSaveMsg(null)
     const payload = {
-      foto_url: formData.get('foto_url') as string,
-      nome_eleitoral: formData.get('nome_eleitoral') as string,
-      codigo_siafi: formData.get('codigo_siafi') as string,
-      email: formData.get('email') as string,
+      foto_url: formData.get('foto_url') as string || null,
+      nome_eleitoral: formData.get('nome_eleitoral') as string || null,
+      codigo_siafi: formData.get('codigo_siafi') as string || null,
+      email: formData.get('email') as string || null,
+      partido_id: formData.get('partido_id') as string || null,
+      situacao: formData.get('situacao') as string || null,
+      gabinete_nome: formData.get('gabinete_nome') as string || null,
+      gabinete_telefone: formData.get('gabinete_telefone') as string || null,
+      gabinete_email: formData.get('gabinete_email') as string || null,
+      uf: formData.get('uf') as string,
+      cargo: formData.get('cargo') as string,
     }
     try {
       const res = await fetch(`/api/admin/politicos/${politico.id}`, {
@@ -147,11 +174,14 @@ export function PoliticoEditorSection({ busca, results }: PoliticoEditorSectionP
                     {pol.nome_eleitoral ?? pol.nome_civil}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
-                    {pol.nome_civil}
+                    {pol.nome_civil} · {pol.cargo.replace('_', ' ').toUpperCase()} ({pol.uf})
                   </div>
                 </div>
                 <button
-                  onClick={() => setEditingId(editingId === pol.id ? null : pol.id)}
+                  onClick={() => {
+                    setSaveMsg(null)
+                    setEditingId(editingId === pol.id ? null : pol.id)
+                  }}
                   style={{
                     fontSize: 12,
                     color: 'var(--brand)',
@@ -177,35 +207,172 @@ export function PoliticoEditorSection({ busca, results }: PoliticoEditorSectionP
                     marginTop: 12,
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
-                    gap: 10,
+                    gap: 12,
                   }}
                 >
-                  {[
-                    { name: 'foto_url', label: 'URL da foto', defaultValue: pol.foto_url ?? '' },
-                    { name: 'nome_eleitoral', label: 'Nome eleitoral', defaultValue: pol.nome_eleitoral ?? '' },
-                    { name: 'codigo_siafi', label: 'Código SIAFI', defaultValue: pol.codigo_siafi ?? '' },
-                    { name: 'email', label: 'E-mail', defaultValue: pol.email ?? '' },
-                  ].map((field) => (
-                    <label key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
-                        {field.label}
-                      </span>
-                      <input
-                        name={field.name}
-                        defaultValue={field.defaultValue}
-                        style={{
-                          padding: '6px 10px',
-                          fontSize: 13,
-                          border: '1px solid var(--line)',
-                          borderRadius: 5,
-                          outline: 'none',
-                          fontFamily: 'var(--font-sans)',
-                          background: 'var(--bg)',
-                          color: 'var(--ink)',
-                        }}
-                      />
-                    </label>
-                  ))}
+                  {/* Nome Eleitoral */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Nome Eleitoral
+                    </span>
+                    <input
+                      name="nome_eleitoral"
+                      defaultValue={pol.nome_eleitoral ?? ''}
+                      required
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Foto URL */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      URL da foto
+                    </span>
+                    <input
+                      name="foto_url"
+                      defaultValue={pol.foto_url ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* E-mail do Político */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      E-mail do Político
+                    </span>
+                    <input
+                      name="email"
+                      type="email"
+                      defaultValue={pol.email ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Código SIAFI */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Código SIAFI
+                    </span>
+                    <input
+                      name="codigo_siafi"
+                      defaultValue={pol.codigo_siafi ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Partido Dropdown */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Partido Político
+                    </span>
+                    <select
+                      name="partido_id"
+                      defaultValue={pol.partido_id ?? ''}
+                      style={inputStyle}
+                    >
+                      <option value="">Sem Partido / Nenhum</option>
+                      {partidos.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.sigla} — {p.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {/* Situação Dropdown */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Situação
+                    </span>
+                    <select
+                      name="situacao"
+                      defaultValue={pol.situacao ?? ''}
+                      style={inputStyle}
+                    >
+                      <option value="">Nenhuma</option>
+                      <option value="ativo">Ativo</option>
+                      <option value="licenciado">Licenciado</option>
+                      <option value="suplente">Suplente</option>
+                      <option value="afastado">Afastado</option>
+                      <option value="inativo">Inativo</option>
+                    </select>
+                  </label>
+
+                  {/* Cargo Dropdown */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Cargo
+                    </span>
+                    <select
+                      name="cargo"
+                      defaultValue={pol.cargo}
+                      required
+                      style={inputStyle}
+                    >
+                      <option value="presidente">Presidente</option>
+                      <option value="vice_presidente">Vice Presidente</option>
+                      <option value="governador">Governador</option>
+                      <option value="vice_governador">Vice Governador</option>
+                      <option value="senador">Senador</option>
+                      <option value="deputado_federal">Deputado Federal</option>
+                      <option value="deputado_estadual">Deputado Estadual</option>
+                      <option value="prefeito">Prefeito</option>
+                      <option value="vice_prefeito">Vice Prefeito</option>
+                      <option value="vereador">Vereador</option>
+                    </select>
+                  </label>
+
+                  {/* UF */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      UF
+                    </span>
+                    <input
+                      name="uf"
+                      defaultValue={pol.uf}
+                      required
+                      maxLength={2}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Gabinete Nome */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Nome do Gabinete
+                    </span>
+                    <input
+                      name="gabinete_nome"
+                      defaultValue={pol.gabinete_nome ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Gabinete Telefone */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      Telefone do Gabinete
+                    </span>
+                    <input
+                      name="gabinete_telefone"
+                      defaultValue={pol.gabinete_telefone ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  {/* Gabinete E-mail */}
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 3, gridColumn: '1 / -1' }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--ink-3)' }}>
+                      E-mail do Gabinete
+                    </span>
+                    <input
+                      name="gabinete_email"
+                      type="email"
+                      defaultValue={pol.gabinete_email ?? ''}
+                      style={inputStyle}
+                    />
+                  </label>
+
                   <div
                     style={{
                       gridColumn: '1 / -1',

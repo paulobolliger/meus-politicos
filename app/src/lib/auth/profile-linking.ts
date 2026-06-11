@@ -1,4 +1,5 @@
-import { Pool, type PoolClient, type Pool as PgPool } from 'pg'
+import { type PoolClient, type Pool as PgPool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 
 import type { AuthProfile } from './types'
 
@@ -29,31 +30,13 @@ const PROFILE_SQL_SELECT = `
   migrado_logto_em::text AS migrado_logto_em
 `
 
-let _pool: PgPool | null = null
-
 function getPool(): PgPool | null {
-  const host = process.env.POSTGRES_HOST
-  const database = process.env.POSTGRES_DB
-  const user = process.env.POSTGRES_USER
-  const password = process.env.POSTGRES_PASSWORD
-
-  if (!host || !database || !user || !password) {
+  try {
+    return getPgPool()
+  } catch (err) {
+    console.error('[profile-linking] Erro ao obter Pool do banco de dados:', err)
     return null
   }
-
-  if (!_pool) {
-    _pool = new Pool({
-      host,
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database,
-      user,
-      password,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return _pool
 }
 
 export function normalizeEmail(email: string | null | undefined): string | null {
@@ -189,3 +172,24 @@ export async function linkLogtoProfileByLegacyEmailPostgres(
     client.release()
   }
 }
+
+export async function createProfileForLogtoUserPostgres(
+  logtoSub: string,
+  email: string | null,
+  name: string | null
+): Promise<AuthProfile | null> {
+  const pool = getPool()
+  if (!pool) return null
+
+  const resolvedName = name || (email ? email.split('@')[0] : 'Usuário')
+
+  const { rows } = await pool.query<RawPerfil>(
+    `INSERT INTO perfis (nome, logto_sub, auth_provider, migrado_logto_em)
+     VALUES ($1, $2, 'logto', now())
+     RETURNING ${PROFILE_SQL_SELECT}`,
+    [resolvedName, logtoSub]
+  )
+
+  return toAuthProfile(rows[0] ?? null, normalizeEmail(email))
+}
+

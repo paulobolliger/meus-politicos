@@ -64,9 +64,10 @@ Arquivo: `app/src/lib/logto/config.ts`.
 | `endpoint` | `LOGTO_ENDPOINT` |
 | `appId` | `LOGTO_APP_ID` |
 | `appSecret` | `LOGTO_APP_SECRET` |
-| `baseUrl` | `LOGTO_BASE_URL` ou `NEXT_PUBLIC_APP_URL` ou `NEXT_PUBLIC_SITE_URL` ou `http://localhost:3000` |
+| `baseUrl` | Dinâmico (derivado do host/subdomínio da requisição via headers) ou fallback para `LOGTO_BASE_URL` / `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_SITE_URL` / `http://localhost:3000` |
 | `cookieSecret` | `LOGTO_COOKIE_SECRET` |
 | `cookieSecure` | `process.env.NODE_ENV === 'production'` |
+| `scopes` | `['openid', 'profile', 'email']` (configurado globalmente) |
 
 Caminhos Logto:
 
@@ -289,8 +290,8 @@ O schema SQL ainda contem politicas com `auth.uid()`/`auth.jwt()` do Supabase. O
 
 | Gap | Severidade | Acao |
 |---|---|---|
-| Criacao de `perfis` para usuario Logto novo nao confirmada | P1 | Implementar/revisar provisioning |
-| Dependencia residual de `auth.users` | P1/P2 | Definir plano de desligamento |
+| Criacao de `perfis` para usuario Logto novo (Resolvido) | P1 | Auto-provisionamento de perfil implementado no runtime |
+| Dependencia residual de `auth.users` | P1/P2 | Decupagem de constraints realizada via SQL migration; linking de email legado preservado como fallback |
 | RLS legado vs Logto | P1 | Validar grants e role Postgres |
 | Checagens admin duplicadas manualmente | P2 | Centralizar helper/pattern |
 | Erro Postgres exposto em APIs admin/auth-dependentes | P2 | Normalizar respostas |

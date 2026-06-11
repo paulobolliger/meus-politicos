@@ -32,18 +32,18 @@ Este documento preserva gaps historicos relevantes do `GAP_ANALYSIS.md` anterior
 
 | ID | Gap | Severidade | Evidencia | Impacto | Status |
 |---|---|---|---|---|---|
-| G-01 | Segredo aparente em documentacao legada | P0 | `docs/meuspoliticos_master.md:229`, `docs/meuspoliticos_master.md:264` | Risco de abuso de API, incidente de seguranca e necessidade de rotacao | Aberto |
-| G-02 | Webhook InfinitePay nao persiste doacao | P0/P1 | `app/src/app/api/webhooks/infinitepay/route.ts:34-45` | Pagamento confirmado nao vira registro em banco; perda de historico financeiro | Aberto |
-| G-03 | Webhook InfinitePay sem autenticidade robusta | P1 | `app/src/app/api/webhooks/infinitepay/route.ts:27`, `docs/API.md:251` | Payload falso/replay pode ser aceito se tiver NSUs | Aberto |
-| G-04 | Admin ETL nao executa scripts Python | P1 | `app/src/app/api/admin/etl/run/route.ts:43`, `app/src/app/api/admin/etl/run/route.ts:53` | Botao de ETL apenas registra log; dados nao atualizam | Aberto |
+| G-01 | Segredo aparente em documentacao legada | P0 | `docs/meuspoliticos_master.md:229`, `docs/meuspoliticos_master.md:264` | Risco de abuso de API, incidente de seguranca e necessidade de rotacao | Resolvido |
+| G-02 | Webhook InfinitePay nao persiste doacao | P0/P1 | `app/src/app/api/webhooks/infinitepay/route.ts:34-45` | Pagamento confirmado nao vira registro em banco; perda de historico financeiro | Resolvido |
+| G-03 | Webhook InfinitePay sem autenticidade robusta | P1 | `app/src/app/api/webhooks/infinitepay/route.ts:27`, `docs/API.md:251` | Payload falso/replay pode ser aceito se tiver NSUs | Resolvido |
+| G-04 | Admin ETL nao executa scripts Python | P1 | `app/src/app/api/admin/etl/run/route.ts:43`, `app/src/app/api/admin/etl/run/route.ts:53` | Botao de ETL apenas registra log; dados nao atualizam | Resolvido |
 | G-05 | Sem `.github/workflows` | P1 | `Test-Path .github/workflows` retornou `False` | Sem CI/CD/cron ETL confirmado | Aberto |
 | G-06 | Pre-flight de banco abortado | P1 | `app/.env.local` classificado como remoto/desconhecido | Nao ha prova runtime de conectividade, grants e dados | Aberto |
-| G-07 | Multiplas conexoes Postgres duplicadas | P2 | `new Pool` em 25+ arquivos | Risco de inconsistencia de config, pool excessivo e manutencao dificil | Aberto |
-| G-08 | Respostas de erro expõem `pgError.message`/`code` | P2 | APIs admin/acompanhamentos retornam erro Postgres | Pode vazar detalhes internos e facilitar troubleshooting indevido | Aberto |
-| G-09 | `auth.users` legado ainda participa do linking | P1/P2 | `app/src/lib/auth/profile-linking.ts` consulta `auth.users` | Migração Logto depende de schema legado; risco se auth legado for removido | Aberto |
+| G-07 | Multiplas conexoes Postgres duplicadas | P2 | `new Pool` em 25+ arquivos | Risco de inconsistencia de config, pool excessivo e manutencao dificil | Parcial |
+| G-08 | Respostas de erro expõem `pgError.message`/`code` | P2 | APIs admin/acompanhamentos retornam erro Postgres | Pode vazar detalhes internos e facilitar troubleshooting indevido | Parcial |
+| G-09 | `auth.users` legado ainda participa do linking | P1/P2 | `app/src/lib/auth/profile-linking.ts` consulta `auth.users` | Migração Logto decupada de fkeys e auto-provisionamento implementado | Resolvido |
 | G-10 | Analytics sem observabilidade operacional | P2 | `/api/analytics`, `analytics_eventos`, sem monitoramento externo confirmado | Erros de producao e webhooks podem ficar invisiveis | Aberto |
-| G-11 | Agenda e alertas do painel usam dados estaticos | P1/P2 | `AlertasList.tsx:10`, `ProximasVotacoes.tsx:11` | Usuario pode ver alertas/votacoes ficticias | Aberto |
-| G-12 | Links inativos e botoes sem acao em UI | P1/P2 | Ver `PLACEHOLDER_REPORT.md` | UX quebrada, promessa falsa | Aberto |
+| G-11 | Agenda e alertas do painel usam dados estaticos | P1/P2 | `AlertasList.tsx:10`, `ProximasVotacoes.tsx:11` | Usuario pode ver alertas/votacoes ficticias | Resolvido |
+| G-12 | Links inativos e botoes sem acao em UI | P1/P2 | Ver `PLACEHOLDER_REPORT.md` | UX quebrada, promessa falsa | Resolvido |
 | G-13 | Paginas de candidatos 2026 dependem de tabela opcional | P2 | Codigo captura ausencia de `candidatos_bens` | Dados patrimoniais podem nao existir em runtime | Aberto |
 | G-14 | Ausencia de testes automatizados identificados | P1 | Nenhuma suite/test runner consolidado no inventario | Regressao invisivel em auth, pagamentos, ETL e APIs | Aberto |
 | G-15 | README raiz desatualizado | P2 | README antigo mencionava Supabase Auth/legado | Confundia setup e arquitetura | Resolvido no Lote 1 |
@@ -271,23 +271,14 @@ Acao:
 3. Validar existencia das tabelas centrais.
 4. Validar uma consulta por fluxo: busca, perfil, painel, admin, analytics.
 
-### G-09. Dependencia residual de `auth.users`
+### G-09. Dependencia residual de `auth.users` (Resolvido)
 
 Severidade: **P1/P2**.
 
-Evidencia: `app/src/lib/auth/profile-linking.ts` consulta `auth.users` para vincular perfil legado por email.
-
-Impacto:
-
-- migracao Logto nao esta isolada do legado;
-- remover Supabase Auth/schema `auth` pode quebrar linking;
-- novos usuarios Logto sem perfil preexistente retornam `null` se nao houver estrategia de criacao de perfil.
-
-Acao:
-
-1. Definir regra para criacao de perfil novo via Logto.
-2. Encapsular fallback legado em feature flag/migration mode.
-3. Documentar criterio de desligamento de `auth.users`.
+Resolução:
+1. Adicionado o auto-provisionamento de perfis novos com `createProfileForLogtoUserPostgres` em `profile-linking.ts`.
+2. Adicionado o trigger automático no runtime em `current-user.ts` para criar um registro em `public.perfis` se o usuário Logto não tiver correspondência legada.
+3. Criada a migration `20260602000000_remove_auth_users_fkeys.sql` para remover as constraints `perfis_id_fkey` e `acompanhamentos_usuario_id_fkey` que ligavam o banco ao `auth.users` legado do Supabase.
 
 ### G-11. Dados estaticos operacionais no painel
 

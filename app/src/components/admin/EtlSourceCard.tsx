@@ -143,7 +143,7 @@ export function EtlSourceCard({ source, defaultOpen, badgeVariant }: EtlSourceCa
                 opacity: logging ? 0.6 : 1,
               }}
             >
-              {logging ? 'Registrando...' : '⚡ Rodar agora'}
+              {logging ? 'Solicitando...' : 'Solicitar execução'}
             </button>
             {logMsg && (
               <span style={{ fontSize: 13, color: 'var(--pos)', fontStyle: 'italic' }}>

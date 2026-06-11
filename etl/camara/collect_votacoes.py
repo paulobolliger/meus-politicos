@@ -13,7 +13,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', 'app', '.env.loc
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
 
-ANOS = [2023, 2024, 2025]
+ANOS = [2023, 2024, 2025, 2026]
 
 MAPA_VOTO = {
     'Sim':       'sim',

@@ -9,7 +9,11 @@ type ProxySession = {
 }
 
 export async function getProxySession(request: NextRequest): Promise<ProxySession> {
-  const client = new LogtoEdgeClient(getLogtoConfig())
+  const host = request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  const customBaseUrl = host ? `${proto}://${host}` : undefined
+
+  const client = new LogtoEdgeClient(getLogtoConfig(customBaseUrl))
   const context = await client.getLogtoContext(request)
   const user = context.isAuthenticated && context.claims?.sub
     ? { id: context.claims.sub }

@@ -55,10 +55,10 @@ const apresentacao = [
 
 export default function ComoFuncionaPage() {
   return (
-    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
+    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)] text-[var(--ink)]">
       <section className="relative overflow-hidden border-b border-[var(--line)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff] to-transparent" />
-        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[var(--brand-soft)]/10 to-transparent" />
+        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[var(--brand-2)]/5 blur-3xl" />
 
         <div className="container-shell relative py-14 sm:py-20">
           <div className="max-w-3xl space-y-6">
@@ -70,20 +70,20 @@ export default function ComoFuncionaPage() {
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">
                 Como funciona
               </h1>
               <p className="max-w-2xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
                 Coletamos dados diretamente das fontes oficiais do governo brasileiro e os apresentamos de forma
                 simples, organizada e neutra, sem filtro editorial e sem agenda política.
               </p>
-              <p className="max-w-2xl text-sm leading-6 text-slate-500">
+              <p className="max-w-2xl text-sm leading-6 text-[var(--ink-3)]">
                 Se você quer a visão filosófica e o posicionamento público do projeto, leia o{' '}
-                <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:underline">
+                <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">
                   manifesto
                 </Link>
                 . Se quer entender a proposta institucional em linguagem mais curta, veja{' '}
-                <Link href="/sobre" className="font-semibold text-[var(--brand-2)] hover:underline">
+                <Link href="/sobre" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">
                   sobre
                 </Link>
                 .
@@ -98,7 +98,7 @@ export default function ComoFuncionaPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
               <p className="mono text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">Base filosófica</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
                 A metodologia existe para sustentar um posicionamento maior.
               </h2>
               <p className="mt-3 text-sm leading-6 text-[var(--ink-3)] sm:text-base">
@@ -124,7 +124,7 @@ export default function ComoFuncionaPage() {
             <div className="flex size-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)] text-[var(--brand-2)]">
               <Database className="size-6" aria-hidden="true" />
             </div>
-            <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-950">Fontes oficiais</h2>
+            <h2 className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)]">Fontes oficiais</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--ink-3)]">
               As informações existem, mas estão espalhadas em sistemas diferentes e formatos técnicos. O Meus
               Políticos organiza essas bases para tornar a consulta mais acessível ao cidadão.
@@ -136,12 +136,12 @@ export default function ComoFuncionaPage() {
               {fontes.map((fonte) => (
                 <li key={fonte} className="flex gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-3">
                   <Globe2 className="mt-0.5 size-4 shrink-0 text-[var(--brand-2)]" aria-hidden="true" />
-                  <span className="text-sm leading-6 text-slate-700">{fonte}</span>
+                  <span className="text-sm leading-6 text-[var(--ink-2)]">{fonte}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-4">
-              <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">Ver todas as fontes com links oficiais →</Link>
+              <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Ver todas as fontes com links oficiais →</Link>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function ComoFuncionaPage() {
       <section className="border-y border-[var(--line)] bg-[var(--panel)] py-12 sm:py-16">
         <div className="container-shell">
           <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
               Como apresentamos os dados
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--ink-3)]">
@@ -170,7 +170,7 @@ export default function ComoFuncionaPage() {
                       <Icon className="size-5" aria-hidden="true" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold tracking-tight text-slate-950">{item.title}</h3>
+                      <h3 className="text-base font-bold tracking-tight text-[var(--ink)]">{item.title}</h3>
                       <p className="mt-1 text-sm leading-6 text-[var(--ink-3)]">{item.description}</p>
                     </div>
                   </div>
@@ -187,14 +187,14 @@ export default function ComoFuncionaPage() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1">
                 <MapPin className="size-4 text-[#9fb7ff]" aria-hidden="true" />
-                  <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
+                <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
                   Quem me representa?
                 </span>
               </div>
               <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
                 Digite seu CEP e descubra seus representantes políticos.
               </h2>
-              <p className="mt-3 text-sm leading-6 text-white/68 sm:text-base">
+              <p className="mt-3 text-sm leading-6 text-white/70 sm:text-base">
                 A plataforma cruza dados geográficos e cargos públicos para ajudar você a identificar representantes e
                 consultar o histórico de cada um.
               </p>
@@ -222,4 +222,3 @@ export default function ComoFuncionaPage() {
     </main>
   )
 }
-

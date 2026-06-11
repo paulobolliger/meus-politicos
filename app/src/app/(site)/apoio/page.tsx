@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { X, Check, RefreshCw } from 'lucide-react'
 
-// ─── Grid background inline ───────────────────────────────────────────────────
+// ─── Grid background inline (com linhas sutis baseadas em var(--line)) ────────
 const GRID_BG: React.CSSProperties = {
-  backgroundImage: 'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
+  backgroundImage: 'linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px)',
   backgroundSize: '60px 60px',
 }
 
@@ -15,40 +16,259 @@ export default function ApoioPage() {
   const [pagamentoEmAndamento, setPagamentoEmAndamento] = useState<TipoApoio | null>(null)
   const [erroPagamento, setErroPagamento] = useState<string | null>(null)
 
-  async function iniciarApoio(tipo: TipoApoio, valor: number) {
-    const nome = window.prompt('Informe seu nome completo')
-    if (!nome?.trim()) return
+  // Estados do Apoio Inline
+  const [modalTipo, setModalTipo] = useState<TipoApoio>('mensal')
+  const [modalValor, setModalValor] = useState<number>(25)
+  const [isCustomValor, setIsCustomValor] = useState(false)
+  
+  // Etapa do Checkout
+  const [etapa, setEtapa] = useState<'cadastro' | 'pagamento' | 'sucesso'>('cadastro')
+  const [formaPagamento, setFormaPagamento] = useState<'pix' | 'cartao'>('pix')
 
-    const email = window.prompt('Informe seu e-mail')
-    if (!email?.trim() || !email.includes('@')) {
-      setErroPagamento('Informe um e-mail valido para gerar o link de pagamento.')
+  // Informações do Apoiador
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
+  const [cpfCnpj, setCpfCnpj] = useState('')
+  const [telefone, setTelefone] = useState('')
+
+  // Informações do Cartão de Crédito
+  const [cartaoHolderName, setCartaoHolderName] = useState('')
+  const [cartaoNumber, setCartaoNumber] = useState('')
+  const [cartaoExpiry, setCartaoExpiry] = useState('')
+  const [cartaoCvv, setCartaoCvv] = useState('')
+  const [cartaoPostalCode, setCartaoPostalCode] = useState('')
+  const [cartaoAddressNumber, setCartaoAddressNumber] = useState('')
+
+  // Retorno da Cobrança Pix
+  const [pixQrCode, setPixQrCode] = useState('')
+  const [pixCopiaCola, setPixCopiaCola] = useState('')
+  const [paymentId, setPaymentId] = useState('')
+  const [copiado, setCopiado] = useState(false)
+
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Limpar polling se desmontar
+  useEffect(() => {
+    return () => pararPollingPix()
+  }, [])
+
+  const iniciarPollingPix = (payId: string) => {
+    if (pollingRef.current) clearInterval(pollingRef.current)
+    pollingRef.current = setInterval(async () => {
+      try {
+        const response = await fetch('/api/apoio/verificar-pagamento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: payId })
+        })
+        const data = await response.json()
+        if (response.ok && data.paid) {
+          pararPollingPix()
+          setEtapa('sucesso')
+        }
+      } catch (err) {
+        console.warn('Erro ao verificar status do Pix:', err)
+      }
+    }, 5000)
+  }
+
+  const pararPollingPix = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+  }
+
+  const handleVerificarPixManual = async () => {
+    if (!paymentId) return
+    setPagamentoEmAndamento(modalTipo)
+    setErroPagamento(null)
+    try {
+      const response = await fetch('/api/apoio/verificar-pagamento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId })
+      })
+      const data = await response.json()
+      if (response.ok && data.paid) {
+        pararPollingPix()
+        setEtapa('sucesso')
+      } else {
+        setErroPagamento('Pagamento ainda não detectado. Se você já pagou, aguarde alguns instantes.')
+      }
+    } catch {
+      setErroPagamento('Erro ao conectar com o servidor para verificar o pagamento.')
+    } finally {
+      setPagamentoEmAndamento(null)
+    }
+  }
+
+  const handleCopiarPix = () => {
+    if (!pixCopiaCola) return
+    navigator.clipboard.writeText(pixCopiaCola)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
+  }
+
+  // Máscaras de entrada
+  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 14) return
+    
+    let formatted = raw
+    if (raw.length <= 11) {
+      formatted = raw
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    } else {
+      formatted = raw
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+    }
+    setCpfCnpj(formatted)
+  }
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 11) return
+
+    let formatted = raw
+    if (raw.length <= 10) {
+      formatted = raw
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d{1,4})$/, '$1-$2')
+    } else {
+      formatted = raw
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d{1,4})$/, '$1-$2')
+    }
+    setTelefone(formatted)
+  }
+
+  const handleValidadeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 4) return
+    let formatted = raw
+    if (raw.length > 2) {
+      formatted = `${raw.slice(0, 2)}/${raw.slice(2, 4)}`
+    }
+    setCartaoExpiry(formatted)
+  }
+
+  const handleNumeroCartaoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 16) return
+    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ')
+    setCartaoNumber(formatted)
+  }
+
+  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 8) return
+    const formatted = raw.replace(/(\d{5})(\d{1,3})$/, '$1-$2')
+    setCartaoPostalCode(formatted)
+  }
+
+  async function handleConfirmarApoioInline(e: React.FormEvent) {
+    e.preventDefault()
+    if (!modalTipo) return
+
+    if (!nome.trim()) {
+      setErroPagamento('Informe seu nome completo.')
+      return
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setErroPagamento('Informe um e-mail válido.')
+      return
+    }
+    const cleanCpf = cpfCnpj.replace(/\D/g, '')
+    if (cleanCpf.length !== 11 && cleanCpf.length !== 14) {
+      setErroPagamento('Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.')
+      return
+    }
+    const cleanPhone = telefone.replace(/\D/g, '')
+    if (cleanPhone.length < 10) {
+      setErroPagamento('Informe um telefone válido com DDD.')
       return
     }
 
-    setPagamentoEmAndamento(tipo)
+    if (formaPagamento === 'cartao') {
+      if (!cartaoHolderName.trim()) {
+        setErroPagamento('Informe o nome do titular do cartão.')
+        return
+      }
+      if (cartaoNumber.replace(/\s/g, '').length < 15) {
+        setErroPagamento('Informe um número de cartão válido.')
+        return
+      }
+      if (!cartaoExpiry.includes('/') || cartaoExpiry.length < 5) {
+        setErroPagamento('Informe a validade no formato MM/AA.')
+        return
+      }
+      if (cartaoCvv.trim().length < 3) {
+        setErroPagamento('Informe o código de segurança (CVV).')
+        return
+      }
+      if (cartaoPostalCode.replace(/\D/g, '').length < 8) {
+        setErroPagamento('Informe um CEP de faturamento válido.')
+        return
+      }
+      if (!cartaoAddressNumber.trim()) {
+        setErroPagamento('Informe o número do endereço.')
+        return
+      }
+    }
+
+    setPagamentoEmAndamento(modalTipo)
     setErroPagamento(null)
 
     try {
+      const payload = {
+        nome: nome.trim(),
+        email: email.trim().toLowerCase(),
+        cpfCnpj: cleanCpf,
+        telefone: cleanPhone,
+        tipo: modalTipo,
+        valor: modalValor,
+        formaPagamento,
+        ...(formaPagamento === 'cartao' ? {
+          cartaoInfo: {
+            holderName: cartaoHolderName.trim(),
+            number: cartaoNumber.replace(/\s/g, ''),
+            expiry: cartaoExpiry,
+            ccv: cartaoCvv.trim(),
+            postalCode: cartaoPostalCode.replace(/\D/g, ''),
+            addressNumber: cartaoAddressNumber.trim()
+          }
+        } : {})
+      }
+
       const response = await fetch('/api/apoio/criar-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: nome.trim(),
-          email: email.trim(),
-          tipo,
-          valor,
-        }),
+        body: JSON.stringify(payload)
       })
+
       const data = await response.json()
 
-      if (!response.ok || !data.url) {
-        setErroPagamento(data.error ?? 'Nao foi possivel gerar o link de pagamento.')
+      if (!response.ok) {
+        setErroPagamento(data.error ?? 'Não foi possível processar seu pagamento. Verifique seus dados e tente novamente.')
         return
       }
 
-      window.location.href = data.url
+      if (formaPagamento === 'pix') {
+        setPixQrCode(data.qrCode)
+        setPixCopiaCola(data.copiaCola)
+        setPaymentId(data.paymentId)
+        iniciarPollingPix(data.paymentId)
+      } else {
+        setEtapa('sucesso')
+      }
     } catch {
-      setErroPagamento('Falha de conexao ao gerar o link de pagamento.')
+      setErroPagamento('Falha de conexão ao processar pagamento.')
     } finally {
       setPagamentoEmAndamento(null)
     }
@@ -63,447 +283,817 @@ export default function ApoioPage() {
     fontWeight: 700,
     textAlign: 'center',
     cursor: 'pointer',
-    transition: 'background 0.15s, color 0.15s',
+    transition: 'all 0.15s ease-in-out',
   }
 
   return (
-    <div style={{ background: '#f4f5f0', color: '#0a0e1a' }}>
+    <div style={{ background: 'var(--bg)', color: 'var(--ink)', position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
+      
+      {/* Halos/Glows decorativos em segundo plano */}
+      <div style={{
+        position: 'absolute',
+        top: '-5%',
+        left: '10%',
+        width: '500px',
+        height: '500px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 70%)',
+        filter: 'blur(80px)',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '25%',
+        right: '-10%',
+        width: '600px',
+        height: '600px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, rgba(236, 72, 153, 0) 70%)',
+        filter: 'blur(100px)',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section style={{
-        ...GRID_BG,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', padding: '80px 24px',
-        borderBottom: '1px solid #e5e7eb',
-        minHeight: 480,
-      }}>
-        <div style={{ maxWidth: 800 }}>
-          <h1 style={{
-            fontSize: 52, fontWeight: 900, lineHeight: 1.1,
-            letterSpacing: '-0.03em', margin: '0 0 24px',
-            color: '#0a0e1a',
-          }}>
-            Política transparente só existe<br />quando alguém sustenta isso.
-          </h1>
-          <p style={{
-            fontSize: 18, color: '#4b5563', lineHeight: 1.7,
-            maxWidth: 600, margin: '0 auto 40px',
-          }}>
-            Meus Políticos transforma dados públicos em informação acessível
-            para milhões de brasileiros — sem paywall político, sem alinhamento
-            partidário e sem manipulação institucional.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="#apoiar" style={{
-              background: '#1d3a8a', color: '#fff',
-              padding: '16px 36px', borderRadius: 12,
-              fontWeight: 700, fontSize: 15, textDecoration: 'none',
-              boxShadow: '0 8px 24px rgba(29,58,138,0.25)',
-            }}>
-              Sustentar agora
-            </a>
-            <Link href="/manifesto" style={{
-              background: '#fff', color: '#0a0e1a',
-              padding: '16px 36px', borderRadius: 12,
-              fontWeight: 700, fontSize: 15, textDecoration: 'none',
-              border: '1px solid #e5e7eb',
-            }}>
-              Ler Manifesto
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Custo tecnológico ────────────────────────────────────────────── */}
-      <section style={{ background: '#fff', padding: '80px 24px' }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          gap: 80, alignItems: 'center',
-        }}>
-          {/* Texto */}
-          <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: '#1d3a8a',
-              letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 20,
-            }}>
-              Data Engineering &amp; Rigor
-            </div>
+      {/* ── Seção de Apoio Principal (Direct & Fluid Checkout) ───────────────── */}
+      <section id="apoiar" style={{ background: 'transparent', padding: '128px 24px 80px', position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{
-              fontSize: 34, fontWeight: 800, lineHeight: 1.2,
-              margin: '0 0 20px', letterSpacing: '-0.02em',
+              fontSize: 42, fontWeight: 900, margin: '0 0 16px',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.15,
+              color: 'var(--ink)',
+              fontFamily: 'var(--font-display)',
             }}>
-              O custo tecnológico da verdade
+              Seja um mantenedor da <span style={{
+                background: 'linear-gradient(135deg, var(--brand-2) 0%, #a855f7 50%, #f43f5e 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>independência</span>
             </h2>
-            <p style={{
-              fontSize: 16, color: '#4b5563', lineHeight: 1.75, margin: '0 0 40px',
-            }}>
-              Manter uma plataforma que monitora 513 deputados, 81 senadores e
-              milhares de gastos em tempo real exige uma infraestrutura de nível
-              enterprise. Não somos apenas um site; somos um terminal de dados
-              que processa terabytes de requisições mensais.
+            <p style={{ fontSize: 15, color: 'var(--ink-3)', margin: '0 auto', maxWidth: 460, lineHeight: 1.6 }}>
+              Escolha o valor e a frequência do seu apoio para manter o portal Meus Políticos 100% independente.
             </p>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-              {[
-                {
-                  icon: '📊',
-                  title: 'Consumo Massivo de APIs',
-                  desc: 'Executamos jobs de scraping e sincronização a cada 15 minutos para garantir latência zero.',
-                },
-                {
-                  icon: '🧠',
-                  title: 'Processamento Semântico',
-                  desc: 'Utilizamos modelos de IA para categorizar projetos de lei e detectar anomalias em gastos públicos.',
-                },
-              ].map(item => (
-                <div key={item.title} style={{ display: 'flex', gap: 16 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 10,
-                    background: 'rgba(29,58,138,0.06)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, flexShrink: 0,
-                  }}>
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{item.title}</div>
-                    <div style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.6 }}>{item.desc}</div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-7" style={{
+              background: 'var(--panel)',
+              border: '1px solid var(--line)',
+              borderRadius: 24,
+              padding: '40px 32px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+              position: 'relative',
+              zIndex: 2
+            }}>
+            
+            {/* FORMULÁRIO DE CADASTRO E PAGAMENTO */}
+            {etapa !== 'sucesso' && !pixQrCode && (
+              <form onSubmit={handleConfirmarApoioInline} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                
+                {/* Frequência do Apoio */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                    FREQUÊNCIA DO APOIO
+                  </span>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalTipo('mensal')
+                        if (!isCustomValor) setModalValor(25)
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: modalTipo === 'mensal' ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                        background: modalTipo === 'mensal' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.2)',
+                        color: 'var(--ink)',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Mensal (Recorrente)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalTipo('unica')
+                        if (!isCustomValor) setModalValor(50)
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: modalTipo === 'unica' ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                        background: modalTipo === 'unica' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.2)',
+                        color: 'var(--ink)',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Único (Uma vez)
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Imagem / Server visual */}
-          <div style={{ position: 'relative' }}>
-            <div style={{
-              position: 'absolute', inset: -16,
-              background: 'rgba(29,58,138,0.04)', borderRadius: 24, zIndex: 0,
-            }} />
-            <div style={{
-              background: '#111827', borderRadius: 16,
-              overflow: 'hidden', border: '1px solid #e5e7eb',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-              position: 'relative', zIndex: 1,
-            }}>
-              {/* Dark server room visual */}
-              <div style={{
-                height: 280,
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 32,
-              }}>
-                <div style={{ width: '100%' }}>
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      marginBottom: i < 5 ? 10 : 0,
-                    }}>
-                      <div style={{
-                        width: 6, height: 6, borderRadius: '50%',
-                        background: i % 3 === 0 ? '#4ade80' : i % 3 === 1 ? '#3b82f6' : '#f59e0b',
-                      }} />
-                      <div style={{
-                        flex: 1, height: 20, borderRadius: 4,
-                        background: 'rgba(255,255,255,0.06)',
-                        overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          height: '100%', borderRadius: 4,
-                          width: `${30 + (i * 13) % 55}%`,
-                          background: `rgba(99,102,241,${0.3 + (i * 0.07)})`,
-                        }} />
-                      </div>
-                      <span style={{
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontSize: 10, color: 'rgba(255,255,255,0.3)',
-                        minWidth: 36, textAlign: 'right',
-                      }}>
-                        {(40 + i * 9) % 100}%
-                      </span>
+                {/* Seleção do Valor */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                    VALOR DO APOIO
+                  </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                    {[10, 25, 50, 100].map(val => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => {
+                          setModalValor(val)
+                          setIsCustomValor(false)
+                        }}
+                        style={{
+                          padding: '10px 0',
+                          borderRadius: 8,
+                          border: (!isCustomValor && modalValor === val) ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                          background: (!isCustomValor && modalValor === val) ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.2)',
+                          color: 'var(--ink)',
+                          fontWeight: 700,
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        R$ {val}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomValor(true)
+                        setModalValor(20) // padrão ao clicar em custom
+                      }}
+                      style={{
+                        padding: '10px 0',
+                        borderRadius: 8,
+                        border: isCustomValor ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                        background: isCustomValor ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.2)',
+                        color: 'var(--ink)',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      Outro
+                    </button>
+                  </div>
+
+                  {/* Input de Valor Customizado */}
+                  {isCustomValor && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-2)' }}>R$</span>
+                      <input
+                        type="number"
+                        min="5"
+                        placeholder="Digite o valor"
+                        value={modalValor || ''}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value)
+                          setModalValor(isNaN(val) ? 0 : val)
+                        }}
+                        className="input-apoio"
+                        style={{ height: 38 }}
+                      />
+                      <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>Mínimo de R$ 5</span>
                     </div>
-                  ))}
+                  )}
+                </div>
+
+                {/* Seus Dados */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                    SEUS DADOS
+                  </span>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nome Completo"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      className="input-apoio"
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Endereço de E-mail"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-apoio"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      required
+                      placeholder="CPF / CNPJ"
+                      value={cpfCnpj}
+                      onChange={handleCpfCnpjChange}
+                      className="input-apoio"
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="WhatsApp (com DDD)"
+                      value={telefone}
+                      onChange={handleTelefoneChange}
+                      className="input-apoio"
+                    />
+                  </div>
+                </div>
+
+                {/* Forma de Pagamento */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                    FORMA DE PAGAMENTO
+                  </span>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setFormaPagamento('pix')}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: formaPagamento === 'pix' ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                        background: formaPagamento === 'pix' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.2)',
+                        color: 'var(--ink)',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: formaPagamento === 'pix' ? 'var(--brand-2)' : 'var(--ink-3)' }}>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                      </svg>
+                      Pix
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormaPagamento('cartao')}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: 10,
+                        border: formaPagamento === 'cartao' ? '2px solid var(--brand-2)' : '1px solid var(--line)',
+                        background: formaPagamento === 'cartao' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(30, 41, 59, 0.2)',
+                        color: 'var(--ink)',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: formaPagamento === 'cartao' ? 'var(--brand-2)' : 'var(--ink-3)' }}>
+                        <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                      Cartão
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dados do Cartão (inline se selecionado) */}
+                {formaPagamento === 'cartao' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: '1px solid var(--line)', paddingTop: 16 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
+                      DADOS DO CARTÃO
+                    </span>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Nome como escrito no cartão"
+                        value={cartaoHolderName}
+                        onChange={(e) => setCartaoHolderName(e.target.value.toUpperCase())}
+                        className="input-apoio"
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Número do Cartão"
+                        value={cartaoNumber}
+                        onChange={handleNumeroCartaoChange}
+                        className="input-apoio"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Validade (MM/AA)"
+                        value={cartaoExpiry}
+                        onChange={handleValidadeChange}
+                        className="input-apoio"
+                      />
+                      <input
+                        type="text"
+                        required
+                        placeholder="CVV"
+                        value={cartaoCvv}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, '')
+                          if (raw.length <= 4) setCartaoCvv(raw)
+                        }}
+                        className="input-apoio"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        required
+                        placeholder="CEP do Titular"
+                        value={cartaoPostalCode}
+                        onChange={handlePostalCodeChange}
+                        className="input-apoio"
+                      />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Número do Endereço"
+                        value={cartaoAddressNumber}
+                        onChange={(e) => setCartaoAddressNumber(e.target.value)}
+                        className="input-apoio"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {erroPagamento && (
+                  <div style={{ fontSize: 12, color: 'var(--neg)', fontWeight: 500, lineHeight: 1.4 }}>
+                    {erroPagamento}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn-apoio-primary"
+                  style={{
+                    width: '100%',
+                    height: 46,
+                    borderRadius: 12,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: pagamentoEmAndamento !== null ? 'wait' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    marginTop: 8
+                  }}
+                  disabled={pagamentoEmAndamento !== null}
+                >
+                  {pagamentoEmAndamento !== null ? (
+                    <>
+                      <RefreshCw size={16} className="spin" /> Processando...
+                    </>
+                  ) : formaPagamento === 'pix' ? 'Gerar Código Pix' : `Apoiar com R$ ${modalValor} ${modalTipo === 'mensal' ? '/mês' : ''}`}
+                </button>
+
+              </form>
+            )}
+
+            {/* SE PIX GERADO */}
+            {etapa !== 'sucesso' && pixQrCode && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', textAlign: 'center', margin: 0 }}>
+                  Pix de R$ {modalValor} gerado!
+                </h3>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
+                  <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                    <img src={`data:image/png;base64,${pixQrCode}`} alt="QR Code Pix" style={{ width: '180px', height: '180px', display: 'block' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>CÓDIGO PIX (COPIA E COLA)</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={pixCopiaCola}
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                      style={{
+                        height: 38,
+                        flex: 1,
+                        padding: '0 12px',
+                        background: 'rgba(30, 41, 59, 0.4)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 8,
+                        color: 'var(--ink)',
+                        fontSize: 12,
+                        outline: 'none',
+                        textOverflow: 'ellipsis'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopiarPix}
+                      style={{
+                        padding: '0 16px',
+                        borderRadius: 8,
+                        background: copiado ? 'var(--pos-soft)' : 'var(--surface)',
+                        border: `1px solid ${copiado ? 'var(--pos)' : 'var(--line)'}`,
+                        color: copiado ? 'var(--pos)' : 'var(--ink)',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {copiado ? 'Copiado!' : 'Copiar'}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '6px 0', textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, color: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+                    <RefreshCw size={14} className="spin" style={{ color: 'var(--brand-2)' }} />
+                    Aguardando confirmação de pagamento...
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, lineHeight: 1.5 }}>
+                    Abra o app do seu banco, escolha "Pagar via Pix" e aponte a câmera para o QR Code ou cole o código acima.
+                  </p>
+                </div>
+
+                {erroPagamento && (
+                  <div style={{ fontSize: 12, color: 'var(--neg)', fontWeight: 500, textAlign: 'center' }}>
+                    {erroPagamento}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      pararPollingPix()
+                      setPixQrCode('')
+                      setPixCopiaCola('')
+                      setPaymentId('')
+                    }}
+                    className="btn-modal-cancel"
+                    style={{ flex: 1, height: 42 }}
+                    disabled={pagamentoEmAndamento !== null}
+                  >
+                    Voltar / Alterar valor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerificarPixManual}
+                    className="btn-apoio-primary"
+                    style={{
+                      flex: 1.5, height: 42, borderRadius: 8, fontSize: 13, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}
+                    disabled={pagamentoEmAndamento !== null}
+                  >
+                    {pagamentoEmAndamento !== null ? (
+                      <RefreshCw size={14} className="spin" />
+                    ) : null}
+                    Já paguei
+                  </button>
                 </div>
               </div>
+            )}
 
-              {/* Status bar */}
+            {/* ETAPA SUCESSO */}
+            {etapa === 'sucesso' && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '20px 0' }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 32, color: '#fff', marginBottom: 24,
+                  boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)'
+                }}>
+                  ✓
+                </div>
+                <h4 style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', margin: '0 0 12px' }}>
+                  Apoio Confirmado!
+                </h4>
+                <p style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.6, margin: '0 0 24px' }}>
+                  Muito obrigado por sua contribuição de <strong>R$ {modalValor}</strong>. Seu apoio cívico foi registrado e processado com sucesso.
+                </p>
+                <div style={{ padding: '16px 20px', borderRadius: 12, background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', marginBottom: 28 }}>
+                  <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, lineHeight: 1.6 }}>
+                    Seu investimento financia nossa infraestrutura independente de dados públicos, IA e rigor fiscal.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEtapa('cadastro')
+                    setPixQrCode('')
+                    setPixCopiaCola('')
+                    setPaymentId('')
+                    setNome('')
+                    setEmail('')
+                    setCpfCnpj('')
+                    setTelefone('')
+                    setCartaoHolderName('')
+                    setCartaoNumber('')
+                    setCartaoExpiry('')
+                    setCartaoCvv('')
+                    setCartaoPostalCode('')
+                    setCartaoAddressNumber('')
+                  }}
+                  className="btn-apoio-primary"
+                  style={{ width: '100%', height: 46, borderRadius: 12, fontWeight: 700 }}
+                >
+                  Fazer outro apoio
+                </button>
+              </div>
+            )}
+
+          </div>
+
+            {/* Coluna 2: Texto Explicativo (Por que doar?) */}
+            <div className="lg:col-span-5" style={{
+              background: 'var(--panel)',
+              border: '1px solid var(--line)',
+              borderRadius: 24,
+              padding: '40px 32px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+              position: 'relative',
+              zIndex: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 24
+            }}>
+              <div>
+                <h3 style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: 'var(--ink)',
+                  margin: '0 0 16px',
+                  fontFamily: 'var(--font-display)'
+                }}>
+                  Por que apoiar o Meus Políticos?
+                </h3>
+                <p style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.6, margin: 0 }}>
+                  Somos uma plataforma cidadã 100% independente que acredita no poder da fiscalização social e no livre acesso à informação.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {[
+                  {
+                    title: 'Independência Editorial',
+                    desc: 'Não recebemos verbas de governos, partidos ou coligações políticas. Nossa fidelidade é exclusivamente com a transparência pública.'
+                  },
+                  {
+                    title: 'Custos de Infraestrutura',
+                    desc: 'Manter robôs e scrapers coletando dados públicos de 1.680 parlamentares em tempo real exige servidores potentes 24 horas por dia.'
+                  },
+                  {
+                    title: 'Gratuito e Sem Anúncios',
+                    desc: 'Acreditamos que a transparência cívica deve ser pública e livre de barreiras. Não cobramos mensalidades obrigatórias e não exibimos anúncios comerciais.'
+                  }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 12 }}>
+                    <div style={{
+                      color: 'var(--brand-2)',
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      lineHeight: 1
+                    }}>
+                      ✓
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', margin: '0 0 4px' }}>
+                        {item.title}
+                      </h4>
+                      <p style={{ fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.5, margin: 0 }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Status de Uptime do Servidor */}
               <div style={{
-                background: 'rgba(255,255,255,0.92)',
-                backdropFilter: 'blur(8px)',
-                borderTop: '1px solid #e5e7eb',
-                padding: '12px 20px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginTop: 8,
+                padding: '16px',
+                borderRadius: 12,
+                background: 'rgba(30, 41, 59, 0.3)',
+                border: '1px solid var(--line)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
               }}>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#4b5563' }}>
-                  INFRA_STATUS: <span style={{ color: '#16a34a', fontWeight: 700 }}>OPERATIONAL</span>
+                <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
+                  STATUS DO PORTAL
                 </span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#1d3a8a', fontWeight: 700 }}>
+                <span style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--pos)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}>
+                  <span style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: 'var(--pos)',
+                    display: 'inline-block'
+                  }} />
                   UPTIME 99.98%
                 </span>
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* ── Transparência em Tempo Real ──────────────────────────────────── */}
-      <section style={{
-        background: '#fafafa', borderTop: '1px solid #e5e7eb',
-        borderBottom: '1px solid #e5e7eb', padding: '80px 24px',
-      }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{
-            display: 'flex', justifyContent: 'space-between',
-            alignItems: 'flex-end', gap: 24, marginBottom: 48, flexWrap: 'wrap',
-          }}>
-            <div style={{ maxWidth: 520 }}>
-              <h2 style={{
-                fontSize: 32, fontWeight: 800, margin: '0 0 12px',
-                letterSpacing: '-0.02em',
-              }}>
-                Transparência em Tempo Real
-              </h2>
-              <p style={{ fontSize: 15, color: '#4b5563', margin: 0, lineHeight: 1.6 }}>
-                Cada centavo investido é revertido em independência técnica.
-                Aqui está como dividimos nossos custos operacionais.
-              </p>
-            </div>
-          </div>
 
-          <div style={{
-            background: '#fff', borderRadius: 24,
-            border: '1px solid #e5e7eb', overflow: 'hidden',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-          }}>
-            <div style={{ padding: '32px 32px 28px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{
-                fontSize: 11, fontWeight: 700, color: '#4b5563',
-                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 24,
-              }}>
-                Alocação de Recursos
-              </div>
 
-              {/* Bar chart */}
-              <div style={{
-                display: 'flex', height: 64, width: '100%',
-                borderRadius: 16, overflow: 'hidden', marginBottom: 28,
-              }}>
-                {[
-                  { pct: 35, bg: '#1d3a8a', label: 'Infraestrutura' },
-                  { pct: 25, bg: '#3b82f6', label: 'Engenharia' },
-                  { pct: 20, bg: '#93c5fd', label: 'Coleta' },
-                  { pct: 10, bg: '#d97706', label: 'IA Semântica' },
-                  { pct: 10, bg: '#d1d5db', label: 'Operação' },
-                ].map((seg, i, arr) => (
-                  <div
-                    key={seg.label}
-                    title={`${seg.label}: ${seg.pct}%`}
-                    style={{
-                      width: `${seg.pct}%`,
-                      background: seg.bg,
-                      borderRight: i < arr.length - 1 ? '2px solid rgba(255,255,255,0.3)' : 'none',
-                    }}
-                  />
-                ))}
-              </div>
 
-              {/* Legend */}
-              <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16,
-              }}>
-                {[
-                  { cor: '#1d3a8a', label: 'Infraestrutura: 35%' },
-                  { cor: '#3b82f6', label: 'Engenharia: 25%' },
-                  { cor: '#93c5fd', label: 'Coleta: 20%' },
-                  { cor: '#d97706', label: 'IA Semântica: 10%' },
-                  { cor: '#d1d5db', label: 'Operação: 10%' },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: item.cor, flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Estilos CSS embutidos para comportamento responsivo e animações */}
+      <style>{`
+        .spin {
+          animation: spin-animation 1s linear infinite;
+        }
+        @keyframes spin-animation {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
 
-      {/* ── Planos de Apoio ───────────────────────────────────────────────── */}
-      <section id="apoiar" style={{ background: '#fff', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <h2 style={{
-              fontSize: 40, fontWeight: 900, margin: '0 0 14px',
-              letterSpacing: '-0.02em',
-            }}>
-              Seja um mantenedor da independência
-            </h2>
-            <p style={{ fontSize: 16, color: '#4b5563', maxWidth: 480, margin: '0 auto' }}>
-              Escolha o plano que melhor se adapta à sua vontade de transformar a
-              transparência no Brasil.
-            </p>
-          </div>
+        .hover-scale {
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-scale:hover {
+          transform: translateY(-2px);
+          filter: brightness(1.1);
+        }
 
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24,
-            maxWidth: 900, margin: '0 auto',
-          }}>
+        /* Grades Responsivas */
+        .grid-custos {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 48px;
+          align-items: center;
+        }
+        .grid-planos {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 28px;
+          max-width: 900px;
+          margin: 0 auto;
+        }
+        .grid-legendas {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
 
-            {/* Card 1 — Recorrente */}
-            <div style={{
-              background: '#fff', border: '1px solid #e5e7eb',
-              borderRadius: 24, padding: '40px 36px',
-              display: 'flex', flexDirection: 'column',
-              transition: 'box-shadow 0.2s, border-color 0.2s',
-            }}>
-              <div style={{ marginBottom: 32 }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 14,
-                  background: '#f9fafb', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: 24, marginBottom: 20,
-                }}>
-                  👤
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>
-                  Apoio Cívico Recorrente
-                </h3>
-                <p style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.6, margin: 0 }}>
-                  Contribuição mensal automática para sustentar os custos de
-                  infraestrutura de dados de um parlamentar.
-                </p>
-              </div>
+        /* Classes de botões */
+        .btn-apoio-primary {
+          background: linear-gradient(135deg, var(--brand-2) 0%, #7c3aed 100%);
+          color: #fff !important;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+        }
+        .btn-apoio-primary:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+          filter: brightness(1.1);
+        }
+        .btn-apoio-secondary {
+          background: var(--surface);
+          border: 1px solid var(--line);
+          color: var(--ink-2) !important;
+        }
+        .btn-apoio-secondary:hover {
+          background: var(--panel);
+          border-color: var(--line-strong);
+          color: var(--ink) !important;
+          transform: translateY(-1px);
+        }
 
-              <div style={{ marginBottom: 6 }}>
-                <span style={{ fontSize: 42, fontWeight: 900 }}>R$ 25</span>
-                <span style={{ fontSize: 14, color: '#4b5563' }}>/mês</span>
-              </div>
-              <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 32 }}>
-                Valor sugerido para apoio recorrente
-              </div>
+        /* Formulários e Inputs do Modal */
+        .input-apoio {
+          height: 38px;
+          width: 100%;
+          padding: 0 12px;
+          background: rgba(30, 41, 59, 0.4);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          color: var(--ink);
+          font-size: 13px;
+          outline: none;
+          transition: border-color 0.15s ease;
+        }
+        .input-apoio:focus {
+          border-color: var(--brand-2);
+        }
 
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-                {['Selo de Mantenedor', 'Relatório de Impacto'].map(b => (
-                  <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 500 }}>
-                    <span style={{ color: '#16a34a', fontSize: 18 }}>✓</span> {b}
-                  </li>
-                ))}
-              </ul>
+        .btn-modal-cancel {
+          background: transparent;
+          border: 1px solid var(--line);
+          color: var(--ink-2) !important;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .btn-modal-cancel:hover {
+          background: rgba(255,255,255,0.03);
+          border-color: var(--line-strong);
+        }
 
-              <button
-                type="button"
-                onClick={() => iniciarApoio('mensal', 25)}
-                disabled={pagamentoEmAndamento !== null}
-                style={{
-                  ...buttonBase,
-                  border: '2px solid #1d3a8a',
-                  background: 'transparent',
-                  color: '#1d3a8a',
-                  opacity: pagamentoEmAndamento !== null ? 0.6 : 1,
-                }}
-              >
-                {pagamentoEmAndamento === 'mensal' ? 'Gerando link...' : 'Apoiar com R$ 25'}
-              </button>
-            </div>
+        /* Modal Overlay & Card */
+        .modal-backdrop {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+          background: rgba(10, 14, 26, 0.7);
+          backdrop-filter: blur(8px);
+          animation: fade-in 0.2s ease;
+        }
+        .modal-card {
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          width: 440px;
+          max-width: 90vw;
+          padding: 32px 28px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+          animation: scale-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
 
-            {/* Card 2 — Esporádico */}
-            <div style={{
-              background: '#fff', border: '1px solid #e5e7eb',
-              borderRadius: 24, padding: '40px 36px',
-              display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{ marginBottom: 32 }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 14,
-                  background: '#f9fafb', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: 24, marginBottom: 20,
-                }}>
-                  📲
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 8px' }}>
-                  Apoio Esporádico
-                </h3>
-                <p style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.6, margin: 0 }}>
-                  Contribua com qualquer valor, quando quiser, sem compromisso mensal.
-                </p>
-              </div>
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-up {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
 
-              <div style={{ marginBottom: 32 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#4b5563', display: 'block', marginBottom: 4 }}>
-                  Qualquer valor
-                </span>
-              </div>
-
-              {/* PIX placeholder */}
-              <div style={{
-                flex: 1,
-                background: '#f9fafb', borderRadius: 16,
-                border: '1.5px dashed #d1d5db',
-                padding: 28, marginBottom: 32,
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                gap: 10, textAlign: 'center',
-              }}>
-                <span style={{ fontSize: 40, opacity: 0.3 }}>⬛</span>
-                <p style={{ fontSize: 12, fontStyle: 'italic', color: '#6b7280', margin: 0, lineHeight: 1.5 }}>
-                  "Transparência não tem preço, mas tem custos fixos."
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => iniciarApoio('unica', 50)}
-                disabled={pagamentoEmAndamento !== null}
-                style={{
-                  ...buttonBase,
-                  border: 'none',
-                  background: '#f3f4f6',
-                  color: '#0a0e1a',
-                  opacity: pagamentoEmAndamento !== null ? 0.6 : 1,
-                }}
-              >
-                {pagamentoEmAndamento === 'unica' ? 'Gerando link...' : 'Contribuir com R$ 50'}
-              </button>
-            </div>
-          </div>
-
-          {erroPagamento && (
-            <p style={{ margin: '20px auto 0', maxWidth: 620, textAlign: 'center', color: '#b91c1c', fontSize: 13, lineHeight: 1.5 }}>
-              {erroPagamento}
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* ── Manifesto Closing ─────────────────────────────────────────────── */}
-      <section style={{
-        background: '#0a0e1a', color: '#fff',
-        padding: '96px 24px', textAlign: 'center',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        {/* Grid overlay */}
-        <div style={{
-          ...GRID_BG,
-          position: 'absolute', inset: 0,
-          opacity: 0.04, pointerEvents: 'none',
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)',
-        }} />
-        <div style={{ maxWidth: 800, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <h2 style={{
-            fontSize: 44, fontWeight: 900, lineHeight: 1.15,
-            margin: '0 0 24px', letterSpacing: '-0.02em',
-          }}>
-            Democracia transparente depende de infraestrutura independente.
-          </h2>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', margin: '0 0 40px', lineHeight: 1.7 }}>
-            Você está ajudando a manter a transparência política acessível e livre para todo o Brasil.
-          </p>
-          <div style={{ width: 96, height: 6, background: '#1d3a8a', borderRadius: 999, margin: '0 auto' }} />
-        </div>
-      </section>
-
+        /* Media Queries de Breakpoints */
+        @media (min-width: 640px) {
+          .grid-legendas {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (min-width: 768px) {
+          .grid-planos {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        @media (min-width: 1024px) {
+          .grid-custos {
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+          }
+          .grid-legendas {
+            grid-template-columns: repeat(5, 1fr);
+          }
+        }
+      `}</style>
     </div>
   )
 }

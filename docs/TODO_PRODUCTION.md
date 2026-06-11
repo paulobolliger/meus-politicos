@@ -49,8 +49,9 @@ Lista consolidada de pendencias para estabilizar o MVP real do Meus Politicos an
 | P1-07 | Banco | Criar/confirmar tabela `doacoes` | Ausente em migrations; citada por TODO/webhook | Migration SQL versionada |
 | P1-08 | Banco | Versionar `partidos_fundos` se usado pelo app | Criada por script ETL, nao por migration | Migration ou guard de ausencia |
 | P1-09 | Banco/Auth | Validar RLS/grants vs Logto e `pg` direto | RLS legado usa `auth.uid()`/`auth.jwt()` | Roles Postgres de menor privilegio e grants revisados |
-| P1-10 | Auth | Criar provisioning para usuario Logto sem perfil legado | `getCurrentUser()` retorna null se nao achar `perfis` | Criacao controlada de `perfis` ou onboarding explicito |
-| P1-11 | Auth | Reduzir dependencia de `auth.users` legado | `profile-linking.ts` consulta `auth.users` | Plano de desligamento ou tabela de emails interna |
+| P1-10 | Auth | (Resolvido) Criar provisioning para usuario Logto sem perfil legado | Resolvido via runtime logic e migration de decupagem | Criação automática em perfis |
+| P1-11 | Auth | Reduzir dependencia de `auth.users` legado | Decupagem de constraints realizada; linking de email legado preservado | Plano de desligamento ou tabela de emails interna |
+| P1-11b | Banco | Criar tabela `municipios_financas` | Card 'Saúde Fiscal' pendente de dados reais | Executar migration SQL para criar a tabela com unique constraint |
 
 ### ETL e Dados
 
@@ -58,10 +59,11 @@ Lista consolidada de pendencias para estabilizar o MVP real do Meus Politicos an
 |---|---|---|---|---|
 | P1-12 | ETL | Fazer `/api/admin/etl/run` disparar job real ou rebaixar visualmente para "registrar solicitacao" | Endpoint retorna "Trigger manual via SSH em breve" | Job runner externo ou UI honesta |
 | P1-13 | ETL | Criar tabela/fila `etl_jobs` ou equivalente | `docs/DEPLOYMENT.md` recomenda orquestracao | Status de job, lock, exit_code e logs sanitizados |
-| P1-14 | ETL | Automatizar coletas Camara/Senado/TSE/IBGE/CGU/ALE | Scripts existem em `etl/**`, sem orquestrador | Scheduler/Cron/GitHub Actions/Coolify job |
+| P1-14 | ETL | Automatizar coletas Camara/Senado/TSE/IBGE/CGU/ALE | Scripts existem in `etl/**`, sem orquestrador | Scheduler/Cron/GitHub Actions/Coolify job |
 | P1-15 | ETL | Unificar envs `POSTGRES_*` e `SUPABASE_DB_*` | Runtime usa `POSTGRES_*`; ETL aceita ambos | Contrato unico por `.env`/secret manager |
 | P1-16 | ETL | Criar `requirements.txt`/`pyproject.toml` do ETL | Dependencias Python nao consolidadas | Ambiente reprodutivel |
 | P1-17 | Dados | Revalidar status de candidatos 2026 | Produto incompleto | Dados de TSE atualizados ou disclaimer operacional |
+| P1-17b | ETL/Dados | Desenvolver e agendar script de ETL para SICONFI | Card 'Saúde Fiscal' pendente de dados reais | Script etl/siconfi/collect_financas.py integrado via API ou BigQuery |
 
 ### Deploy e Observabilidade
 

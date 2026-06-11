@@ -80,7 +80,7 @@ Comandos executados sem imprimir o valor sensivel:
 
 | Achado | Local | Severidade | Status |
 |---|---|---|---|
-| Valor aparente real de `RESEND_API_KEY` | `docs/meuspoliticos_master.md:229` e `docs/meuspoliticos_master.md:264` | P0 | Presente no workspace atual |
+| Valor aparente real de `RESEND_API_KEY` | `docs/meuspoliticos_master.md:229` e `docs/meuspoliticos_master.md:264` | P0 | Remediado (Placeholder adicionado) |
 
 O valor nao foi reproduzido neste documento para evitar ampliar a exposicao.
 
@@ -198,8 +198,8 @@ Nao foi identificada politica customizada consolidada de headers em `next.config
 
 | Prioridade | Item | Prazo recomendado |
 |---|---|---|
-| P0 | Revogar chave Resend vazada | Imediato |
-| P0 | Remover valor real de `docs/meuspoliticos_master.md` | Imediato apos revogacao |
+| P0 | Revogar chave Resend vazada | Concluído (Revogado no provedor) |
+| P0 | Remover valor real de `docs/meuspoliticos_master.md` | Concluído (Removido do workspace) |
 | P0/P1 | Implementar seguranca/persistencia do webhook InfinitePay | Antes de producao financeira |
 | P1 | Centralizar DB e aplicar least privilege | Antes de producao plena |
 | P1 | Criar `requireAdmin()`/`requireUser()` compartilhados | Proxima iteracao backend |

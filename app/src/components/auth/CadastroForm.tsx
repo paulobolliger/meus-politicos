@@ -2,267 +2,202 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '12px 16px',
-  border: '1px solid var(--line-strong)',
-  background: 'var(--panel)',
-  fontSize: 14,
-  marginBottom: 12,
-  outline: 'none',
-  boxSizing: 'border-box',
-  borderRadius: 0,
-  color: 'var(--ink)',
-}
-
-const oauthBtnBase: React.CSSProperties = {
-  width: '100%',
-  padding: '12px 20px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 10,
-  fontSize: 14,
-  fontWeight: 500,
-  cursor: 'pointer',
-  boxSizing: 'border-box',
-  borderRadius: 0,
-}
+import { useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
 
 export function CadastroForm() {
-  const [nome, setNome] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const searchParams = useSearchParams()
+
+  const [loadingEmail, setLoadingEmail] = useState(false)
+  const [loadingOAuth, setLoadingOAuth] = useState<'google' | 'x' | 'linkedin' | null>(null)
   const [aceite, setAceite] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [loadingEmail, setLoadingEmail] = useState(false)
-  const [loadingGoogle, setLoadingGoogle] = useState(false)
-  const [loadingTwitter, setLoadingTwitter] = useState(false)
 
-  function signUpUrl() {
-    return '/api/auth/logto/sign-up?redirectTo=/meus-politicos'
+  const redirectTo = searchParams.get('redirectTo') || '/meus-politicos'
+
+  function signUpUrl(connector?: string) {
+    const base = `/api/auth/logto/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`
+    return connector ? `${base}&connector=${connector}` : base
   }
 
-  function cadastrarComGoogle() {
-    setErrorMessage('')
-    setLoadingGoogle(true)
-    window.location.href = signUpUrl()
-  }
-
-  function cadastrarComX() {
-    setErrorMessage('')
-    setLoadingTwitter(true)
-    window.location.href = signUpUrl()
-  }
-
-  async function cadastrarComEmail(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
+  function cadastrarComOAuth(key: 'google' | 'x' | 'linkedin') {
     if (!aceite) {
-      setErrorMessage('Voce precisa concordar com os Termos de uso e Politica de privacidade.')
+      setErrorMessage('Você precisa concordar com os Termos de uso e Política de privacidade.')
       return
     }
+    setErrorMessage('')
+    setLoadingOAuth(key)
+    const target = key === 'x' ? 'twitter' : key
+    window.location.href = signUpUrl(target)
+  }
 
-    if (!senhaValida) {
-      setErrorMessage('A senha ainda nao atende aos requisitos minimos.')
+  function cadastrarComEmail() {
+    if (!aceite) {
+      setErrorMessage('Você precisa concordar com os Termos de uso e Política de privacidade.')
       return
     }
-
-    if (password !== confirmPassword) {
-      setErrorMessage('As senhas informadas nao conferem.')
-      return
-    }
-
     setErrorMessage('')
     setLoadingEmail(true)
     window.location.href = signUpUrl()
   }
 
-  const requisitosSenha = [
-    { label: 'Pelo menos 8 caracteres', valido: password.length >= 8 },
-    { label: 'Uma letra maiuscula', valido: /[A-Z]/.test(password) },
-    { label: 'Uma letra minuscula', valido: /[a-z]/.test(password) },
-    { label: 'Um numero', valido: /\d/.test(password) },
-  ]
-  const senhaValida = requisitosSenha.every((requisito) => requisito.valido)
-  const senhasConferem = confirmPassword.length > 0 && password === confirmPassword
+  // Animações
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 15, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 24 }
+    }
+  }
 
   return (
-    <form onSubmit={cadastrarComEmail}>
-      <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--ink)', marginBottom: 24 }}>Criar conta</h2>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="w-full flex flex-col gap-5"
+    >
+      <motion.div variants={itemVariants}>
+        <h2 className="text-2xl font-bold text-slate-100 tracking-tight mb-1">Criar conta</h2>
+        <p className="text-xs text-slate-400">Crie seu perfil cidadão gratuito para salvar e monitorar seus representantes.</p>
+      </motion.div>
 
-      {/* Google */}
-      <button
-        type="button"
-        onClick={cadastrarComGoogle}
-        disabled={loadingGoogle}
-        style={{ ...oauthBtnBase, background: 'var(--panel)', border: '1px solid var(--line-strong)', marginBottom: 8, color: 'var(--ink)' }}
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 16, height: 16, flexShrink: 0 }}>
-          <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.6 2.3 12 2.3 6.9 2.3 2.8 6.4 2.8 11.5s4.1 9.2 9.2 9.2c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.6H12z" />
-        </svg>
-        {loadingGoogle ? 'Conectando...' : 'Continuar com Google'}
-      </button>
+      {/* Aceite de termos obrigatório */}
+      <motion.div variants={itemVariants}>
+        <label className="flex items-start gap-2.5 text-xs text-slate-400 cursor-pointer select-none group">
+          <input
+            type="checkbox"
+            checked={aceite}
+            onChange={(e) => {
+              setAceite(e.target.checked)
+              if (e.target.checked) setErrorMessage('')
+            }}
+            className="mt-0.5 rounded border-slate-700 bg-slate-900/60 text-violet-600 focus:ring-violet-500/30 focus:ring-offset-0 focus:ring-1 cursor-pointer shrink-0"
+          />
+          <span>
+            Concordo com os{' '}
+            <Link href="/termos" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors duration-150">
+              Termos de uso
+            </Link>{' '}
+            e a{' '}
+            <Link href="/privacidade" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors duration-150">
+              Política de privacidade
+            </Link>{' '}
+            do portal Meus Políticos.
+          </span>
+        </label>
+      </motion.div>
 
-      {/* X */}
-      <button
-        type="button"
-        onClick={cadastrarComX}
-        disabled={loadingTwitter}
-        style={{ ...oauthBtnBase, background: 'var(--ink)', color: 'white', border: 'none', marginBottom: 20 }}
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 16, height: 16, fill: 'white', flexShrink: 0 }}>
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
-        </svg>
-        {loadingTwitter ? 'Conectando...' : 'Continuar com X'}
-      </button>
+      {errorMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs text-rose-500 font-medium bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg"
+        >
+          ⚠️ {errorMessage}
+        </motion.div>
+      )}
+
+      {/* Botão de E-mail */}
+      <motion.div variants={itemVariants}>
+        <button
+          type="button"
+          onClick={cadastrarComEmail}
+          disabled={loadingEmail || loadingOAuth !== null}
+          className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-[0.99] text-white font-semibold text-sm rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-violet-600/15 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {loadingEmail ? 'Redirecionando...' : 'Cadastrar com E-mail →'}
+        </button>
+      </motion.div>
 
       {/* Divisor */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-        <span className="mono" style={{ fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.1em' }}>OU</span>
-        <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-      </div>
+      <motion.div variants={itemVariants} className="flex items-center gap-4 my-1">
+        <div className="flex-1 h-[1px] bg-slate-800" />
+        <span className="font-mono text-[10px] text-slate-500 tracking-widest uppercase">Ou redes sociais</span>
+        <div className="flex-1 h-[1px] bg-slate-800" />
+      </motion.div>
 
-      {/* Campos */}
-      <input
-        type="text"
-        value={nome}
-        onChange={(e) => setNome(e.target.value)}
-        placeholder="Seu nome"
-        style={inputStyle}
-        required
-      />
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Seu e-mail"
-        style={inputStyle}
-        required
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Crie uma senha"
-        style={inputStyle}
-        required
-        minLength={8}
-        aria-describedby="password-requirements"
-      />
-
-      {/* Requisitos da senha */}
-      <div
-        id="password-requirements"
-        style={{
-          padding: 12,
-          border: '1px solid var(--line)',
-          background: 'var(--bg)',
-          marginBottom: 12,
-        }}
-      >
-        <div className="mono" style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.12em', marginBottom: 8 }}>
-          REQUISITOS DA SENHA
-        </div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-          {requisitosSenha.map((req) => (
-            <li
-              key={req.label}
-              className="mono"
-              style={{ fontSize: 11, color: req.valido ? 'var(--pos)' : 'var(--mute)', display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              <span>{req.valido ? '✓' : '○'}</span> {req.label}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <input
-        type="password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        placeholder="Repita a senha"
-        style={inputStyle}
-        required
-        minLength={8}
-        aria-invalid={confirmPassword.length > 0 && password !== confirmPassword}
-      />
-      {confirmPassword.length > 0 ? (
-        <p
-          className="mono"
-          style={{ fontSize: 12, color: senhasConferem ? 'var(--pos)' : 'var(--neg)', marginBottom: 12, marginTop: -8 }}
+      {/* Redes Sociais */}
+      <motion.div variants={itemVariants} className="flex gap-2.5">
+        {/* Google */}
+        <button
+          type="button"
+          onClick={() => cadastrarComOAuth('google')}
+          disabled={loadingEmail || loadingOAuth !== null}
+          className="flex-1 py-2.5 px-2 bg-slate-900/40 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 active:scale-[0.98] rounded-lg text-slate-200 text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
-          {senhasConferem ? '✓ As senhas conferem.' : '✗ As senhas ainda não conferem.'}
-        </p>
-      ) : null}
+          {loadingOAuth === 'google' ? (
+            <span className="text-[10px]">...</span>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
+                <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.6 2.3 12 2.3 6.9 2.3 2.8 6.4 2.8 11.5s4.1 9.2 9.2 9.2c5.3 0 8.8-3.7 8.8-8.9 0-.6-.1-1.1-.2-1.6H12z" />
+              </svg>
+              <span>Google</span>
+            </>
+          )}
+        </button>
 
-      {/* Aceite */}
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 8,
-          fontSize: 13,
-          color: 'var(--ink-3)',
-          marginBottom: 16,
-          cursor: 'pointer',
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={aceite}
-          onChange={(e) => setAceite(e.target.checked)}
-          style={{ marginTop: 2, flexShrink: 0 }}
-        />
-        <span>
-          Concordo com os{' '}
-          <Link href="/termos" style={{ color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>
-            Termos de uso
-          </Link>{' '}
-          e{' '}
-          <Link href="/privacidade" style={{ color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 600 }}>
-            Política de privacidade
-          </Link>
-        </span>
-      </label>
+        {/* X / Twitter */}
+        <button
+          type="button"
+          onClick={() => cadastrarComOAuth('x')}
+          disabled={loadingEmail || loadingOAuth !== null}
+          className="flex-1 py-2.5 px-2 bg-slate-900/40 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 active:scale-[0.98] rounded-lg text-slate-200 text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        >
+          {loadingOAuth === 'x' ? (
+            <span className="text-[10px]">...</span>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current shrink-0">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.1-6.72-5.85 6.72h-3.31l7.73-8.835L2.42 2.25h6.76l4.6 6.088 5.313-6.088zM17.15 18.738h1.828L6.8 3.897H4.881l12.269 14.841z" />
+              </svg>
+              <span>X</span>
+            </>
+          )}
+        </button>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={loadingEmail}
-        style={{
-          width: '100%',
-          padding: 14,
-          background: 'var(--brand)',
-          color: 'white',
-          border: 'none',
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: 'pointer',
-          boxSizing: 'border-box',
-          borderRadius: 0,
-        }}
-      >
-        {loadingEmail ? 'Criando conta...' : 'Criar conta →'}
-      </button>
+        {/* LinkedIn */}
+        <button
+          type="button"
+          onClick={() => cadastrarComOAuth('linkedin')}
+          disabled={loadingEmail || loadingOAuth !== null}
+          className="flex-1 py-2.5 px-2 bg-slate-900/40 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 active:scale-[0.98] rounded-lg text-slate-200 text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        >
+          {loadingOAuth === 'linkedin' ? (
+            <span className="text-[10px]">...</span>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current shrink-0">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+              <span>LinkedIn</span>
+            </>
+          )}
+        </button>
+      </motion.div>
 
-      {errorMessage ? (
-        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--neg)' }}>{errorMessage}</p>
-      ) : null}
-
-      <div className="mono" style={{ marginTop: 16, fontSize: 12, color: 'var(--ink-3)' }}>
+      <motion.div variants={itemVariants} className="text-xs text-slate-400 mt-2 select-none">
         Já tem conta?{' '}
-        <Link href="/login" style={{ color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none' }}>
+        <Link href="/login" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors duration-150">
           Entre
         </Link>
-      </div>
+      </motion.div>
 
-      <p className="mono" style={{ marginTop: 24, fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.06em', textAlign: 'center', lineHeight: 1.5 }}>
-        🔒 SEUS DADOS DE LOCALIZAÇÃO NUNCA SÃO ARMAZENADOS
-      </p>
-    </form>
+      <motion.p variants={itemVariants} className="text-[10px] text-slate-500 font-mono tracking-widest text-center mt-6 uppercase leading-relaxed">
+        🔒 Conexão de identidade criptografada e segura via Logto
+      </motion.p>
+    </motion.div>
   )
 }

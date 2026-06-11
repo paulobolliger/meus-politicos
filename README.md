@@ -34,7 +34,7 @@ O MVP ainda nao deve ser classificado como producao plena porque ha gaps impedit
 | Autenticacao | Logto via `@logto/next` | `app/src/lib/logto/*`, `app/src/app/api/auth/logto/*` |
 | Sessao e RBAC | `getCurrentUser`, `requireUser`, `requireAdmin` | `app/src/lib/auth/current-user.ts` |
 | Banco | PostgreSQL direto via `pg` | multiplos `new Pool()` e `pool.query()` em paginas e route handlers |
-| Schema | SQL Supabase/migrations | `supabase/001_schema.sql`, `supabase/migrations/*.sql` |
+| Schema | SQL/migrations | `db/schema.sql`, `db/migrations/*.sql` |
 | UI | Tailwind CSS v4, shadcn/ui, lucide-react, recharts, framer-motion | `app/package.json`, `app/src/components` |
 | ETL | Python | `etl/camara`, `etl/senado`, `etl/tse`, `etl/ale`, `etl/ibge`, `etl/portal_transparencia` |
 | IA | OpenAI SDK | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` |
@@ -111,10 +111,10 @@ meus-politicos/
       types/           Tipos compartilhados
   docs/                Documentacao de engenharia, produto e historico
   etl/                 Scripts Python de coleta e carga
-  supabase/
+  db/
     migrations/        Migrations SQL
     seeds/             Seeds SQL
-    001_schema.sql     Schema monolitico de referencia
+    schema.sql         Schema monolitico de referencia
   package.json         Workspace raiz
   app/package.json     App Next.js
   .env.example         Template limpo de variaveis
@@ -210,7 +210,7 @@ npm run dev
 
 ## Banco De Dados
 
-O app atual consulta PostgreSQL diretamente com `pg`. O schema vive em `supabase/001_schema.sql` e `supabase/migrations/*.sql`.
+O app atual consulta PostgreSQL diretamente com `pg`. O schema vive em `db/schema.sql` e `db/migrations/*.sql`.
 
 Tabelas centrais observadas no codigo:
 

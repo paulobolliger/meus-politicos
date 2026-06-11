@@ -13,11 +13,12 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
     <div className="theme-dark auth-shell" style={{ minHeight: '100vh', background: 'var(--bg)', display: 'grid' }}>
       {/* Coluna esquerda — desktop only */}
       <div className="auth-col-left" style={{
-        background: '#0f1a35',
+        background: 'radial-gradient(circle at 0% 0%, #1e1b4b 0%, #0f172a 100%)',
         padding: '60px 48px',
         flexDirection: 'column',
         justifyContent: 'space-between',
         minHeight: '100vh',
+        boxShadow: 'inset -1px 0 0 rgba(255, 255, 255, 0.05)',
       }}>
         <Link href="/">
           {/* eslint-disable-next-line @next/next/no-img-element */}

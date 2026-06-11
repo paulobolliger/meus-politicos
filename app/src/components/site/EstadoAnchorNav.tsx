@@ -35,7 +35,7 @@ export function EstadoAnchorNav({ cor }: { cor: string }) {
   return (
     <nav style={{
       position: 'sticky', top: 64, zIndex: 40,
-      background: 'white', borderBottom: '1px solid #e5e7eb',
+      background: '#1E293B', borderBottom: '1px solid #334155',
     }}>
       <div style={{
         maxWidth: 1280, margin: '0 auto', padding: '0 32px',
@@ -47,7 +47,7 @@ export function EstadoAnchorNav({ cor }: { cor: string }) {
             height: 56, padding: '0 4px',
             border: 'none', background: 'transparent', cursor: 'pointer',
             fontSize: 14, fontWeight: active === a.id ? 700 : 400,
-            color: active === a.id ? cor : '#6b7280',
+            color: active === a.id ? cor : '#94A3B8',
             borderBottom: active === a.id ? `2px solid ${cor}` : '2px solid transparent',
             whiteSpace: 'nowrap', transition: 'all 0.15s',
             fontFamily: 'var(--font-sans)',

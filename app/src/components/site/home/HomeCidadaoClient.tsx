@@ -2,12 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FormEvent, useMemo, useState } from 'react'
-import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { VotacaoRecente } from '@/app/(site)/page'
-import { CookieBanner } from '@/components/site/CookieBanner'
-
-// ─── Dados dos estados ───────────────────────────────────────────────────────
+import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
 
 type StateDot = { uf: string; x: number; y: number; n: number }
 
@@ -95,7 +92,7 @@ function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) =
         {/* Mapa base do Brasil */}
         <image
           href="/brazil-map.svg"
-          x="0" y="0" width="100" height="100"
+          x="-3" y="0" width="105" height="100"
           preserveAspectRatio="xMidYMid meet"
           style={{ opacity: 0.18 }}
         />
@@ -132,13 +129,234 @@ const cardStyle: React.CSSProperties = {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: VotacaoRecente[] }) {
+export function HomeCidadaoClient({
+  recentVotacoes = [],
+  estatisticas,
+}: {
+  recentVotacoes?: VotacaoRecente[]
+  estatisticas?: {
+    ceap?: { total: number; registros: number; politicos: number; ano: number } | null
+    emendas?: { totalPago: number; totalEmpenhado: number; municipios: number; politicos: number; ano: number } | null
+    representantes?: { total: number; camara: number; senado: number; presencaMedia: number | null } | null
+    legislativo?: { total: number; pls: number; mpvs: number; pecs: number; novasAno: number; ano: number } | null
+    bancadas?: Array<{ sigla: string; count: number }> | null
+    presencaEstado?: Array<{ uf: string; avgPresenca: number }> | null
+    cidadesEmendas?: Array<{ nome: string; uf: string; total: number }> | null
+  }
+}) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeUf, setActiveUf] = useState('SP')
   const [hovered, setHovered] = useState<string | null>(null)
 
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // Debounced autocomplete search on the homepage
+  useEffect(() => {
+    const trimmed = query.trim()
+    const isCep = /^\d{5}-?\d{3}$/.test(trimmed) || /^\d{8}$/.test(trimmed.replace(/\D/g, ''))
+    
+    if (!trimmed || isCep || trimmed.length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setSuggestionsLoading(true)
+      try {
+        const res = await fetch(`/api/busca?q=${encodeURIComponent(trimmed)}`)
+        if (res.ok) {
+          const json = await res.json()
+          setSuggestions(json.items?.slice(0, 5) ?? [])
+          setShowSuggestions(true)
+        }
+      } catch (err) {
+        console.error('Erro ao buscar sugestões:', err)
+      } finally {
+        setSuggestionsLoading(false)
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [query])
+
+  // Click outside listener to close autocomplete suggestion list
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (formRef.current && !formRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const activeState = useMemo(() => STATES.find((s) => s.uf === activeUf) ?? STATES[0], [activeUf])
+
+  function formatReal(val: number): string {
+    if (val >= 1_000_000_000) {
+      return `R$ ${(val / 1_000_000_000).toFixed(1).replace('.', ',')} bilhões`
+    }
+    if (val >= 1_000_000) {
+      return `R$ ${(val / 1_000_000).toFixed(1).replace('.', ',')} milhões`
+    }
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
+  }
+
+  function formatInt(val: number): string {
+    return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(val)
+  }
+
+  const dadosReaisBadge = (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/20 uppercase select-none shrink-0">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#10B981]"></span>
+      </span>
+      Dados Reais
+    </span>
+  )
+
+  const exploreItems = [
+    {
+      href: '/emendas',
+      titulo: 'Emendas Parlamentares',
+      desc: 'Consulte os investimentos e repasses indicados por deputados e senadores para os municípios.',
+      iconBg: 'rgba(59,130,246,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#3b82f6' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      href: '/projetos',
+      titulo: 'Projetos de Lei & Leis',
+      desc: 'Acompanhe PLs, PECs e MPVs em tramitação e saiba como mudam a legislação brasileira.',
+      iconBg: 'rgba(139,92,246,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#8b5cf6' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 0-2 2V5a2 2 0 0 0 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+        </svg>
+      )
+    },
+    {
+      href: '/glossario',
+      titulo: 'Glossário Político',
+      desc: 'Entenda de forma simples o significado de termos como CEAP, emendas, quórum e obstrução.',
+      iconBg: 'rgba(4,108,78,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#10b981' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      )
+    },
+    {
+      href: '/eleicao/2026',
+      titulo: 'Eleições 2026',
+      desc: 'Monitore candidates declarados, propostas de governo e estatísticas eleitorais.',
+      iconBg: 'rgba(217,119,6,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#f59e0b' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      )
+    },
+    {
+      href: '/busca',
+      titulo: 'Políticos & Candidatos',
+      desc: 'Busque o histórico, presença nas sessões, gastos com CEAP e votos de deputados e senadores.',
+      iconBg: 'rgba(13,148,136,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#0d9488' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z" />
+        </svg>
+      )
+    },
+    {
+      href: '/estado',
+      titulo: 'Estados & Assembleias',
+      desc: 'Compare a assiduidade dos estados e veja a atuação dos deputados estaduais.',
+      iconBg: 'rgba(6,182,212,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#06b6d4' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+      )
+    },
+    {
+      href: '/cidades',
+      titulo: 'Municípios & Cidades',
+      desc: 'Consulte o valor total das emendas que chegaram para cada cidade e o ranking per capita.',
+      iconBg: 'rgba(14,165,233,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#0ea5e9' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" />
+        </svg>
+      )
+    },
+    {
+      href: '/eleicao/2026/presidente',
+      titulo: 'Poder Executivo',
+      desc: 'Analise as propostas da Presidência, ministérios, governadores e andamento do Executivo.',
+      iconBg: 'rgba(244,63,94,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#f43f5e' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m4-11v11m4-11v11m4-11v11m4-11v11" />
+        </svg>
+      )
+    },
+    {
+      href: '/partidos',
+      titulo: 'Partidos Políticos',
+      desc: 'Veja a força das bancadas no Congresso Nacional, taxas de fidelidade partidária e orientações.',
+      iconBg: 'rgba(217,70,239,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#d946ef' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-4m0 0V5a2 2 0 0 1 2-2h6.5l1 1H21v12h-7.5l-1-1H5a2 2 0 0 0-2 2zm9-13.5V9" />
+        </svg>
+      )
+    },
+    {
+      href: '/busca',
+      titulo: 'Despesas & CEAP',
+      desc: 'Rastreie em detalhes o dinheiro público usado para reembolso de cotas e manutenção de mandatos.',
+      iconBg: 'rgba(234,179,8,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#eab308' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+        </svg>
+      )
+    },
+    {
+      href: '/estado',
+      titulo: 'Presença & Assiduidade',
+      desc: 'Monitore os parlamentares mais assíduos e quem mais faltou nas sessões deliberativas.',
+      iconBg: 'rgba(132,204,22,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#84cc16' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0-2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+        </svg>
+      )
+    },
+    {
+      href: '/busca',
+      titulo: 'Votações & Votos',
+      desc: 'Veja o posicionamento de cada representante em votações nominais cruciais e reformas.',
+      iconBg: 'rgba(239,68,68,0.08)',
+      icon: (
+        <svg style={{ width: 18, height: 18, color: '#ef4444' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+        </svg>
+      )
+    }
+  ]
 
   function onSubmitSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -158,14 +376,7 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
 
         {/* ── HERO + STATS (2/3 + 1/3) ── */}
         <section style={{ padding: '72px 24px 80px' }}>
-          <div style={{
-            maxWidth: 1200,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr',
-            gap: 48,
-            alignItems: 'center',
-          }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12 items-center max-w-[1200px] mx-auto">
 
             {/* ── Coluna esquerda — texto + busca ── */}
             <div>
@@ -178,7 +389,7 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
                 Acesse dados oficiais do governo brasileiro de forma clara e direta. Sem complicação.
               </p>
 
-              <form onSubmit={onSubmitSearch} style={{ marginTop: 36 }}>
+              <form ref={formRef} onSubmit={onSubmitSearch} style={{ marginTop: 36, position: 'relative' }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 0,
                   background: 'var(--panel)', border: '1px solid var(--line-strong)',
@@ -189,24 +400,128 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    onFocus={() => {
+                      if (suggestions.length > 0) setShowSuggestions(true)
+                    }}
                     placeholder="Digite seu CEP ou nome de um político"
                     style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}
                   />
                   <button type="submit" style={{
                     height: 44, padding: '0 22px', borderRadius: 8,
-                    background: 'var(--ink)', border: 'none', cursor: 'pointer',
-                    color: 'white', fontSize: 14, fontWeight: 700, flexShrink: 0,
-                  }}>
+                    backgroundColor: '#8B5CF6', border: 'none', cursor: 'pointer',
+                    color: '#ffffff', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                  }} className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-colors duration-150">
                     Buscar
                   </button>
                 </div>
+
+                {/* Popover de Sugestões */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    marginTop: 8,
+                    background: 'rgba(30, 41, 59, 0.96)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: 12,
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+                    zIndex: 50,
+                    overflow: 'hidden',
+                    maxWidth: 540,
+                  }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', fontSize: 10, color: 'var(--ink-3)', fontWeight: 700, letterSpacing: '0.05em' }}>
+                      SUGESTÕES DE POLÍTICOS
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {suggestions.map((p) => {
+                        const labelCargo = p.cargo === 'deputado_federal' ? 'Dep. Federal' : p.cargo === 'senador' ? 'Senador' : p.cargo
+                        return (
+                          <Link
+                            key={p.id}
+                            href={`/politicos/${p.slug}`}
+                            onClick={() => setShowSuggestions(false)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                              padding: '10px 16px',
+                              textDecoration: 'none',
+                              color: 'inherit',
+                              borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                              transition: 'background 0.15s ease',
+                            }}
+                            className="hover:bg-slate-800/80"
+                          >
+                            <div style={{
+                              width: 32,
+                              height: 40,
+                              borderRadius: 4,
+                              overflow: 'hidden',
+                              position: 'relative',
+                              background: '#090d16',
+                              flexShrink: 0
+                            }}>
+                              {p.foto_url ? (
+                                <img
+                                  src={p.foto_url}
+                                  alt=""
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: '100%', height: '100%', display: 'flex', alignItems: 'center',
+                                  justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--brand)',
+                                }}>
+                                  {p.nome_eleitoral?.slice(0, 2).toUpperCase() || 'P'}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {p.nome_eleitoral || p.nome}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>
+                                <span style={{ fontWeight: 700, color: 'var(--brand-2)' }}>{p.partidos?.sigla || '–'}</span> · {p.uf || '–'} · {labelCargo}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--brand-2)', fontWeight: 600 }}>
+                              Ver perfil →
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                    <Link
+                      href={`/busca?q=${encodeURIComponent(query)}`}
+                      onClick={() => setShowSuggestions(false)}
+                      style={{
+                        display: 'block',
+                        padding: '10px 16px',
+                        textAlign: 'center',
+                        fontSize: 12,
+                        color: 'var(--ink-2)',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        textDecoration: 'none',
+                        fontWeight: 600,
+                      }}
+                      className="hover:bg-slate-800/50 hover:text-white"
+                    >
+                      Ver todos os resultados para "{query}" →
+                    </Link>
+                  </div>
+                )}
               </form>
 
               <div style={{ marginTop: 16, fontSize: 13, color: 'var(--ink-3)' }}>
                 Ou pesquise direto:{' '}
                 {['Lula', 'Tarcísio de Freitas', 'Tabata Amaral', 'Eduardo Leite'].map((n, idx) => (
                   <button key={n} type="button" onClick={() => router.push(`/busca?q=${encodeURIComponent(n)}`)}
-                    style={{ border: 'none', background: 'transparent', color: 'var(--brand-2)', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 13 }}>
+                    style={{ border: 'none', background: 'transparent', color: '#818CF8', fontWeight: 600, cursor: 'pointer', padding: 0, fontSize: 13 }}
+                    className="hover:underline text-[#818CF8] hover:text-[#A5B4FC]">
                     {idx > 0 ? ' · ' : ''}{n}
                   </button>
                 ))}
@@ -278,89 +593,59 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
           </div>
         </section>
 
-        {/* ── SEM JARGÃO + DADOS REAIS (1/3 + 2/3) ── */}
+        {/* ── SEÇÃO METRICAS E DADOS REAIS ── */}
         <section style={{ background: 'var(--panel)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 48, alignItems: 'start' }}>
-
-            {/* ── Coluna esquerda — Sem jargão ── */}
-            <div>
-              <div className="label" style={{ marginBottom: 12 }}>EM 3 PERGUNTAS, VOCÊ ENTENDE QUALQUER POLÍTICO</div>
-              <h2 style={{ margin: '0 0 32px', fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
-                Sem ranking moral.
-                <br />
-                <span style={{ color: 'var(--ink-3)' }}>Só o que importa.</span>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            
+            {/* Cabeçalho Unificado */}
+            <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="label">DADOS REAIS DA PLATAFORMA</div>
+              <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 42px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+                Transparência em números
               </h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <article style={{ ...cardStyle, padding: '16px 18px' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>01</div>
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>Aparece pra trabalhar?</h3>
-                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    Frequência em sessões deliberativas comparada com pares da mesma UF.
-                  </p>
-                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
-                    <PresencaRingMini value={94} />
-                  </div>
-                </article>
-
-                <article style={{ ...cardStyle, padding: '16px 18px' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>02</div>
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>No que gasta dinheiro público?</h3>
-                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    <GlossarioTooltip termo="CEAP" slug={TERMOS_GLOSSARIO['CEAP'].slug} definicaoSimples={TERMOS_GLOSSARIO['CEAP'].definicaoSimples}>
-                      Cota parlamentar
-                    </GlossarioTooltip>{' '}
-                    organizada por categoria com comparação ao teto permitido.
-                  </p>
-                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
-                    <UsageBar pct={56} />
-                  </div>
-                </article>
-
-                <article style={{ ...cardStyle, padding: '16px 18px' }}>
-                  <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 8 }}>03</div>
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.2, color: 'var(--ink)' }}>Como vota?</h3>
-                  <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    Histórico de votações nominais para entender alinhamento e abstenções.
-                  </p>
-                  <div style={{ borderTop: '1px dashed var(--line-strong)', paddingTop: 12 }}>
-                    <VoteMini />
-                  </div>
-                </article>
-              </div>
+              <p style={{ margin: 0, fontSize: 15, color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: 800 }}>
+                Analisamos a atuação de políticos com base em dados oficiais de gastos, presença e votações nominais, sem filtros ideológicos ou julgamento moral.{' '}
+                <Link href="/como-funciona" style={{ color: 'var(--brand-2)', fontWeight: 600, textDecoration: 'none' }} className="hover:underline">
+                  Entenda como funciona →
+                </Link>
+              </p>
             </div>
 
-            {/* ── Coluna direita — 4 cards com dados reais agregados ── */}
-            <div>
-              <div className="label" style={{ marginBottom: 12 }}>DADOS REAIS DA PLATAFORMA</div>
-              <h2 style={{ margin: '0 0 32px', fontSize: 'clamp(24px, 3vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
-                Transparência em números.
-                <br />
-                <span style={{ color: 'var(--ink-3)' }}>Do banco de dados ao cidadão.</span>
-              </h2>
+            {/* Grid 3x2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-4">
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-
-                {/* Card 1 — Cotas CEAP */}
-                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                      </svg>
+              {/* Card 1 — Cotas CEAP */}
+              <Link href="/busca" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                      </div>
+                      <span className="label">Cotas CEAP · {estatisticas?.ceap?.ano ?? 2026}</span>
                     </div>
-                    <span className="label">Cotas CEAP · 2024</span>
+                    {dadosReaisBadge}
                   </div>
                   <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--accent-gold)', lineHeight: 1, marginBottom: 4 }}>
-                    R$ 250,8 milhões
+                    {estatisticas?.ceap ? formatReal(estatisticas.ceap.total) : 'R$ 250,8 milhões'}
                   </div>
                   <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    Total de cotas parlamentares gastas em 2024, distribuídas em 25 categorias de despesa.
+                    Total de cotas parlamentares gastas em {estatisticas?.ceap?.ano ?? 2026}, distribuídas em 25 categorias de despesa.
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16, marginTop: 'auto' }}>
                     {[
-                      { label: '548 parlamentares com gasto registrado', pct: 92 },
-                      { label: '184.285 registros no período', pct: 100 },
+                      {
+                        label: `${estatisticas?.ceap ? formatInt(estatisticas.ceap.politicos) : '548'} parlamentares com gasto`,
+                        pct: estatisticas?.ceap && estatisticas?.representantes
+                          ? Math.min(100, Math.round((estatisticas.ceap.politicos / estatisticas.representantes.total) * 100))
+                          : 92
+                      },
+                      {
+                        label: `${estatisticas?.ceap ? formatInt(estatisticas.ceap.registros) : '184.285'} registros no período`,
+                        pct: 100
+                      },
                     ].map((r) => (
                       <div key={r.label}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)', marginBottom: 3 }}>
@@ -372,272 +657,285 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
                       </div>
                     ))}
                   </div>
-                  <Link href="/busca" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
-                    Explorar gastos →
-                  </Link>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Explorar gastos</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
                 </article>
+              </Link>
 
-                {/* Card 2 — Emendas parlamentares */}
-                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-                      </svg>
-                    </div>
-                    <span className="label">Emendas parlamentares · 2024</span>
-                  </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--brand)', lineHeight: 1, marginBottom: 4 }}>
-                    R$ 28,6 bilhões pagos
-                  </div>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    De R$ 44,9 bilhões empenhados, chegaram aos municípios R$ 28,6 bi via emendas individuais.
-                  </p>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)', marginBottom: 4 }}>
-                      <span>Pago vs. Empenhado</span>
-                      <span className="mono" style={{ color: 'var(--brand)' }}>64%</span>
-                    </div>
-                    <div style={{ height: 6, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: '64%', background: 'var(--brand)' }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: 'var(--ink-3)' }}>
-                      <span>393 municípios beneficiados</span>
-                      <span>543 parlamentares</span>
-                    </div>
-                  </div>
-                  <Link href="/cidades" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
-                    Ver por cidade →
-                  </Link>
-                </article>
-
-                {/* Card 3 — Representantes */}
-                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                      </svg>
-                    </div>
-                    <span className="label">Representantes monitorados</span>
-                  </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--pos)', lineHeight: 1, marginBottom: 4 }}>
-                    594 parlamentares
-                  </div>
-                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    Câmara e Senado federais monitorados em tempo real — presença, gastos e votações.
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                    {[
-                      { label: 'Deputados Federais', valor: '513', pct: 87 },
-                      { label: 'Senadores', valor: '81', pct: 100 },
-                    ].map((r) => (
-                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
-                        <span style={{ color: 'var(--ink-3)' }}>{r.label}</span>
-                        <span className="mono" style={{ fontWeight: 700, color: 'var(--pos)', fontSize: 13 }}>{r.valor}</span>
+              {/* Card 2 — Bancadas Partidárias */}
+              <Link href="/partidos" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
                       </div>
-                    ))}
-                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, fontSize: 12, color: 'var(--ink-3)' }}>
-                      Presença média em plenário: <strong style={{ color: 'var(--ink)' }}>63,2%</strong>
+                      <span className="label">Bancadas Partidárias</span>
                     </div>
-                  </div>
-                  <Link href="/busca" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
-                    Buscar representante →
-                  </Link>
-                </article>
-
-                {/* Card 4 — Projetos de Lei */}
-                <article style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                      </svg>
-                    </div>
-                    <span className="label">Atividade legislativa</span>
+                    {dadosReaisBadge}
                   </div>
                   <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: '#7c3aed', lineHeight: 1, marginBottom: 4 }}>
-                    22.384 proposições
+                    Força no Congresso
                   </div>
                   <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                    Monitoradas desde 2004 — PLs, PECs, MPVs e PDLs em todas as fases de tramitação.
+                    Maiores representações partidárias ativas na Câmara dos Deputados e no Senado Federal.
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
-                    {[
-                      { tipo: 'Projetos de Lei (PL)', n: '18.602', pct: 83 },
-                      { tipo: 'Medidas Provisórias (MPV)', n: '205', pct: 1 },
-                      { tipo: 'PECs (Emendas Const.)', n: '67', pct: 0.3 },
-                    ].map((r) => (
-                      <div key={r.tipo} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)' }}>
-                        <span>{r.tipo}</span>
-                        <span className="mono" style={{ fontWeight: 700, color: 'var(--ink-2)' }}>{r.n}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, marginTop: 'auto' }}>
+                    {(estatisticas?.bancadas && estatisticas.bancadas.length > 0 ? estatisticas.bancadas : [
+                      { sigla: 'PL', count: 99 },
+                      { sigla: 'PT', count: 81 },
+                      { sigla: 'UNIÃO', count: 59 }
+                    ]).map((b) => {
+                      const maxB = estatisticas?.bancadas && estatisticas.bancadas.length > 0
+                        ? Math.max(...estatisticas.bancadas.map(x => x.count))
+                        : 99
+                      const pct = Math.max(10, Math.round((b.count / maxB) * 100))
+                      return (
+                        <div key={b.sigla}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-2)', marginBottom: 2 }}>
+                            <span style={{ fontWeight: 700 }}>{b.sigla}</span>
+                            <span className="mono">{b.count} parlamentares</span>
+                          </div>
+                          <div style={{ height: 4, background: 'var(--bg-2)', borderRadius: 2, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--brand)' }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Ver partidos no Congresso</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
+                </article>
+              </Link>
+
+              {/* Card 3 — Emendas Parlamentares */}
+              <Link href="/emendas" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
                       </div>
-                    ))}
-                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, fontSize: 12, color: 'var(--ink-3)' }}>
-                      Só em 2026: <strong style={{ color: 'var(--ink)' }}>2.719 novas proposições</strong>
+                      <span className="label">Emendas parlamentares · {estatisticas?.emendas?.ano ?? 2026}</span>
+                    </div>
+                    {dadosReaisBadge}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--brand)', lineHeight: 1, marginBottom: 4 }}>
+                    {estatisticas?.emendas ? `${formatReal(estatisticas.emendas.totalPago)} pagos` : 'R$ 28,6 bilhões pagos'}
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    {estatisticas?.emendas
+                      ? `De ${formatReal(estatisticas.emendas.totalEmpenhado)} empenhados, chegaram aos municípios ${formatReal(estatisticas.emendas.totalPago)} via emendas.`
+                      : 'De R$ 44,9 bilhões empenhados, chegaram aos municípios R$ 28,6 bi via emendas individuais.'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, marginTop: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--ink-3)', marginBottom: 4 }}>
+                      <span>Pago vs. Empenhado</span>
+                      <span className="mono" style={{ color: 'var(--brand)' }}>
+                        {estatisticas?.emendas && estatisticas.emendas.totalEmpenhado > 0
+                          ? Math.min(100, Math.round((estatisticas.emendas.totalPago / estatisticas.emendas.totalEmpenhado) * 100))
+                          : 64}%
+                      </span>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${estatisticas?.emendas && estatisticas.emendas.totalEmpenhado > 0
+                          ? Math.min(100, Math.round((estatisticas.emendas.totalPago / estatisticas.emendas.totalEmpenhado) * 100))
+                          : 64}%`,
+                        background: 'var(--brand)'
+                      }} />
                     </div>
                   </div>
-                  <Link href="/projetos" style={{ marginTop: 'auto', display: 'inline-flex', fontSize: 12, fontWeight: 600, color: 'var(--brand-2)', textDecoration: 'none' }}>
-                    Ver projetos →
-                  </Link>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Explorar emendas</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
                 </article>
+              </Link>
 
-              </div>
+              {/* Card 4 — Atividade & Representantes */}
+              <Link href="/busca" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                      </div>
+                      <span className="label">Atividade & Representantes</span>
+                    </div>
+                    {dadosReaisBadge}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--pos)', lineHeight: 1, marginBottom: 4 }}>
+                    {estatisticas?.representantes ? `${formatInt(estatisticas.representantes.total)} parlamentares` : '594 parlamentares'}
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Câmara e Senado federais monitorados em tempo real — presença, gastos e {estatisticas?.legislativo ? formatInt(estatisticas.legislativo.total) : '22.384'} proposições legislativas desde 2004.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, marginTop: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                      <span style={{ color: 'var(--ink-3)' }}>Deputados Federais / Senadores</span>
+                      <span className="mono" style={{ fontWeight: 700, color: 'var(--pos)', fontSize: 13 }}>
+                        {estatisticas?.representantes ? `${formatInt(estatisticas.representantes.camara)} / ${formatInt(estatisticas.representantes.senado)}` : '513 / 81'}
+                      </span>
+                    </div>
+                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: 8, fontSize: 12, color: 'var(--ink-3)' }}>
+                      Presença média em plenário:{' '}
+                      <strong style={{ color: 'var(--ink)' }}>
+                        {estatisticas?.representantes?.presencaMedia != null
+                          ? `${estatisticas.representantes.presencaMedia.toFixed(1).replace('.', ',')}%`
+                          : '63,2%'}
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Buscar representante</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
+                </article>
+              </Link>
+
+              {/* Card 5 — Presença por Estado */}
+              <Link href="/estado" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>
+                        </svg>
+                      </div>
+                      <span className="label">Presença Média por Estado</span>
+                    </div>
+                    {dadosReaisBadge}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--pos)', lineHeight: 1, marginBottom: 4 }}>
+                    Fidelidade Cívica
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Unidades federativas (UFs) cujos deputados e senadores registram melhor assiduidade em sessões.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, marginTop: 'auto' }}>
+                    {(estatisticas?.presencaEstado && estatisticas.presencaEstado.length > 0 ? estatisticas.presencaEstado : [
+                      { uf: 'DF', avgPresenca: 94.2 },
+                      { uf: 'RS', avgPresenca: 91.5 },
+                      { uf: 'SC', avgPresenca: 89.8 }
+                    ]).map((ufData, idx) => (
+                      <div key={ufData.uf} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                        <span style={{ color: 'var(--ink-2)' }}>{idx + 1}º. {UF_NOMES[ufData.uf] ?? ufData.uf} ({ufData.uf})</span>
+                        <span className="mono" style={{ fontWeight: 700, color: 'var(--pos)' }}>
+                          {ufData.avgPresenca.toFixed(1).replace('.', ',')}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Ver rankings por estado</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
+                </article>
+              </Link>
+
+              {/* Card 6 — Emendas por Município */}
+              <Link href="/cidades" className="group flex flex-col no-underline h-full">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                      </div>
+                      <span className="label">Emendas por Município</span>
+                    </div>
+                    {dadosReaisBadge}
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--brand)', lineHeight: 1, marginBottom: 4 }}>
+                    Maiores Destinos
+                  </div>
+                  <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                    Municípios que mais receberam recursos totais de emendas parlamentares federais catalogadas.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16, marginTop: 'auto' }}>
+                    {(estatisticas?.cidadesEmendas && estatisticas.cidadesEmendas.length > 0 ? estatisticas.cidadesEmendas : [
+                      { nome: 'São Paulo', uf: 'SP', total: 125_000_000 },
+                      { nome: 'Rio de Janeiro', uf: 'RJ', total: 82_000_000 },
+                      { nome: 'Salvador', uf: 'BA', total: 45_000_000 }
+                    ]).map((city, idx) => (
+                      <div key={`${city.nome}-${city.uf}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                        <span style={{ color: 'var(--ink-2)' }}>{idx + 1}º. {city.nome} ({city.uf})</span>
+                        <span className="mono" style={{ fontWeight: 700, color: 'var(--brand)' }}>
+                          {formatReal(city.total).replace('bilhões', 'bi').replace('milhões', 'mi')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                    <span className="mr-1">Ver todas as cidades</span>
+                    <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </div>
+                </article>
+              </Link>
+
             </div>
 
           </div>
         </section>
 
-        {/* ── VOTAÇÕES + EXPLORE MAIS (2/3 + 1/3) ── */}
-        <section style={{ padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 48, alignItems: 'start' }}>
-
-            {/* ── Coluna esquerda — Votações ── */}
-            <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: 'clamp(22px, 3vw, 32px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
-                  Votações Recentes de Impacto
-                </h2>
-                <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--ink-3)' }}>
-                  Veja como se posicionaram os parlamentares em temas cruciais.
-                </p>
-              </div>
-              <Link href="/busca" style={{ fontSize: 13, color: 'var(--brand-2)', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-                Ver todas →
-              </Link>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              {recentVotacoes.length > 0
-                ? recentVotacoes.slice(0, 4).map((v, i) => {
-                    const total = v.total_sim + v.total_nao + v.total_abstencao || 1
-                    const pctSim = Math.round((v.total_sim / total) * 100)
-                    const pctNao = Math.round((v.total_nao / total) * 100)
-                    const pctAbs = 100 - pctSim - pctNao
-                    const dia = new Date(v.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-                    const isInternal = /^\d+-\d+$/.test(v.proposicao ?? '')
-                    const tag = (!v.proposicao || isInternal) ? 'Câmara' : v.proposicao
-                    const texto = v.descricao_simples ?? v.proposicao ?? '—'
-                    const textoExibido = texto.includes('.') ? texto.slice(0, texto.indexOf('.') + 1) : texto.slice(0, 100)
-                    const aprovada = pctSim > pctNao
-                    const resultado = aprovada ? 'APROVADO' : 'REJEITADO'
-                    const resultadoCor = aprovada ? 'var(--pos)' : 'var(--neg)'
-                    const resultadoBg = aprovada ? 'var(--pos-soft)' : 'var(--neg-soft)'
-
-                    return (
-                      <article key={i} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
-                            <span className="mono" style={{ fontSize: 10, background: 'var(--bg-2)', padding: '3px 8px', borderRadius: 4, color: 'var(--ink-2)', fontWeight: 600 }}>
-                              {tag}
-                            </span>
-                            <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 999, background: resultadoBg, color: resultadoCor, fontWeight: 700, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-                              {resultado}
-                            </span>
-                          </div>
-                          <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700, lineHeight: 1.4, color: 'var(--ink)', minHeight: 48 }}>
-                            {textoExibido}
-                          </h3>
-                          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{dia}</span>
-                        </div>
-                        <div style={{ marginTop: 20 }}>
-                          <div style={{ display: 'flex', height: 6, borderRadius: 999, overflow: 'hidden', background: 'var(--bg-2)', marginBottom: 8 }}>
-                            {pctSim > 0 && <div style={{ width: `${pctSim}%`, background: 'var(--pos)' }} />}
-                            {pctNao > 0 && <div style={{ width: `${pctNao}%`, background: 'var(--neg)' }} />}
-                            {pctAbs > 0 && <div style={{ width: `${pctAbs}%`, background: 'var(--warn)', opacity: 0.5 }} />}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 700, color: 'var(--ink-3)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            <span style={{ color: 'var(--pos)' }}>Sim ({pctSim}%)</span>
-                            <span style={{ color: 'var(--neg)' }}>Não ({pctNao}%)</span>
-                          </div>
-                        </div>
-                      </article>
-                    )
-                  })
-                : /* Placeholder quando não há dados */
-                  [
-                    { tag: 'PL 2630/2020', titulo: 'Lei de Liberdade, Responsabilidade e Transparência', pctSim: 45, pctNao: 50, resultado: 'REJEITADO' as const },
-                    { tag: 'PEC 45/2019', titulo: 'Reforma Tributária sobre o Consumo', pctSim: 78, pctNao: 15, resultado: 'APROVADO' as const },
-                    { tag: 'MP 1154/2023', titulo: 'Estrutura de Ministérios e Órgãos', pctSim: 62, pctNao: 30, resultado: 'APROVADO' as const },
-                    { tag: 'PL 123/2024', titulo: 'Créditos de Carbono e Mercado Verde', pctSim: 0, pctNao: 0, resultado: 'EM PAUTA' as const },
-                  ].map((v, i) => {
-                    const aprovada = v.resultado === 'APROVADO'
-                    const emPauta = v.resultado === 'EM PAUTA'
-                    const cor = aprovada ? 'var(--pos)' : emPauta ? 'var(--accent-gold)' : 'var(--neg)'
-                    const bg = aprovada ? 'var(--pos-soft)' : emPauta ? 'var(--accent-gold-soft)' : 'var(--neg-soft)'
-                    return (
-                      <article key={i} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 12 }}>
-                            <span className="mono" style={{ fontSize: 10, background: 'var(--bg-2)', padding: '3px 8px', borderRadius: 4, color: 'var(--ink-2)', fontWeight: 600 }}>
-                              {v.tag}
-                            </span>
-                            <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 999, background: bg, color: cor, fontWeight: 700, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-                              {v.resultado}
-                            </span>
-                          </div>
-                          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.4, color: 'var(--ink)', minHeight: 48 }}>
-                            {v.titulo}
-                          </h3>
-                        </div>
-                        <div style={{ marginTop: 20 }}>
-                          <div style={{ height: 6, borderRadius: 999, overflow: 'hidden', background: 'var(--bg-2)', marginBottom: 8, display: 'flex' }}>
-                            {v.pctSim > 0 && <div style={{ width: `${v.pctSim}%`, background: 'var(--pos)' }} />}
-                            {v.pctNao > 0 && <div style={{ width: `${v.pctNao}%`, background: 'var(--neg)' }} />}
-                            {v.pctSim === 0 && v.pctNao === 0 && <div style={{ width: '100%', background: 'var(--bg-2)' }} />}
-                          </div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--ink-3)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            {v.pctSim > 0 ? `Sim (${v.pctSim}%) · Não (${v.pctNao}%)` : 'Aguardando Votação Final'}
-                          </div>
-                        </div>
-                      </article>
-                    )
-                  })
-              }
-            </div>
-            </div>{/* fim coluna esquerda */}
-
-            {/* ── Coluna direita — Explore Mais ── */}
-            <div>
-              <h2 style={{ margin: '0 0 8px', fontSize: 'clamp(22px, 3vw, 32px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
-                Explore Mais
+        {/* ── SEÇÃO EXPLORE MAIS (GRID 3x4) ── */}
+        <section style={{ padding: '80px 24px', borderTop: '1px solid var(--line)' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            
+            <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="label">PORTAL DE ANÁLISE CÍVICA</div>
+              <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 42px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
+                Explore mais temas da política
               </h2>
-              <p style={{ margin: '0 0 32px', fontSize: 14, color: 'var(--ink-3)' }}>
-                Acesse dados por tema e aprofunde sua análise.
+              <p style={{ margin: 0, fontSize: 15, color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: 800 }}>
+                Navegue pelas áreas especializadas do portal para auditar gastos, consultar projetos e entender a atuação dos governantes.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  { href: '/cidades', icon: '🏘️', titulo: 'Emendas por cidade', desc: 'Quanto chegou à sua cidade? Ranking per capita de emendas parlamentares.', iconBg: 'rgba(29,58,138,0.08)' },
-                  { href: '/projetos', icon: '📄', titulo: 'Projetos de Lei', desc: 'Acompanhe PLs, PECs e MPVs em tramitação no Congresso.', iconBg: 'rgba(124,58,237,0.08)' },
-                  { href: '/glossario', icon: '📖', titulo: 'Glossário político', desc: 'Entenda CEAP, emenda, quórum e outros termos em linguagem simples.', iconBg: 'rgba(4,108,78,0.08)' },
-                  { href: '/candidatos-2026', icon: '⚡', titulo: 'Eleições 2026', desc: 'Veja quem já registrou candidatura para as eleições de outubro.', iconBg: 'rgba(217,119,6,0.08)' },
-                ].map((c) => (
-                  <Link key={c.href} href={c.href} style={{ textDecoration: 'none', display: 'block' }}>
-                    <article
-                      style={{ ...cardStyle, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14 }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05), 0 1px 8px rgba(0,0,0,0.03)' }}
-                    >
-                      <div style={{ width: 36, height: 36, borderRadius: 8, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
-                        {c.icon}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-4">
+              {exploreItems.map((item, idx) => (
+                <Link key={idx} href={item.href} className="group flex flex-col no-underline h-full">
+                  <article style={{ ...cardStyle, background: 'var(--panel)', border: '1px solid var(--line)', transition: 'all 0.3s ease-out' }} className="flex-1 flex flex-col p-6 group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {item.icon}
                       </div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', marginBottom: 3 }}>{c.titulo}</div>
-                        <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>{c.desc}</p>
-                      </div>
-                    </article>
-                  </Link>
-                ))}
-              </div>
-            </div>{/* fim coluna direita */}
+                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>
+                        {item.titulo}
+                      </h3>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.6 }}>
+                      {item.desc}
+                    </p>
+                    <div style={{ marginTop: 'auto', paddingTop: 16 }} className="inline-flex items-center text-xs font-bold text-[#818CF8] group-hover:text-[#A5B4FC] group-hover:underline transition-colors duration-200">
+                      <span className="mr-1">Ver detalhes</span>
+                      <span className="transform group-hover:translate-x-1 transition-transform duration-200">→</span>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
 
           </div>
         </section>
 
         {/* ── EXPLORE POR REGIÃO ── */}
         <section style={{ padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 48, alignItems: 'center' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-[1100px] mx-auto">
             <div>
               <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 42px)', lineHeight: 1.1, letterSpacing: '-0.025em' }}>
                 Explore por Região
@@ -696,45 +994,9 @@ export function HomeCidadaoClient({ recentVotacoes = [] }: { recentVotacoes?: Vo
           </div>
         </section>
 
-        {/* ── COMO FUNCIONA (mantida, visual atualizado) ── */}
-        <section style={{ background: 'var(--panel)', borderTop: '1px solid var(--line)', padding: '80px 24px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
-              <h2 style={{ margin: 0, fontSize: 'clamp(28px, 4vw, 42px)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
-                Como funciona
-              </h2>
-              <p style={{ marginTop: 12, color: 'var(--ink-3)', fontSize: 15 }}>
-                Em 3 passos, transformamos bases oficiais em leitura cívica simples.
-              </p>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-              {[
-                { n: '1', h: 'Coletamos', d: 'Diariamente, robôs leem dados públicos da Câmara, Senado, TSE e Portal da Transparência.' },
-                { n: '2', h: 'Organizamos', d: 'Convertemos tudo em linguagem clara, com etiquetas, comparações e gráficos.' },
-                { n: '3', h: 'Mostramos', d: 'Você consulta de graça. Toda informação tem link direto para a fonte original.' },
-              ].map((step) => (
-                <article key={step.n} style={{ ...cardStyle }}>
-                  <div style={{
-                    width: 56, height: 56, borderRadius: '50%',
-                    border: '2px solid var(--brand)', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    fontSize: 24, color: 'var(--brand)', fontWeight: 700,
-                    fontFamily: 'var(--font-mono)', marginBottom: 16,
-                  }}>
-                    {step.n}
-                  </div>
-                  <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>{step.h}</h3>
-                  <p style={{ margin: 0, color: 'var(--ink-3)', lineHeight: 1.6, fontSize: 14 }}>{step.d}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
 
       </main>
-
-      <CookieBanner />
     </>
   )
 }

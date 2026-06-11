@@ -1,188 +1,294 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+const PUBLIC_LINKS = [
+  { label: 'Buscar', href: '/busca' },
+  { label: 'Câmara', href: '/camara' },
+  { label: 'Senado', href: '/senado' },
+  { label: 'Estados & Cidades', href: '/estado' },
+  { label: 'Projetos', href: '/projetos' },
+  { label: 'Eleições', href: '/eleicao' },
+]
+
+const PRIVATE_LINKS = [
+  { label: 'Início', href: '/painel' },
+  { label: 'Meus políticos', href: '/painel/meus-politicos' },
+  { label: 'Comparar', href: '/painel/comparar' },
+]
+
 export function SiteHeader() {
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<{ name: string | null } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [flags, setFlags] = useState<Record<string, boolean>>({})
+
+  const isDashboard = pathname.startsWith('/painel')
+  const activePrivate = PRIVATE_LINKS.filter(
+    (link) => link.href !== '/painel/comparar' || flags['comparativo_parlamentares']
+  )
+  const activePublic = [
+    ...PUBLIC_LINKS,
+    ...(flags['insights_rankings'] ? [{ label: 'Rankings', href: '/insights' }] : [])
+  ]
+  const links = isDashboard ? [...activePrivate, ...activePublic] : activePublic
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4)
+    const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data.user)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
+
+    fetch('/api/flags')
+      .then((res) => res.json())
+      .then((data) => {
+        setFlags(data)
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        zIndex: 100,
-        borderBottom: '1px solid rgba(195,198,214,0.3)',
-        transition: 'box-shadow 0.2s ease',
-        boxShadow: scrolled ? '0 4px 20px -2px rgba(0,0,0,0.08)' : 'none',
-      }}
+      className={`fixed top-0 w-full z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? 'bg-[#1E293B]/95 backdrop-blur-sm border-[#334155] shadow-md'
+          : 'bg-[#1E293B]/90 backdrop-blur-sm border-[#334155]/60 shadow-sm'
+      }`}
     >
-      {/* Faixa superior — status + aviso */}
-      <div style={{ background: '#0a0e1a', color: 'white', fontSize: 12, padding: '7px 0' }}>
-        <div
-          style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '0 32px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 7, height: 7, borderRadius: 999, background: '#4ade80', display: 'inline-block', flexShrink: 0, animation: 'pulse 2s infinite' }} />
-            <span className="mono" style={{ fontSize: 10, color: '#4ade80', letterSpacing: '0.1em', fontWeight: 600 }}>
-              SISTEMA ONLINE
+      {!loading && user && !isDashboard && (
+        <div className="bg-[#6366F1] text-white text-[11px] font-bold py-1.5 px-4 flex justify-between items-center transition-all z-50">
+          <span className="flex items-center gap-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
             </span>
-            <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
-            <span style={{ opacity: 0.8 }}>
-              Você está no <strong>site público</strong>. Para análise profunda,{' '}
-              <a href="https://app.meuspoliticos.com.br" style={{ color: '#7dd3fc' }}>
-                acesse app.meuspoliticos.com.br →
-              </a>
-            </span>
+            Você está visualizando a área pública do portal.
           </span>
-          <span className="mono" style={{ fontSize: 10, opacity: 0.45, letterSpacing: '0.1em' }}>
-            DADOS PÚBLICOS · FONTES OFICIAIS
-          </span>
+          <Link href="/painel" className="underline hover:text-slate-200">
+            Voltar ao Painel Cidadão →
+          </Link>
         </div>
-      </div>
+      )}
+      <div className="max-w-7xl mx-auto h-16 px-4 md:px-8 flex justify-between items-center">
+        {/* Brand / Logo (Opção 11 com Vetor SVG + Texto Jakarta Sans) */}
+        <Link href="/" className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity">
+          <svg
+            viewBox="0 0 32 28"
+            className="w-8 h-7 text-[#6366F1] fill-current drop-shadow-[0_0_8px_rgba(99,102,241,0.3)] transition-transform duration-300 group-hover:scale-105"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="0" y="0" width="5.5" height="28" rx="1" />
+            <path d="M5.5 0 L14.5 18 L14.5 28 L5.5 10 Z" />
+            <rect x="16.5" y="16" width="4" height="12" rx="0.5" />
+            <rect x="22.5" y="8" width="4" height="20" rx="0.5" />
+            <rect x="28.5" y="0" width="3.5" height="28" rx="0.5" />
+          </svg>
+          <span className="font-sans font-extrabold text-white text-lg tracking-tight select-none">
+            Meus <span className="font-semibold text-slate-300">Políticos</span>
+          </span>
+        </Link>
 
-      {/* Nav principal com glass blur */}
-      <div
-        style={{
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1320,
-            margin: '0 auto',
-            padding: '0 32px',
-            display: 'flex',
-            alignItems: 'center',
-            height: 68,
-            gap: 40,
-          }}
-        >
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-            <Image
-              src="/logos_meus-politicos_colorido_semfundo.png"
-              alt="Meus Políticos"
-              height={32}
-              width={160}
-              style={{ objectFit: 'contain' }}
-            />
+        {/* Navigation Links (Desktop) */}
+        <nav className="hidden md:flex items-center gap-1.5">
+          {links.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-sans text-[13px] px-3.5 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'text-[#8B5CF6] bg-[#8B5CF6]/10 border border-[#8B5CF6]/20'
+                    : 'text-[#94A3B8] hover:text-white hover:bg-[#0F172A]'
+                }`}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Trailing Actions */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Apoiar Button - Gradiente âmbar/ouro */}
+          <Link
+            href="/apoio"
+            className="bg-gradient-to-br from-[#FFB020] to-[#FF8A00] hover:from-[#FFBA3B] hover:to-[#FF981A] active:scale-95 transition-all duration-200 text-[#1E1E1E] font-bold text-xs tracking-wider uppercase px-4 py-2 rounded-lg shadow-sm flex items-center gap-1.5 font-sans"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-3.5 h-3.5 flex-shrink-0"
+              style={{ display: 'inline-block' }}
+            >
+              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            </svg>
+            Apoiar
           </Link>
 
-          <nav style={{ display: 'flex', gap: 24, flex: 1 }}>
-            {[
-              { label: 'Buscar', href: '/busca' },
-              { label: 'Meu Estado', href: '/meu-estado' },
-              { label: 'Projetos', href: '/projetos' },
-              { label: 'Glossário', href: '/glossario' },
-              { label: 'Estados', href: '/estado' },
-            ].map((l) => (
+          {/* Auth State Links */}
+          {loading ? (
+            <div className="w-16 h-8 bg-slate-800 rounded-lg animate-pulse" />
+          ) : user ? (
+            <div className="flex items-center gap-2">
               <Link
-                key={l.href}
-                href={l.href}
-                style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-3)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                href="/painel"
+                className="bg-[#334155] hover:bg-[#475569] text-white font-medium text-xs px-3.5 py-2 rounded-lg border border-[#475569]/60 transition-colors"
               >
-                {l.label}
+                Painel
               </Link>
-            ))}
-            <Link
-              href="/candidatos-2026"
-              style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-3)', textDecoration: 'none', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              Candidatos 2026
-              <span style={{
-                padding: '2px 6px',
-                borderRadius: 999,
-                background: 'rgba(217,119,6,0.1)',
-                color: 'var(--accent-gold)',
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-              }}>
-                Novo
-              </span>
-            </Link>
-          </nav>
-
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            {/* Apoiar — destaque sutil âmbar */}
-            <Link
-              href="/apoio"
-              style={{
-                padding: '0 14px',
-                height: 38,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: 'rgba(217,119,6,0.08)',
-                border: '1px solid rgba(217,119,6,0.3)',
-                color: '#b45309',
-                fontSize: 13,
-                fontWeight: 700,
-                textDecoration: 'none',
-                borderRadius: 6,
-                whiteSpace: 'nowrap',
-                transition: 'background 0.15s',
-              }}
-            >
-              <span style={{ fontSize: 14 }}>❤️</span> Apoiar
-            </Link>
+              <a
+                href="/api/auth/logto/sign-out"
+                className="text-[#94A3B8] hover:text-white text-xs font-semibold px-2 py-2 transition-colors"
+              >
+                Sair
+              </a>
+            </div>
+          ) : (
             <Link
               href="/login"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] active:scale-95 transition-all text-white font-bold text-xs px-4 py-2 rounded-lg"
               style={{
-                padding: '0 18px',
-                height: 38,
-                display: 'inline-flex',
-                alignItems: 'center',
-                border: '1px solid var(--line-strong)',
-                color: 'var(--ink-2)',
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: 'none',
-                borderRadius: 6,
+                backgroundColor: '#8B5CF6',
+                color: '#ffffff',
               }}
             >
               Entrar
             </Link>
-            <a
-              href="https://app.meuspoliticos.com.br"
-              style={{
-                padding: '0 18px',
-                height: 38,
-                display: 'inline-flex',
-                alignItems: 'center',
-                background: 'var(--ink)',
-                color: 'white',
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: 'none',
-                borderRadius: 6,
-                whiteSpace: 'nowrap',
-              }}
+          )}
+        </div>
+
+        {/* Mobile Actions and Toggle */}
+        <div className="flex items-center gap-2 md:hidden">
+          {!loading && user && (
+            <Link
+              href="/painel"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] tracking-wide px-3 py-1.5 rounded-lg border border-indigo-500/30 transition-all shadow-sm"
             >
-              App →
-            </a>
-          </div>
+              PAINEL
+            </Link>
+          )}
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu de Navegação"
+            className="p-2 text-[#94A3B8] hover:text-white focus:outline-none"
+          >
+            {mobileMenuOpen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-[#1E293B] border-t border-[#334155] px-4 py-4 space-y-3 animate-fade-in">
+          <nav className="flex flex-col gap-1.5">
+            {links.map((link) => {
+              const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`font-sans text-sm px-3.5 py-2.5 rounded-lg font-medium transition-all ${
+                    isActive
+                      ? 'text-[#8B5CF6] bg-[#8B5CF6]/10 border border-[#8B5CF6]/20'
+                      : 'text-[#94A3B8] hover:text-white hover:bg-[#0F172A]'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="border-t border-[#334155] pt-3 flex flex-col gap-2.5">
+            <Link
+              href="/apoio"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full bg-gradient-to-br from-[#FFB020] to-[#FF8A00] text-[#1E1E1E] font-bold text-xs tracking-wider uppercase py-2.5 rounded-lg shadow-sm flex items-center justify-center gap-1.5 font-sans"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-3.5 h-3.5 flex-shrink-0"
+                style={{ display: 'inline-block' }}
+              >
+                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+              </svg>
+              Apoiar
+            </Link>
+
+            {loading ? (
+              <div className="w-full h-10 bg-slate-800 rounded-lg animate-pulse" />
+            ) : user ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/painel"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full bg-[#334155] hover:bg-[#475569] text-white font-medium text-xs text-center py-2.5 rounded-lg border border-[#475569]/60 transition-colors"
+                >
+                  Painel
+                </Link>
+                <a
+                  href="/api/auth/logto/sign-out"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-[#94A3B8] hover:text-white text-xs font-semibold text-center py-2.5 rounded-lg transition-colors"
+                >
+                  Sair
+                </a>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-xs py-2.5 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: '#8B5CF6',
+                  color: '#ffffff',
+                }}
+              >
+                Entrar
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

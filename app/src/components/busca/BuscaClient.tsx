@@ -14,13 +14,27 @@ const selectStyle: React.CSSProperties = {
   padding: '0 14px',
   background: 'var(--panel)',
   border: '1px solid var(--line-strong)',
-  borderRadius: 10,
+  borderRadius: 8,
   fontSize: 14,
   color: 'var(--ink)',
   outline: 'none',
   cursor: 'pointer',
   fontFamily: 'var(--font-sans)',
   whiteSpace: 'nowrap',
+}
+
+function chipStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: '4px 10px',
+    borderRadius: 8,
+    border: active ? '1px solid var(--brand)' : '1px solid rgba(255, 255, 255, 0.08)',
+    background: active ? 'var(--brand-soft)' : 'rgba(255,255,255,0.03)',
+    color: active ? 'var(--brand)' : 'var(--ink-2)',
+    fontSize: 11.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  }
 }
 
 export function BuscaClient() {
@@ -40,6 +54,15 @@ export function BuscaClient() {
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => { setQueryInput(qParam) }, [qParam])
+
+  // Debounced search on text input
+  useEffect(() => {
+    if (queryInput === qParam) return
+    const timer = setTimeout(() => {
+      navigateWith({ q: queryInput || null }, { replace: true })
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [queryInput, qParam])
 
   const queryString = useMemo(() => searchParams.toString(), [searchParams])
 
@@ -68,14 +91,19 @@ export function BuscaClient() {
     return () => { active = false }
   }, [queryString])
 
-  function navigateWith(updates: Record<string, string | null>) {
+  function navigateWith(updates: Record<string, string | null>, options?: { replace?: boolean }) {
     const params = new URLSearchParams(searchParams.toString())
     Object.entries(updates).forEach(([key, value]) => {
       if (!value) params.delete(key); else params.set(key, value)
     })
     if (['cargo', 'uf', 'partido', 'q', 'ordem'].some((k) => k in updates)) params.set('pagina', '1')
     const next = params.toString()
-    router.push(next ? `/busca?${next}` : '/busca')
+    const url = next ? `/busca?${next}` : '/busca'
+    if (options?.replace) {
+      router.replace(url)
+    } else {
+      router.push(url)
+    }
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -87,7 +115,7 @@ export function BuscaClient() {
   const total          = data?.total ?? 0
   const totalPaginas   = data?.totalPaginas ?? 1
   const totalIndexados = data?.totalIndexados ?? 0
-  const porPagina      = data?.porPagina ?? 20
+  const porPagina      = data?.porPagina ?? 15
   const firstItem      = total === 0 ? 0 : (pagina - 1) * porPagina + 1
   const lastItem       = total === 0 ? 0 : Math.min(pagina * porPagina, total)
 
@@ -99,14 +127,22 @@ export function BuscaClient() {
     .slice(Math.max(0, pagina - 3), Math.max(0, pagina - 3) + 5)
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
+    <div style={{ background: '#090d16', minHeight: '100vh', color: '#CBD5E1', position: 'relative', overflow: 'hidden' }}>
+      
+      {/* Ambient background glow */}
+      <div style={{
+        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100vw', height: '600px',
+        background: 'radial-gradient(circle at 50% -150px, rgba(139, 92, 246, 0.12) 0%, rgba(9, 13, 22, 0) 70%)',
+        pointerEvents: 'none', zIndex: 0
+      }} />
 
       {/* ── Cabeçalho ── */}
-      <section style={{ padding: '40px 24px 24px', maxWidth: 1280, margin: '0 auto' }}>
-        <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--ink)' }}>
+      <section style={{ padding: '40px 24px 24px', maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-0.025em', color: '#F8FAFC' }}>
           Buscar Políticos
         </h1>
-        <p style={{ margin: 0, fontSize: 15, color: 'var(--ink-3)', maxWidth: 620, lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 15, color: '#94A3B8', maxWidth: 620, lineHeight: 1.6 }}>
           {totalIndexados > 0
             ? `${totalIndexados.toLocaleString('pt-BR')} representantes indexados — pressença, gastos e votações em dados abertos.`
             : 'Encontre parlamentares, fiscalize gastos e acompanhe votações.'}
@@ -116,16 +152,17 @@ export function BuscaClient() {
       {/* ── Filtros sticky ── */}
       <section style={{
         position: 'sticky', top: 100, zIndex: 40,
-        background: 'rgba(244,245,240,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--line)',
-        padding: '14px 24px',
+        background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '16px 24px',
+        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
       }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-          <form onSubmit={onSubmit} style={{ display: 'grid', gridTemplateColumns: '2fr repeat(3, 1fr) 1fr', gap: 10, alignItems: 'center' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2.5 items-center w-full">
 
             {/* Busca texto */}
             <div style={{ position: 'relative' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                 style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
@@ -133,6 +170,7 @@ export function BuscaClient() {
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
                 placeholder="Nome do parlamentar..."
+                className="busca-input transition-all duration-150"
                 style={{
                   ...selectStyle,
                   width: '100%', paddingLeft: 42, boxSizing: 'border-box',
@@ -141,7 +179,7 @@ export function BuscaClient() {
             </div>
 
             {/* Cargo */}
-            <select value={cargo} onChange={(e) => navigateWith({ cargo: e.target.value || null })} style={selectStyle}>
+            <select value={cargo} onChange={(e) => navigateWith({ cargo: e.target.value || null })} className="busca-input transition-all duration-150" style={selectStyle}>
               <option value="">Cargo: Todos</option>
               {cargosChips.length > 0
                 ? cargosChips.map((c) => (
@@ -154,19 +192,19 @@ export function BuscaClient() {
             </select>
 
             {/* UF */}
-            <select value={uf} onChange={(e) => navigateWith({ uf: e.target.value || null })} style={selectStyle}>
+            <select value={uf} onChange={(e) => navigateWith({ uf: e.target.value || null })} className="busca-input transition-all duration-150" style={selectStyle}>
               <option value="">UF: Brasil</option>
               {UFS.map((u) => <option key={u} value={u}>{u}</option>)}
             </select>
 
             {/* Partido */}
-            <select value={partido} onChange={(e) => navigateWith({ partido: e.target.value || null })} style={selectStyle}>
+            <select value={partido} onChange={(e) => navigateWith({ partido: e.target.value || null })} className="busca-input transition-all duration-150" style={selectStyle}>
               <option value="">Partido: Todos</option>
               {allPartidos.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
 
             {/* Ordenação */}
-            <select value={ordem} onChange={(e) => navigateWith({ ordem: e.target.value })} style={selectStyle}>
+            <select value={ordem} onChange={(e) => navigateWith({ ordem: e.target.value })} className="busca-input transition-all duration-150" style={selectStyle}>
               <option value="relevancia">Relevância</option>
               <option value="presenca">Presença</option>
               <option value="gastos">Maior gasto</option>
@@ -174,15 +212,70 @@ export function BuscaClient() {
             </select>
 
           </form>
+
+          {/* Chips de Filtro Rápido */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span className="mono" style={{ color: 'var(--ink-3)', fontSize: 9.5, letterSpacing: '0.08em', fontWeight: 600 }}>FILTRAR POR:</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
+              <button type="button" onClick={() => navigateWith({ cargo: cargo === 'deputado_federal' ? null : 'deputado_federal' })} style={chipStyle(cargo === 'deputado_federal')}>
+                Federal
+              </button>
+              <button type="button" onClick={() => navigateWith({ cargo: cargo === 'senador' ? null : 'senador' })} style={chipStyle(cargo === 'senador')}>
+                Senador
+              </button>
+              
+              <span style={{ color: 'rgba(255,255,255,0.08)', margin: '0 4px' }}>|</span>
+              
+              {['SP', 'RJ', 'MG', 'BA', 'PE'].map((u) => (
+                <button key={u} type="button" onClick={() => navigateWith({ uf: uf === u ? null : u })} style={chipStyle(uf === u)}>
+                  {u}
+                </button>
+              ))}
+              
+              <span style={{ color: 'rgba(255,255,255,0.08)', margin: '0 4px' }}>|</span>
+              
+              {['PL', 'PT', 'PSD', 'MDB', 'UNIÃO'].map((p) => (
+                <button key={p} type="button" onClick={() => navigateWith({ partido: partido === p ? null : p })} style={chipStyle(partido === p)}>
+                  {p}
+                </button>
+              ))}
+
+              {(qParam || cargo || uf || partido) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQueryInput('')
+                    router.push('/busca')
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--neg)',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    marginLeft: 'auto',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4
+                  }}
+                  className="hover:underline"
+                >
+                  ✕ Limpar Filtros
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ── Resultados ── */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 60px' }}>
+      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 60px', position: 'relative', zIndex: 1 }}>
 
         {/* Contador */}
         {!loading && (
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-3)' }}>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#94A3B8' }}>
             {total === 0 ? 'Nenhum resultado' : `${firstItem}–${lastItem} de ${total.toLocaleString('pt-BR')} resultados`}
           </p>
         )}
@@ -191,7 +284,7 @@ export function BuscaClient() {
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} style={{ background: 'var(--panel)', borderRadius: 16, height: 340, border: '1px solid var(--line)', opacity: 0.5 }} className="busca-skeleton" />
+              <div key={i} style={{ background: '#1E293B', borderRadius: 16, height: 340, border: '1px solid #334155', opacity: 0.5 }} className="busca-skeleton" />
             ))}
           </div>
         ) : error ? (
@@ -199,10 +292,10 @@ export function BuscaClient() {
             {error}
           </div>
         ) : items.length === 0 ? (
-          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 16, padding: '60px 24px', textAlign: 'center' }}>
+          <div style={{ background: '#1E293B', border: '1px solid #334155', borderRadius: 16, padding: '60px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-2)', margin: '0 0 6px' }}>Nenhum resultado encontrado</p>
-            <p style={{ fontSize: 13, color: 'var(--ink-3)', margin: 0 }}>Tente mudar os filtros ou buscar por outro nome.</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>Nenhum resultado encontrado</p>
+            <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>Tente mudar os filtros ou buscar por outro nome.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
@@ -277,6 +370,9 @@ export function BuscaClient() {
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes busca-pulse { 0%,100%{opacity:.5} 50%{opacity:.3} }
         .busca-skeleton { animation: busca-pulse 1.5s ease-in-out infinite; }
+        .busca-input { transition: all 0.15s ease-in-out; }
+        .busca-input:hover { border-color: rgba(255, 255, 255, 0.25) !important; }
+        .busca-input:focus { border-color: var(--brand) !important; box-shadow: 0 0 0 3px var(--brand-soft) !important; }
       ` }} />
     </div>
   )
@@ -287,9 +383,9 @@ function pageBtn(active: boolean): React.CSSProperties {
     width: 40, height: 40,
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     borderRadius: 8,
-    border: active ? 'none' : '1px solid var(--line)',
-    background: active ? 'var(--ink)' : 'var(--panel)',
-    color: active ? 'white' : 'var(--ink-2)',
+    border: active ? '1px solid var(--brand)' : '1px solid var(--line)',
+    background: active ? 'var(--brand)' : 'var(--panel)',
+    color: active ? '#ffffff' : 'var(--ink-2)',
     fontSize: 14, fontWeight: active ? 700 : 500,
     cursor: 'pointer',
   }

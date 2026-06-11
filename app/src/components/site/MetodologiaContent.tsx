@@ -73,22 +73,22 @@ export function MetodologiaContent() {
     <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[var(--line)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#eef3ff] to-transparent" />
-        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[var(--brand-soft)]/10 to-transparent" />
+        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[var(--brand-2)]/5 blur-3xl" />
         <div className="container-shell relative py-14 sm:py-20">
           <div className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1 shadow-sm">
               <span className="inline-block size-2 rounded-full bg-[var(--brand-2)]" />
               <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--mute)]">Metodologia científica</span>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">Como calculamos os dados</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">Como calculamos os dados</h1>
             <p className="max-w-2xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
               Não inventamos métricas. Adaptamos metodologias validadas academicamente e usadas por universidades, parlamentos e organismos internacionais. Cada score é auditável, replicável e baseado exclusivamente em dados oficiais.
             </p>
             <div className="flex flex-wrap gap-3 text-sm">
-              <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">Ver fontes</Link>
-              <span className="text-slate-400">·</span>
-              <a href="https://github.com/meuspoliticos" target="_blank" rel="noopener" className="font-semibold text-[var(--brand-2)] hover:underline">Repositório público</a>
+              <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Ver fontes</Link>
+              <span className="text-[var(--ink-3)]">·</span>
+              <a href="https://github.com/meuspoliticos" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Repositório público</a>
             </div>
           </div>
         </div>
@@ -96,13 +96,13 @@ export function MetodologiaContent() {
 
       {/* PRINCÍPIO FUNDAMENTAL */}
       <section className="container-shell py-10">
-        <div className="mb-8 rounded-2xl bg-[#1e2a47] p-6 text-white shadow-md">
+        <div className="mb-8 rounded-2xl bg-[var(--panel)] border border-[var(--line)] p-6 text-[var(--ink)] shadow-md">
           <h2 className="mb-2 text-lg font-bold">Instrumento de auditoria cívica — não ranking de opinião</h2>
-          <p className="mb-4 text-base">Todos os scores são benchmarks relativos. O político é comparado com peers do mesmo perfil — partido, estado e tempo de mandato. Nunca uma nota absoluta de bom ou mau. A conclusão é sempre do cidadão.</p>
+          <p className="mb-4 text-base text-[var(--ink-2)]">Todos os scores são benchmarks relativos. O político é comparado com peers do mesmo perfil — partido, estado e tempo de mandato. Nunca uma nota absoluta de bom ou mau. A conclusão é sempre do cidadão.</p>
           <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 rounded-lg bg-[#223366] px-3 py-1 text-xs font-semibold"><ShieldCheck size={16} />Dados de fontes oficiais</div>
-            <div className="flex items-center gap-2 rounded-lg bg-[#223366] px-3 py-1 text-xs font-semibold"><FileText size={16} />Fórmulas públicas e auditáveis</div>
-            <div className="flex items-center gap-2 rounded-lg bg-[#223366] px-3 py-1 text-xs font-semibold"><BookOpen size={16} />Qualquer pesquisador pode replicar</div>
+            <div className="flex items-center gap-2 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 py-1 text-xs font-semibold"><ShieldCheck size={16} className="text-[var(--brand-2)]" />Dados de fontes oficiais</div>
+            <div className="flex items-center gap-2 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 py-1 text-xs font-semibold"><FileText size={16} className="text-[var(--brand-2)]" />Fórmulas públicas e auditáveis</div>
+            <div className="flex items-center gap-2 rounded-lg bg-[var(--bg)] border border-[var(--line)] px-3 py-1 text-xs font-semibold"><BookOpen size={16} className="text-[var(--brand-2)]" />Qualquer pesquisador pode replicar</div>
           </div>
         </div>
       </section>
@@ -115,20 +115,20 @@ export function MetodologiaContent() {
             <div key={score.number} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)] text-[var(--brand-2)] font-bold text-sm">{score.number}</span>
-                <span className="font-semibold text-slate-700">{score.name}</span>
+                <span className="font-semibold text-[var(--ink)]">{score.name}</span>
                 <span className="mono ml-auto inline-flex items-center gap-1 rounded bg-[var(--bg)] px-2 py-0.5 text-xs font-medium uppercase tracking-[0.12em] text-[var(--brand-2)]">Base científica</span>
               </div>
-              <div className="text-xs text-slate-500 mb-1">{score.base} <span className="text-slate-400">·</span> <span>{score.authors}</span></div>
-              <div className="text-base font-medium text-[var(--ink)]">{score.description}</div>
-              <div className="rounded bg-[var(--bg)] border border-[var(--line)] px-3 py-2 text-xs font-mono text-slate-700 whitespace-pre-wrap">{score.formula}</div>
+              <div className="text-xs text-[var(--ink-3)] mb-1">{score.base} <span className="text-[var(--ink-3)]">·</span> <span>{score.authors}</span></div>
+              <div className="text-base font-medium text-[var(--ink-2)]">{score.description}</div>
+              <div className="rounded bg-[var(--bg)] border border-[var(--line)] px-3 py-2 text-xs font-mono text-[var(--ink-2)] whitespace-pre-wrap">{score.formula}</div>
               <div>
                 <SourceCite source={score.source} />
               </div>
-              <div className="mt-2 text-sm">
+              <div className="mt-2 text-sm text-[var(--ink-2)]">
                 <span className="font-semibold text-[var(--brand-2)]">Como lemos esse dado:</span> {score.leitura}
               </div>
-              <div className="mt-1 rounded bg-yellow-50 border-l-4 border-yellow-400 px-3 py-2 text-xs text-yellow-800">
-                <span className="font-semibold">Limitação conhecida:</span> {score.limitacao}
+              <div className="mt-1 rounded bg-[var(--warn-soft)] border-l-4 border-[var(--warn)] px-3 py-2 text-xs text-[var(--ink-2)]">
+                <span className="font-semibold text-[var(--warn)]">Limitação conhecida:</span> {score.limitacao}
               </div>
             </div>
           ))}
@@ -138,7 +138,7 @@ export function MetodologiaContent() {
       {/* REFERÊNCIAS */}
       <section className="container-shell py-8">
         <h2 className="mb-4 text-xl font-bold text-[var(--ink)]">Referências científicas</h2>
-        <ul className="list-disc pl-6 space-y-1 text-slate-700">
+        <ul className="list-disc pl-6 space-y-1 text-[var(--ink-2)]">
           {referencias.map((ref, i) => (
             <li key={i}>{ref.texto}</li>
           ))}
@@ -151,32 +151,32 @@ export function MetodologiaContent() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm flex flex-col items-start gap-2">
             <Wrench size={24} className="text-[var(--brand-2)]" />
-            <span className="font-semibold">Código aberto</span>
-            <span className="text-xs text-slate-500">Fórmulas disponíveis no GitHub</span>
+            <span className="font-semibold text-[var(--ink)]">Código aberto</span>
+            <span className="text-xs text-[var(--ink-3)]">Fórmulas disponíveis no GitHub</span>
           </div>
           <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm flex flex-col items-start gap-2">
             <ListChecks size={24} className="text-[var(--brand-2)]" />
-            <span className="font-semibold">Memória de cálculo</span>
-            <span className="text-xs text-slate-500">Cada score auditável por parlamentar</span>
+            <span className="font-semibold text-[var(--ink)]">Memória de cálculo</span>
+            <span className="text-xs text-[var(--ink-3)]">Cada score auditável por parlamentar</span>
           </div>
           <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm flex flex-col items-start gap-2">
             <Calculator size={24} className="text-[var(--brand-2)]" />
-            <span className="font-semibold">Você ajusta os pesos</span>
-            <span className="text-xs text-slate-500">Em breve, o cidadão poderá personalizar a ponderação</span>
+            <span className="font-semibold text-[var(--ink)]">Você ajusta os pesos</span>
+            <span className="text-xs text-[var(--ink-3)]">Em breve, o cidadão poderá personalizar a ponderação</span>
           </div>
         </div>
       </section>
 
       {/* DISCLAIMER */}
       <section className="container-shell pb-10 pt-4">
-        <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+        <p className="text-xs text-[var(--ink-3)] border-t border-[var(--line)] pt-4">
           Scores calculados com base em dados oficiais da Câmara dos Deputados, Senado Federal e TSE. Esta análise estatística não constitui julgamento moral ou profissional. Erros podem ser reportados em <a href="mailto:contato@meuspoliticos.com.br" className="underline">contato@meuspoliticos.com.br</a>.
         </p>
         <nav className="mt-8 flex flex-wrap gap-4 text-sm">
-          <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:underline">Manifesto</Link>
-          <Link href="/sobre" className="font-semibold text-[var(--brand-2)] hover:underline">Sobre</Link>
-          <Link href="/como-funciona" className="font-semibold text-[var(--brand-2)] hover:underline">Como funciona</Link>
-          <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">Fontes</Link>
+          <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Manifesto</Link>
+          <Link href="/sobre" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Sobre</Link>
+          <Link href="/como-funciona" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Como funciona</Link>
+          <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">Fontes</Link>
         </nav>
       </section>
     </div>

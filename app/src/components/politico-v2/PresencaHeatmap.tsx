@@ -17,15 +17,15 @@ export function PresencaHeatmap({ data }: PresencaHeatmapProps) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-slate-900">Presença mensal</p>
+    <div className="rounded-xl border border-[var(--line)] bg-[rgba(30,41,59,0.45)] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.15)] backdrop-blur-md">
+      <p className="text-sm font-semibold text-[var(--ink)]">Presença mensal</p>
       <div className="mt-4 grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-10">
         {data.map((item) => (
           <div
             key={item.dia}
             className="h-6 rounded"
             title={`${item.dia}: ${item.percentual}%`}
-            style={{ backgroundColor: `rgba(41,82,204, ${Math.max(0.15, Math.min(1, item.percentual / 100))})` }}
+            style={{ backgroundColor: `color-mix(in srgb, var(--brand-2) ${Math.max(20, Math.min(100, item.percentual))}%, var(--panel))` }}
           />
         ))}
       </div>

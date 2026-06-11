@@ -10,6 +10,8 @@ Uso:
     python -m etl.ale.collect_almt --entidade presencas --ano 2025
 """
 
+import os
+import requests
 import argparse
 import logging
 import time
@@ -31,13 +33,49 @@ ANO_ATUAL = date.today().year
 ANOS_PADRAO = [ANO_ATUAL - 1, ANO_ATUAL]
 
 
+def get_almt_headers() -> dict:
+    """
+    Tenta obter o token de acesso OAuth 2.0 usando Client Credentials
+    caso as credenciais estejam disponíveis no ambiente.
+    """
+    client_id = os.getenv('ALMT_CLIENT_ID')
+    client_secret = os.getenv('ALMT_CLIENT_SECRET')
+    headers = {'User-Agent': 'MeusPoliticosBR/1.0'}
+    
+    if not client_id or not client_secret:
+        log.warning("[ALMT] ALMT_CLIENT_ID ou ALMT_CLIENT_SECRET não configurados. Continuando sem autenticação.")
+        return headers
+
+    try:
+        token_url = f'{BASE_URL}/oauth/token'
+        log.info(f"[ALMT] Solicitando token OAuth em {token_url}...")
+        r = requests.post(
+            token_url,
+            data={'grant_type': 'client_credentials'},
+            auth=(client_id, client_secret),
+            timeout=15,
+            verify=False
+        )
+        if r.status_code == 200:
+            token = r.json().get('access_token')
+            if token:
+                headers['Authorization'] = f'Bearer {token}'
+                log.info("[ALMT] Token OAuth 2.0 obtido com sucesso.")
+        else:
+            log.warning(f"[ALMT] Falha ao obter token: HTTP {r.status_code}. Continuando sem autenticação.")
+    except Exception as e:
+        log.warning(f"[ALMT] Erro ao obter token: {e}. Continuando sem autenticação.")
+
+    return headers
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Deputados
 # ──────────────────────────────────────────────────────────────────────────────
 
-def collect_deputados(conn) -> int:
+def collect_deputados(conn, headers: dict) -> int:
     log.info("[ALMT] Coletando deputados...")
-    dados = get_json(f'{BASE_URL}/deputados')
+    dados = get_json(f'{BASE_URL}/deputados', headers=headers)
     if not dados:
         return 0
 
@@ -78,7 +116,7 @@ def collect_deputados(conn) -> int:
 # Votações
 # ──────────────────────────────────────────────────────────────────────────────
 
-def collect_votacoes(conn, anos: list[int]) -> int:
+def collect_votacoes(conn, anos: list[int], headers: dict) -> int:
     log.info(f"[ALMT] Coletando votações para {anos}...")
 
     with conn.cursor() as cur:
@@ -88,7 +126,7 @@ def collect_votacoes(conn, anos: list[int]) -> int:
 
     for ano in anos:
         # ALMT organiza votações por sessão
-        sessoes_data = get_json(f'{BASE_URL}/sessoes', params={'ano': ano})
+        sessoes_data = get_json(f'{BASE_URL}/sessoes', params={'ano': ano}, headers=headers)
         if not sessoes_data:
             continue
 
@@ -105,7 +143,7 @@ def collect_votacoes(conn, anos: list[int]) -> int:
             descricao_sessao = sessao.get('descricao') or sessao.get('tipo') or ''
 
             # Votações nominais da sessão
-            vots_data = get_json(f'{BASE_URL}/sessoes/{id_sessao}/votacoes')
+            vots_data = get_json(f'{BASE_URL}/sessoes/{id_sessao}/votacoes', headers=headers)
             if not vots_data:
                 time.sleep(0.3)
                 continue
@@ -118,7 +156,7 @@ def collect_votacoes(conn, anos: list[int]) -> int:
                 proposicao_str = (votacao.get('proposicao') or votacao.get('sigla') or '')[:200]
 
                 # Votos por parlamentar
-                votos_data = get_json(f'{BASE_URL}/sessoes/{id_sessao}/votacoes/{id_vot}/votos')
+                votos_data = get_json(f'{BASE_URL}/sessoes/{id_sessao}/votacoes/{id_vot}/votos', headers=headers)
                 if not votos_data:
                     continue
 
@@ -170,7 +208,7 @@ def collect_votacoes(conn, anos: list[int]) -> int:
 # Presenças
 # ──────────────────────────────────────────────────────────────────────────────
 
-def collect_presencas(conn, anos: list[int]) -> int:
+def collect_presencas(conn, anos: list[int], headers: dict) -> int:
     log.info(f"[ALMT] Coletando presenças para {anos}...")
 
     with conn.cursor() as cur:
@@ -186,11 +224,11 @@ def collect_presencas(conn, anos: list[int]) -> int:
     for id_ale, politico_id in deputados:
         for ano in anos:
             dados = get_json(f'{BASE_URL}/deputados/{id_ale}/presencas',
-                              params={'ano': ano})
+                              params={'ano': ano}, headers=headers)
             if not dados:
                 # Tentar endpoint alternativo
                 dados = get_json(f'{BASE_URL}/presencas',
-                                  params={'ano': ano, 'idDeputado': id_ale})
+                                  params={'ano': ano, 'idDeputado': id_ale}, headers=headers)
             if not dados:
                 continue
 
@@ -255,14 +293,15 @@ def main():
     args = parser.parse_args()
 
     conn = get_db()
+    headers = get_almt_headers()
     try:
         totais = {}
         if args.entidade in ('deputados', 'tudo'):
-            totais['deputados'] = collect_deputados(conn)
+            totais['deputados'] = collect_deputados(conn, headers)
         if args.entidade in ('votacoes', 'tudo'):
-            totais['votacoes'] = collect_votacoes(conn, args.ano)
+            totais['votacoes'] = collect_votacoes(conn, args.ano, headers)
         if args.entidade in ('presencas', 'tudo'):
-            totais['presencas'] = collect_presencas(conn, args.ano)
+            totais['presencas'] = collect_presencas(conn, args.ano, headers)
 
         with conn.cursor() as cur:
             for entidade, n in totais.items():

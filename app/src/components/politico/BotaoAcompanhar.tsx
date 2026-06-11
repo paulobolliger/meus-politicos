@@ -15,20 +15,6 @@ type Props = {
 
 function buildLoginUrl(slug: string): string {
   const redirectTo = encodeURIComponent(`/politicos/${slug}?follow=1`)
-
-  if (typeof window === 'undefined') return `/login?redirectTo=${redirectTo}`
-
-  const { hostname, port } = window.location
-  const isDev = hostname.includes('localhost') || hostname === '127.0.0.1'
-  const isApp = hostname.startsWith('app.')
-
-  if (isDev && isApp) {
-    return `http://painel.localhost:${port}/login?redirectTo=${redirectTo}`
-  }
-  if (isApp) {
-    const painelUrl = process.env.NEXT_PUBLIC_PAINEL_URL ?? 'https://painel.meuspoliticos.com.br'
-    return `${painelUrl}/login?redirectTo=${redirectTo}`
-  }
   return `/login?redirectTo=${redirectTo}`
 }
 
@@ -122,11 +108,10 @@ export function BotaoAcompanhar({
         style={{
           width: '100%',
           padding: '8px 12px',
-          borderRadius: '0 0 12px 12px',
-          border: seguindo ? '1px solid #d1fae5' : '1px solid #e2e8f0',
-          borderTop: 'none',
-          background: seguindo ? '#f0fdf4' : '#f8fafc',
-          color: seguindo ? '#065f46' : '#334155',
+          borderRadius: '8px',
+          border: seguindo ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+          background: seguindo ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+          color: seguindo ? '#10B981' : '#CBD5E1',
           fontSize: 12,
           fontWeight: 600,
           cursor: loading ? 'wait' : 'pointer',
@@ -134,7 +119,7 @@ export function BotaoAcompanhar({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 6,
-          transition: 'background 0.15s, color 0.15s',
+          transition: 'all 0.15s ease',
         }}
       >
         {loading ? '...' : seguindo ? '✓ Acompanhando' : '+ Acompanhar'}

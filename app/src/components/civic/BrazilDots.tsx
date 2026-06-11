@@ -1,7 +1,5 @@
 'use client'
 
-import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
-
 type StateDot = {
   uf: string
   x: number
@@ -39,8 +37,6 @@ const STATES: StateDot[] = [
   { uf: 'MS', x: 45, y: 68, n: 8 },
 ]
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'
-
 type BrazilDotsProps = {
   active: string
   onPick: (uf: string) => void
@@ -53,44 +49,35 @@ export function BrazilDots({ active, onPick, dark = false, height = 420 }: Brazi
 
   return (
     <div style={{ position: 'relative', height, width: '100%' }}>
-      {/* Mapa real do Brasil via react-simple-maps */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <ComposableMap
-          projection="geoMercator"
-          projectionConfig={{ center: [-54, -15], scale: 600 }}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <Geographies geography={GEO_URL}>
-            {({ geographies }) =>
-              geographies
-                .filter((geo) => geo.properties.name === 'Brazil')
-                .map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="none"
-                    stroke="var(--line-strong)"
-                    strokeWidth={0.5}
-                    style={{ outline: 'none' }}
-                  />
-                ))
-            }
-          </Geographies>
-        </ComposableMap>
-      </div>
-
-      {/* Dots dos estados sobrepostos */}
       <svg
         viewBox="0 0 100 100"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%' }}
         preserveAspectRatio="xMidYMid meet"
       >
+        {/* Mapa base do Brasil */}
+        <image
+          href="/brazil-map.svg"
+          x="-3"
+          y="0"
+          width="105"
+          height="100"
+          preserveAspectRatio="xMidYMid meet"
+          style={{ opacity: dark ? 0.35 : 0.18 }}
+        />
+
+        {/* Pontos interativos dos estados */}
         {STATES.map((s) => {
           const r = 1.2 + (s.n / maxN) * 2.6
           const isActive = s.uf === active
           return (
             <g key={s.uf} style={{ cursor: 'pointer' }} onClick={() => onPick(s.uf)}>
-              <circle cx={s.x} cy={s.y} r={r + 1.6} fill={dark ? 'var(--brand)' : 'var(--brand-2)'} opacity={isActive ? 0.2 : 0} />
+              <circle
+                cx={s.x}
+                cy={s.y}
+                r={r + 1.6}
+                fill={dark ? 'var(--brand)' : 'var(--brand-2)'}
+                opacity={isActive ? 0.22 : 0}
+              />
               <circle
                 cx={s.x}
                 cy={s.y}
@@ -101,7 +88,7 @@ export function BrazilDots({ active, onPick, dark = false, height = 420 }: Brazi
               <text
                 x={s.x}
                 y={s.y - r - 1.2}
-                fontFamily="IBM Plex Mono, monospace"
+                fontFamily="var(--font-mono)"
                 fontSize="2.2"
                 textAnchor="middle"
                 fill={isActive ? 'var(--ink)' : dark ? 'var(--ink-2)' : 'var(--ink-3)'}

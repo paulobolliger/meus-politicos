@@ -5,9 +5,13 @@ export function Panel({ children, className, style }: HTMLAttributes<HTMLDivElem
   return (
     <div
       style={{
-        background: 'var(--panel)',
+        background: 'rgba(30, 41, 59, 0.45)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid var(--line)',
-        borderRadius: 0,
+        borderRadius: 16,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        overflow: 'hidden',
         ...style,
       }}
       className={className}
@@ -23,7 +27,7 @@ export function PanelHeader({
   action,
   source,
 }: {
-  title: string
+  title: ReactNode
   sub?: string
   action?: ReactNode
   source?: string

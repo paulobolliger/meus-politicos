@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Share2 } from 'lucide-react'
 
 type ShareButtonProps = {
   nomeEleitoral: string
@@ -78,28 +79,28 @@ export function ShareButton(props: ShareButtonProps) {
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          padding: '8px 14px',
-          background: 'var(--panel)',
+          width: 40,
+          height: 40,
+          padding: 0,
+          background: 'rgba(15, 23, 42, 0.62)',
           color: 'var(--ink-2)',
-          border: '1px solid var(--line)',
-          fontSize: 13,
-          fontWeight: 600,
+          border: '1px solid rgba(148, 163, 184, 0.28)',
           cursor: 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 6,
-          borderRadius: 4,
+          borderRadius: 12,
+          boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
         }}
+        aria-label="Compartilhar político"
         aria-expanded={open}
         aria-haspopup="true"
+        title="Compartilhar político"
       >
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M15 8a3 3 0 1 0-2.977-2.63l-4.94 2.47a3 3 0 1 0 0 4.319l4.94 2.47a3 3 0 1 0 .895-1.789l-4.94-2.47a3.027 3.027 0 0 0 0-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-        </svg>
-        Compartilhar
-        <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" style={{ opacity: 0.5 }}>
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
+        <Share2 size={18} aria-hidden="true" />
       </button>
 
       {open && (

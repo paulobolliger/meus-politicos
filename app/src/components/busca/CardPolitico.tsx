@@ -48,6 +48,73 @@ const AVATAR_BG: Record<string, string> = {
   vereador: '#b01264',
 }
 
+type PartyTheme = {
+  brandColor: string
+  accentColor: string
+  glowColor: string
+  brandColorRgb: string
+}
+
+function getPartyTheme(sigla: string | null | undefined): PartyTheme {
+  const s = sigla?.toUpperCase()?.trim() ?? ''
+  
+  if (s === 'PT' || s === 'PSOL' || s === 'PSTU' || s === 'PCB' || s === 'UP' || s === 'REDE') {
+    return {
+      brandColor: '#ef4444',
+      accentColor: '#fca5a5',
+      glowColor: 'rgba(239, 68, 68, 0.08)',
+      brandColorRgb: '239, 68, 68',
+    }
+  }
+  if (s === 'PL' || s === 'PP' || s === 'PRTB' || s === 'PSC' || s === 'REPUBLICANOS') {
+    return {
+      brandColor: '#2563eb',
+      accentColor: '#fbbf24',
+      glowColor: 'rgba(37, 99, 235, 0.08)',
+      brandColorRgb: '37, 99, 235',
+    }
+  }
+  if (s === 'NOVO') {
+    return {
+      brandColor: '#ea580c',
+      accentColor: '#fdba74',
+      glowColor: 'rgba(234, 88, 12, 0.08)',
+      brandColorRgb: '234, 88, 12',
+    }
+  }
+  if (s === 'PV' || s === 'MDB' || s === 'PMDB' || s === 'PSD') {
+    return {
+      brandColor: '#10b981',
+      accentColor: '#6ee7b7',
+      glowColor: 'rgba(16, 185, 129, 0.08)',
+      brandColorRgb: '16, 185, 129',
+    }
+  }
+  if (s === 'UNIÃO' || s === 'UNIAO' || s === 'AVANTE' || s === 'PODE' || s === 'PODEMOS') {
+    return {
+      brandColor: '#8b5cf6',
+      accentColor: '#38bdf8',
+      glowColor: 'rgba(139, 92, 246, 0.08)',
+      brandColorRgb: '139, 92, 246',
+    }
+  }
+  if (s === 'PSB' || s === 'PDT' || s === 'SOLIDARIEDADE' || s === 'CIDADANIA' || s === 'PSDB') {
+    return {
+      brandColor: '#ec4899',
+      accentColor: '#fbcfe8',
+      glowColor: 'rgba(236, 72, 153, 0.08)',
+      brandColorRgb: '236, 72, 153',
+    }
+  }
+  
+  return {
+    brandColor: '#6366f1',
+    accentColor: '#c084fc',
+    glowColor: 'rgba(99, 102, 241, 0.08)',
+    brandColorRgb: '99, 102, 241',
+  }
+}
+
 function iniciais(nome: string) {
   return nome.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('')
 }
@@ -73,19 +140,22 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
   const presencaCor = corPresenca(politico.presenca_pct_atual)
   const presencaPct = politico.presenca_pct_atual ?? 0
   const gastoFormatado = moeda(politico.gasto_total_ano)
+  const theme = getPartyTheme(politico.partidos?.sigla)
 
   return (
     <div
       style={{
         background: 'var(--panel)',
-        border: '1px solid var(--line)',
+        border: hovered ? `1px solid ${theme.brandColor}` : '1px solid var(--line)',
         borderRadius: 16,
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? '0 12px 28px -4px rgba(0,81,213,0.1), 0 4px 8px -2px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.04)',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        boxShadow: hovered 
+          ? `0 12px 28px -4px rgba(${theme.brandColorRgb}, 0.22), 0 4px 8px -2px rgba(0,0,0,0.15)` 
+          : '0 1px 3px rgba(0,0,0,0.04)',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -93,13 +163,13 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
       <Link href={`/politicos/${politico.slug}`} style={{ textDecoration: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
         {/* ── Área da foto ── */}
-        <div style={{ height: 192, position: 'relative', background: 'white', overflow: 'hidden', flexShrink: 0, borderRadius: '16px 16px 0 0', clipPath: 'inset(0 0 0 0 round 16px 16px 0 0)' }}>
+        <div style={{ height: 192, position: 'relative', background: '#090d16', overflow: 'hidden', flexShrink: 0, borderRadius: '16px 16px 0 0', clipPath: 'inset(0 0 0 0 round 16px 16px 0 0)' }}>
           {politico.foto_url ? (
             <Image
               src={politico.foto_url}
               alt={`Foto de ${nomeExibicao}`}
               fill
-              style={{ objectFit: 'contain', objectPosition: 'center top', background: 'white' }}
+              style={{ objectFit: 'contain', objectPosition: 'center top', background: 'linear-gradient(135deg, #1e293b 0%, #090d16 100%)' }}
               unoptimized
             />
           ) : (
@@ -108,7 +178,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
                 width: 88, height: 88, borderRadius: '50%',
                 background: avatarBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '4px solid rgba(255,255,255,0.9)',
+                border: '4px solid #1E293B',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
               }}>
                 <span style={{ fontSize: 30, fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>
@@ -137,7 +207,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
           {/* Nome */}
           <h3 style={{
             margin: '0 0 4px', fontSize: 16, fontWeight: 700, lineHeight: 1.25,
-            color: hovered ? 'var(--brand-2)' : 'var(--ink)',
+            color: hovered ? theme.accentColor : '#F8FAFC',
             transition: 'color 0.15s ease',
           }}>
             {nomeExibicao}
@@ -145,7 +215,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
 
           {/* Partido · UF */}
           <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--ink-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 700, color: 'var(--brand-2)' }}>{politico.partidos?.sigla ?? '—'}</span>
+            <span style={{ fontWeight: 700, color: theme.brandColor }}>{politico.partidos?.sigla ?? '—'}</span>
             <span style={{ opacity: 0.4 }}>·</span>
             {politico.uf ?? '—'}
           </p>
@@ -158,7 +228,7 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
                 {politico.presenca_pct_atual == null ? '–' : `${politico.presenca_pct_atual}%`}
               </span>
             </div>
-            <div style={{ height: 5, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ height: 5, background: '#0F172A', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${presencaPct}%`, background: presencaCor, borderRadius: 3 }} />
             </div>
           </div>

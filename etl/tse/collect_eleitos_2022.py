@@ -348,7 +348,7 @@ def processar_csv(db, csv_stream, uf_filtro: Optional[str], limite: Optional[int
             nome = limpar(row.get('NM_CANDIDATO')) or ''
             nome_urna = limpar(row.get('NM_URNA_CANDIDATO')) or nome
             sq = limpar(row.get('SQ_CANDIDATO')) or ''
-            foto_url = limpar(row.get('URL_FOTO'))
+            foto_url = f'https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura/buscar/foto/2022/2040602022/{sq}' if sq else None
             email = limpar(row.get('NM_EMAIL'))
             data_nasc = parse_data(limpar(row.get('DT_NASCIMENTO')))
             sexo = normalizar_sexo(limpar(row.get('DS_GENERO')))

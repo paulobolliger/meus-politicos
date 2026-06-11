@@ -76,7 +76,7 @@ export function AppHeader() {
             513 deputados monitorados
           </span>
           <a
-            href="https://meuspoliticos.com.br"
+            href="/"
             style={{
               fontSize: 12,
               color: 'var(--ink-3)',

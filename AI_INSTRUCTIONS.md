@@ -20,7 +20,7 @@ Nunca trate mencoes antigas a Supabase Auth ou Stripe como runtime ativo sem con
 | Frontend/backend | Next.js 16.2.6, React 19.2.4, TypeScript |
 | Auth | Logto via `@logto/next` |
 | RBAC | `perfis.role` via PostgreSQL |
-| Banco | PostgreSQL/Supabase acessado diretamente por `pg` |
+| Banco | PostgreSQL (VPS) acessado diretamente por `pg` |
 | Pagamentos | InfinitePay |
 | IA | OpenAI server-side/ETL |
 | ETL | Scripts Python em `etl/**`, sem orquestracao real no admin |

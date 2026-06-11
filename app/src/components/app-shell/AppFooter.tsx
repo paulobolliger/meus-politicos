@@ -20,7 +20,7 @@ export function AppFooter() {
         }}
       >
         <span className="mono" style={{ fontSize: 10.5, color: 'var(--mute)', letterSpacing: '0.06em' }}>
-          MEUS POLITICOS · APP · MIT
+          MEUS POLITICOS · APP · MIT {process.env.NEXT_PUBLIC_APP_VERSION ? `· ${process.env.NEXT_PUBLIC_APP_VERSION}` : ''}
         </span>
         <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           <Link href="/metodologia" style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}>
@@ -29,8 +29,8 @@ export function AppFooter() {
           <Link href="/fontes" style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}>
             Fontes
           </Link>
-          <a href="https://meuspoliticos.com.br" style={{ fontSize: 12, color: 'var(--brand-2)', textDecoration: 'none' }}>
-            &larr; Site publico
+          <a href="/" style={{ fontSize: 12, color: 'var(--brand-2)', textDecoration: 'none' }}>
+            &larr; Voltar ao site
           </a>
         </div>
       </div>

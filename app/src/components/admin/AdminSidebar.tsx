@@ -2,18 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const SIDEBAR_BG = '#0f1f4d'
-const SIDEBAR_HOVER = 'rgba(255,255,255,0.06)'
-const SIDEBAR_ACTIVE = 'rgba(255,255,255,0.10)'
+import {
+  LayoutDashboard,
+  Zap,
+  CheckSquare,
+  Users,
+  BarChart3,
+  Flag,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: '◉', exact: true },
-  { label: 'ETL Monitor', href: '/admin/etl', icon: '⚡' },
-  { label: 'Qualidade', href: '/admin/dados', icon: '✦' },
-  { label: 'Usuários', href: '/admin/usuarios', icon: '👤' },
-  { label: 'Analytics', href: '/admin/analytics', icon: '📊' },
-  { label: 'Feature flags', href: '/admin/flags', icon: '⚑' },
+  { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard size={18} />, exact: true },
+  { label: 'ETL Monitor', href: '/admin/etl', icon: <Zap size={18} /> },
+  { label: 'Qualidade', href: '/admin/dados', icon: <CheckSquare size={18} /> },
+  { label: 'Usuários', href: '/admin/usuarios', icon: <Users size={18} /> },
+  { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} /> },
+  { label: 'Feature flags', href: '/admin/flags', icon: <Flag size={18} /> },
 ]
 
 function isActive(pathname: string, href: string, exact?: boolean) {
@@ -33,10 +37,11 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
       style={{
         width: 220,
         minWidth: 220,
-        background: SIDEBAR_BG,
+        background: 'var(--bg)',
+        borderRight: '1px solid var(--line)',
         display: 'flex',
         flexDirection: 'column',
-        color: '#fff',
+        color: 'var(--ink)',
         fontFamily: 'var(--font-sans)',
       }}
     >
@@ -44,7 +49,7 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
       <div
         style={{
           padding: '20px 16px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid var(--line)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -52,21 +57,21 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
             style={{
               width: 32,
               height: 32,
-              background: '#fff',
+              background: 'var(--brand)',
               borderRadius: 6,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
               fontSize: 18,
-              color: SIDEBAR_BG,
+              color: '#fff',
               flexShrink: 0,
             }}
           >
             M
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2, color: '#fff' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2, color: 'var(--ink)' }}>
               Meus Políticos
             </div>
             <span
@@ -89,37 +94,27 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '8px 0' }}>
+      <nav style={{ flex: 1, padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href, item.exact)
           return (
             <Link
               key={item.href}
               href={item.href}
+              className={`mono sidebar-item ${active ? 'sidebar-item-active' : ''}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
                 padding: '9px 16px',
                 fontSize: 13.5,
-                fontWeight: active ? 600 : 400,
-                color: active ? '#fff' : 'rgba(255,255,255,0.72)',
-                background: active ? SIDEBAR_ACTIVE : 'transparent',
                 textDecoration: 'none',
-                borderRadius: 6,
                 margin: '1px 8px',
-                transition: 'background 0.1s',
-              }}
-              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                if (!active)
-                  e.currentTarget.style.background = SIDEBAR_HOVER
-              }}
-              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                if (!active)
-                  e.currentTarget.style.background = 'transparent'
               }}
             >
-              <span style={{ width: 18, textAlign: 'center', fontSize: 14 }}>{item.icon}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18 }}>
+                {item.icon}
+              </span>
               <span>{item.label}</span>
             </Link>
           )
@@ -130,7 +125,7 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
       <div
         style={{
           padding: '12px 16px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: '1px solid var(--line)',
           fontSize: 12,
         }}
       >
@@ -147,13 +142,14 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
               width: 28,
               height: 28,
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.15)',
+              background: 'var(--line-strong)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 13,
               fontWeight: 600,
               flexShrink: 0,
+              color: 'var(--ink)',
             }}
           >
             {email.charAt(0).toUpperCase()}
@@ -163,7 +159,7 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              color: 'rgba(255,255,255,0.65)',
+              color: 'var(--ink-3)',
               fontSize: 11.5,
             }}
           >
@@ -174,7 +170,7 @@ export function AdminSidebar({ email }: AdminSidebarProps) {
           href="/"
           style={{
             display: 'block',
-            color: 'rgba(255,255,255,0.50)',
+            color: 'var(--ink-3)',
             textDecoration: 'none',
             fontSize: 12,
             padding: '5px 0',

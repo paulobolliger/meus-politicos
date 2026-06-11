@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 
 // ─── Hemicycle (semicírculo de cadeiras da ALE) ──────────────────────────────
 
@@ -48,37 +49,65 @@ export function HemicycleChart({ partidos, total }: { partidos: PartySlice[]; to
   })
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
-      <svg width={240} height={120} viewBox="0 0 240 120" style={{ overflow: 'visible' }}>
-        {slices.map((s, i) => (
-          <path key={i} d={s.d} fill={s.cor} opacity={0.88}>
-            <title>{s.sigla}: {s.qtd} cadeiras</title>
-          </path>
-        ))}
-        {/* Label central */}
-        <text x={cx} y={cy - 8} textAnchor="middle" fontSize="11" fill="var(--ink-3)" fontFamily="var(--font-mono)">
-          TOTAL
-        </text>
-        <text x={cx} y={cy + 6} textAnchor="middle" fontSize="20" fontWeight="700" fill="var(--ink)" fontFamily="var(--font-mono)">
-          {total}
-        </text>
-        <text x={cx} y={cy + 18} textAnchor="middle" fontSize="9" fill="var(--mute)" fontFamily="var(--font-mono)">
-          cadeiras
-        </text>
-      </svg>
-      {/* Legenda */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 120 }}>
-        {slices.slice(0, 8).map((s) => (
-          <div key={s.sigla} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: s.cor, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: 'var(--ink-2)', fontFamily: 'var(--font-mono)', flex: 1 }}>
-              {s.sigla}
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
-              {s.qtd}
-            </span>
-          </div>
-        ))}
+    <div style={{
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-evenly',
+      gap: 24,
+      width: '100%',
+      flexWrap: 'wrap',
+    }}>
+      <div style={{ width: 240, height: 120, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width={240} height={120} viewBox="0 0 240 120" style={{ overflow: 'visible' }}>
+          {slices.map((s, i) => (
+            <path key={i} d={s.d} fill={s.cor} opacity={0.88}>
+              <title>{s.sigla}: {s.qtd} cadeiras</title>
+            </path>
+          ))}
+          {/* Label central ajustado perfeitamente dentro do vão do semicírculo para evitar sobreposição */}
+          <text x={cx} y={cy - 38} textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--ink-3)" fontFamily="var(--font-sans)" style={{ letterSpacing: '0.05em' }}>
+            TOTAL
+          </text>
+          <text x={cx} y={cy - 15} textAnchor="middle" fontSize="26" fontWeight="800" fill="var(--ink)" fontFamily="var(--font-sans)">
+            {total}
+          </text>
+          <text x={cx} y={cy - 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--mute)" fontFamily="var(--font-sans)" style={{ letterSpacing: '0.05em' }}>
+            CADEIRAS
+          </text>
+        </svg>
+      </div>
+      {/* Legenda com cápsulas/chips auto-wrap de alto contraste para evitar espaços vazios e desalinhamento */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 8,
+        flex: 1,
+        minWidth: 260,
+        justifyContent: 'center',
+      }}>
+        {partidos.slice(0, 12).map((p) => {
+          const sCor = p.cor || partyColor(p.sigla)
+          return (
+            <div key={p.sigla} style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 8px',
+              background: 'var(--bg)',
+              borderRadius: 6,
+              border: '1px solid var(--line-soft)',
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: sCor, flexShrink: 0 }} />
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink-2)', fontFamily: 'var(--font-sans)' }}>
+                {p.sigla}
+              </span>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', background: 'var(--panel)', padding: '1px 6px', borderRadius: 4 }}>
+                {p.qtd}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -176,10 +205,10 @@ export function PactoFederativoFlow({ data }: { data: PactoData }) {
 
 export function PartyBar({ partidos, total }: { partidos: PartySlice[]; total: number }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* Stacked bar */}
-      <div style={{ display: 'flex', height: 12, borderRadius: 999, overflow: 'hidden', width: '100%' }}>
-        {partidos.slice(0, 10).map((p) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Stacked bar premium */}
+      <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden', width: '100%', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)' }}>
+        {partidos.slice(0, 12).map((p) => (
           <div
             key={p.sigla}
             style={{
@@ -191,13 +220,32 @@ export function PartyBar({ partidos, total }: { partidos: PartySlice[]; total: n
           />
         ))}
       </div>
-      {/* Partido rows */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 4 }}>
-        {partidos.slice(0, 10).map((p) => (
-          <div key={p.sigla} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: p.cor || partyColor(p.sigla), flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: 'var(--ink-2)', fontFamily: 'var(--font-mono)' }}>{p.sigla}</span>
-            <span style={{ fontSize: 11, color: 'var(--mute)', fontFamily: 'var(--font-mono)', marginLeft: 'auto' }}>{p.qtd}</span>
+      {/* Partido rows com cápsulas/chips auto-wrap de alto contraste para evitar espaços vazios e desalinhamento */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 8,
+        width: '100%',
+        marginTop: 4,
+      }}>
+        {partidos.slice(0, 12).map((p) => (
+          <div
+            key={p.sigla}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 8px',
+              background: 'var(--bg)',
+              borderRadius: 6,
+              border: '1px solid var(--line-soft)',
+            }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.cor || partyColor(p.sigla), flexShrink: 0 }} />
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink-2)', fontFamily: 'var(--font-sans)' }}>{p.sigla}</span>
+            <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', background: 'var(--panel)', padding: '1px 6px', borderRadius: 4 }}>
+              {p.qtd}
+            </span>
           </div>
         ))}
       </div>
@@ -279,6 +327,7 @@ type TimelineItem = {
   mes: number | null
   titulo: string
   descricao: string | null
+  descricaoNode?: React.ReactNode
   tipo: string | null
   impacto: string | null
 }
@@ -319,10 +368,10 @@ export function TimelinePolitica({ items }: { items: TimelineItem[] }) {
                 {item.tipo && ` · ${TIPO_ICON[item.tipo] ?? '📌'} ${item.tipo.toUpperCase()}`}
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{item.titulo}</div>
-              {item.descricao && (
-                <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-                  {item.descricao}
-                </p>
+              {(item.descricaoNode || item.descricao) && (
+                <div style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--ink-3)', lineHeight: 1.55 }}>
+                  {item.descricaoNode || item.descricao}
+                </div>
               )}
             </div>
           )
@@ -396,3 +445,162 @@ export function StateAnchorNav({ cor }: { cor: string }) {
     </nav>
   )
 }
+
+// ─── Bancada Federal Wrapper (Alternância de visualização) ───────────────────
+
+type PoliticoRowClient = {
+  id: string
+  slug: string
+  nome_eleitoral: string
+  foto_url: string | null
+  cargo: string
+  partidos: { sigla: string } | null
+}
+
+export function BancadaFederalList({
+  depFederais,
+  bancadaPartidos,
+  cor
+}: {
+  depFederais: PoliticoRowClient[]
+  bancadaPartidos: { sigla: string; qtd: number; cor: string }[]
+  cor: string
+}) {
+  const [viewMode, setViewMode] = useState<'grid' | 'party'>('grid')
+
+  // Grouping by party
+  const groupedByParty = new Map<string, PoliticoRowClient[]>()
+  depFederais.forEach((d) => {
+    const p = d.partidos?.sigla ?? 'Outros'
+    if (!groupedByParty.has(p)) {
+      groupedByParty.set(p, [])
+    }
+    groupedByParty.get(p)!.push(d)
+  })
+
+  // Order parties by headcount (highest first) as in bancadaPartidos
+  const sortedParties = bancadaPartidos.map(bp => bp.sigla)
+
+  return (
+    <div>
+      {/* Visual switcher tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <button
+          onClick={() => setViewMode('grid')}
+          style={{
+            padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+            border: `1px solid ${viewMode === 'grid' ? cor : 'var(--line)'}`,
+            background: viewMode === 'grid' ? `${cor}15` : 'transparent',
+            color: viewMode === 'grid' ? cor : 'var(--ink-3)',
+            cursor: 'pointer', outline: 'none',
+            transition: 'all 0.15s',
+          }}
+        >
+          🎛️ Visualização em Grade
+        </button>
+        <button
+          onClick={() => setViewMode('party')}
+          style={{
+            padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+            border: `1px solid ${viewMode === 'party' ? cor : 'var(--line)'}`,
+            background: viewMode === 'party' ? `${cor}15` : 'transparent',
+            color: viewMode === 'party' ? cor : 'var(--ink-3)',
+            cursor: 'pointer', outline: 'none',
+            transition: 'all 0.15s',
+          }}
+        >
+          🏛️ Agrupado por Partido
+        </button>
+      </div>
+
+      {viewMode === 'grid' ? (
+        // Grid View
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8 }}>
+          {depFederais.map((d) => (
+            <Link key={d.id} href={`/p/${d.slug}`} style={{ textDecoration: 'none' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                borderRadius: 8, background: 'var(--bg)', border: '1px solid var(--line)',
+                transition: 'border-color 0.15s',
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
+                  background: 'var(--line)', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                }}>
+                  {d.foto_url
+                    ? <img src={d.foto_url} alt={d.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : d.nome_eleitoral.charAt(0)
+                  }
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontSize: 11.5, color: 'var(--ink)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {d.nome_eleitoral}
+                  </div>
+                  {d.partidos?.sigla && (
+                    <div style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
+                      {d.partidos.sigla}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        // Party Grouped View
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {sortedParties.map((partySigla) => {
+            const list = groupedByParty.get(partySigla) || []
+            if (list.length === 0) return null;
+            const partyInfo = bancadaPartidos.find(bp => bp.sigla === partySigla)
+            const pCor = partyInfo?.cor ?? '#94a3b8'
+            return (
+              <div key={partySigla} style={{
+                border: '1px solid var(--line)', borderRadius: 12, padding: 16,
+                background: 'rgba(255,255,255,0.01)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: pCor }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                    {partySigla}
+                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
+                    ({list.length} deputado{list.length !== 1 ? 's' : ''})
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8 }}>
+                  {list.map((d) => (
+                    <Link key={d.id} href={`/p/${d.slug}`} style={{ textDecoration: 'none' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                        borderRadius: 8, background: 'var(--bg)', border: '1px solid var(--line)',
+                      }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
+                          background: 'var(--line)', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                        }}>
+                          {d.foto_url
+                            ? <img src={d.foto_url} alt={d.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : d.nome_eleitoral.charAt(0)
+                          }
+                        </div>
+                        <div style={{ overflow: 'hidden' }}>
+                          <div style={{ fontSize: 11.5, color: 'var(--ink)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {d.nome_eleitoral}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+

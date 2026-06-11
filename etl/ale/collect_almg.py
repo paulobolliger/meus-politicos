@@ -45,7 +45,7 @@ def collect_deputados(conn) -> int:
     em registros já existentes (criados via TSE 2022).
     """
     log.info("[ALMG] Coletando lista de deputados...")
-    dados = get_json(f'{BASE_URL}/deputados')
+    dados = get_json(f'{BASE_URL}/deputados/em_exercicio')
     if not dados:
         log.error("[ALMG] Falha ao buscar deputados")
         return 0
@@ -323,8 +323,8 @@ def collect_despesas(conn, anos: list[int]) -> int:
                 if date(ano, mes, 1) > date.today().replace(day=1):
                     break
 
-                url = f'{BASE_URL}/deputados/{id_ale}/verba-indenizatoria'
-                dados = get_json(url, params={'ano': ano, 'mes': mes})
+                url = f'{BASE_URL}/prestacao_contas/verbas_indenizatorias/deputados/{id_ale}/{ano}/{mes}'
+                dados = get_json(url)
                 if not dados:
                     continue
 
@@ -332,25 +332,27 @@ def collect_despesas(conn, anos: list[int]) -> int:
 
                 batch = []
                 for item in itens:
-                    valor_str = str(item.get('valor') or item.get('valorTotal') or '0')
-                    try:
-                        valor = float(valor_str.replace(',', '.').replace('R$', '').strip())
-                    except ValueError:
-                        continue
-                    if valor <= 0:
-                        continue
+                    detalhes = item.get('listaDetalheVerba') or [item]
+                    for det in detalhes:
+                        valor_str = str(det.get('valor') or det.get('valorTotal') or det.get('valorReembolsado') or '0')
+                        try:
+                            valor = float(valor_str.replace(',', '.').replace('R$', '').strip())
+                        except ValueError:
+                            continue
+                        if valor <= 0:
+                            continue
 
-                    categoria_raw = item.get('natureza') or item.get('categoria') or item.get('tipo') or 'outros'
-                    fornecedor = (item.get('fornecedor') or item.get('empresa') or '')[:200]
-                    cnpj = (item.get('cnpj') or item.get('cpfCnpj') or '')[:20]
-                    id_item = str(item.get('id') or item.get('idDespesa') or '')
-                    source_rec = f'{id_ale}_{ano}_{mes}_{id_item}'
+                        categoria_raw = det.get('descTipoDespesa') or det.get('descritivoNatureza') or det.get('natureza') or det.get('categoria') or det.get('tipo') or 'outros'
+                        fornecedor = (det.get('nomeEmitente') or det.get('fornecedor') or det.get('empresa') or '')[:200]
+                        cnpj = (det.get('cnpjEmitente') or det.get('cnpj') or det.get('cpfCnpj') or '')[:20]
+                        id_item = str(det.get('id') or det.get('idDespesa') or '')
+                        source_rec = f'{id_ale}_{ano}_{mes}_{id_item}'
 
-                    batch.append((
-                        politico_id, ano, mes, valor,
-                        categoria_raw[:100], fornecedor, cnpj or None,
-                        FONTE, source_rec
-                    ))
+                        batch.append((
+                            politico_id, ano, mes, valor,
+                            categoria_raw[:100], fornecedor, cnpj or None,
+                            FONTE, source_rec
+                        ))
 
                 if batch:
                     with conn.cursor() as cur:

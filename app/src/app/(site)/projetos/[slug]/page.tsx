@@ -2,24 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
+import { IAPerguntaProjeto } from '@/components/projetos/IAPerguntaProjeto'
+import { TabelaVotosIndividuais } from '@/components/projetos/TabelaVotosIndividuais'
+import { GlossaryHighlighter } from '@/components/glossario/GlossaryHighlighter'
 
 type PageProps = {
   params: Promise<{ slug: string }>
-}
-
-// ── Postgres direto ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? '5433'),
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    connectionTimeoutMillis: 4000,
-  })
-  return _pool
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -73,10 +62,10 @@ type TramitacaoPg = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const TIPO_LABEL: Record<string, string> = {
   PL:  'Projeto de Lei',
-  PEC: 'Proposta de Emenda a Constituicao',
+  PEC: 'Proposta de Emenda à Constituição',
   PLP: 'Projeto de Lei Complementar',
   PDL: 'Projeto de Decreto Legislativo',
-  MPV: 'Medida Provisoria',
+  MPV: 'Medida Provisória',
 }
 
 const CARGO_LABEL: Record<string, string> = {
@@ -105,15 +94,15 @@ function situacaoInfo(s: string | null): SituacaoInfo {
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const { rows } = await getPool().query<Pick<ProposicaoPg, 'tipo' | 'numero' | 'ano' | 'ementa'>>(
+  const { rows } = await getPgPool().query<Pick<ProposicaoPg, 'tipo' | 'numero' | 'ano' | 'ementa'>>(
     `SELECT tipo, numero, ano, ementa FROM proposicoes WHERE slug = $1 LIMIT 1`,
     [slug]
   )
-  if (!rows[0]) return { title: 'Projeto nao encontrado' }
+  if (!rows[0]) return { title: 'Projeto não encontrado' }
   const { tipo, numero, ano, ementa } = rows[0]
   const titulo = `${tipo} ${numero}/${ano}`
   return {
-    title: `${titulo} - Meus Politicos`,
+    title: `${titulo} - Meus Políticos`,
     description: ementa?.slice(0, 160) ?? `Detalhes do ${TIPO_LABEL[tipo] ?? tipo}`,
   }
 }
@@ -121,7 +110,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default async function ProjetoDetalhe({ params }: PageProps) {
   const { slug } = await params
-  const pool = getPool()
+  const pool = getPgPool()
 
   const [propResult, autoresResult, tramitacoesResult] = await Promise.all([
     pool.query<ProposicaoPg>(
@@ -197,6 +186,34 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
   )
   const votacoesPartido = votacoesResult.rows
 
+  const votosIndividuaisResult = await pool.query<{
+    politico_id: string
+    nome_eleitoral: string
+    partido: string | null
+    uf: string | null
+    foto_url: string | null
+    voto: string
+    slug: string
+  }>(
+    `SELECT pol.id AS politico_id, pol.nome_eleitoral, pt.sigla AS partido, pol.uf, pol.foto_url, v.voto, pol.slug
+     FROM votacoes v
+     JOIN politicos pol ON pol.id = v.politico_id
+     LEFT JOIN partidos pt ON pt.id = pol.partido_id
+     WHERE v.proposicao = $1
+       AND v.proposicao_id = $2
+     ORDER BY pol.nome_eleitoral ASC`,
+    [propRef, ultimaSessao?.proposicao_id ?? '']
+  )
+  const votosIndividuais = votosIndividuaisResult.rows.map((row) => ({
+    politico_id: row.politico_id,
+    nome_eleitoral: row.nome_eleitoral,
+    partido: row.partido,
+    uf: row.uf,
+    foto_url: row.foto_url,
+    voto: row.voto,
+    slug: row.slug,
+  }))
+
   const sit = situacaoInfo(proposicao.situacao)
   const tipoLabel = TIPO_LABEL[proposicao.tipo] ?? proposicao.tipo
   const tituloCompleto = `${proposicao.tipo} ${proposicao.numero}/${proposicao.ano}`
@@ -208,8 +225,18 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
     : null
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px 80px' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient top glow */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 1200, height: 400,
+        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 32px 80px', position: 'relative', zIndex: 1 }}>
 
         {/* ── Grid único: conteúdo principal + sidebar sticky ─────────────────── */}
         <div className="projeto-grid" style={{
@@ -221,6 +248,17 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
 
           {/* ══ COLUNA PRINCIPAL ══════════════════════════════════════════════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+            {/* Breadcrumb */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <Link href="/projetos" style={{ fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none' }} className="hover:text-white transition-colors">
+                Projetos
+              </Link>
+              <span style={{ fontSize: 11, color: 'var(--line-strong)', userSelect: 'none' }}>/</span>
+              <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>
+                {proposicao.tipo} {proposicao.numero}/{proposicao.ano}
+              </span>
+            </div>
 
             {/* ── Hero: badge + h1 + ementa + resumo + IA ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -258,14 +296,14 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
                   margin: '0 0 20px', fontSize: 13, lineHeight: 1.65,
                   color: 'var(--ink-3)', fontStyle: 'italic',
                 }}>
-                  {proposicao.ementa}
+                  <GlossaryHighlighter>{proposicao.ementa}</GlossaryHighlighter>
                 </p>
               )}
 
               {/* Em Resumo */}
               {proposicao.frases_chave && proposicao.frases_chave.length > 0 && (
                 <div style={{
-                  background: 'white', border: '1px solid #c6c6cd',
+                  background: 'var(--panel)', border: '1px solid var(--line)',
                   borderRadius: 12, padding: '20px 22px', marginBottom: 16,
                 }}>
                   <div style={{
@@ -278,51 +316,23 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
                       <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, lineHeight: 1.5, color: 'var(--ink)' }}>
                         <span style={{
                           flexShrink: 0, marginTop: 1, width: 22, height: 22, borderRadius: '50%',
-                          background: '#e5eeff', color: 'var(--brand-2)',
+                          background: 'var(--brand-soft)', color: 'var(--brand)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 11, fontWeight: 800,
                         }}>{i + 1}</span>
-                        {frase}
+                        <GlossaryHighlighter>{frase}</GlossaryHighlighter>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              {/* IA box */}
-              <div style={{
-                background: '#eff4ff', border: '1px solid #c6c6cd',
-                borderLeft: '4px solid var(--brand-2)',
-                borderRadius: '0 12px 12px 0', padding: '20px 22px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 18 }}>🧠</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand-2)', letterSpacing: '-0.01em' }}>
-                    Inteligência Cívica (IA)
-                  </span>
-                </div>
-                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                  Tem dúvidas sobre este projeto? Pergunte à nossa IA em linguagem simples.
-                </p>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <input type="text"
-                    placeholder="Ex: Como isso afeta minha conta de água?"
-                    readOnly
-                    style={{
-                      width: '100%', background: 'white', border: '1px solid #c6c6cd',
-                      borderRadius: 8, padding: '9px 44px 9px 14px', fontSize: 13,
-                      color: 'var(--ink)', outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'var(--font-sans)',
-                    }}
-                  />
-                  <span style={{ position: 'absolute', right: 10, fontSize: 18, color: 'var(--brand-2)', cursor: 'pointer' }}>➤</span>
-                </div>
-              </div>
+
             </div>
 
             {/* ── Tramitação ── */}
             <section style={{
-              background: 'white', border: '1px solid #c6c6cd',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 12, padding: '28px 28px 12px',
             }}>
               <h2 style={{ margin: '0 0 28px', fontSize: 18, fontWeight: 700, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -331,7 +341,7 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
               <div style={{ position: 'relative' }}>
                 <div style={{
                   position: 'absolute', left: 20, top: 0, bottom: 0,
-                  width: 2, background: '#e5e7eb',
+                  width: 2, background: 'var(--line)',
                   transform: 'translateX(-50%)', zIndex: 0,
                 }} />
                 {tramitacoes.length > 0 ? (
@@ -382,11 +392,14 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
 
             {/* ── Votação ── */}
             {votacoesPartido.length > 0 ? (
-              <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} dataSessao={ultimaSessao?.data ?? null} />
+              <div className="space-y-6">
+                <VotacoesTable rows={votacoesPartido} tituloCompleto={tituloCompleto} dataSessao={ultimaSessao?.data ?? null} />
+                <TabelaVotosIndividuais votos={votosIndividuais} />
+              </div>
             ) : (
-              <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, overflow: 'hidden' }}>
+              <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
                 <div style={{
-                  background: '#eff4ff', borderBottom: '1px solid #c6c6cd',
+                  background: 'var(--bg-2)', borderBottom: '1px solid var(--line)',
                   padding: '20px 28px', display: 'flex',
                   alignItems: 'center', justifyContent: 'space-between', gap: 16,
                 }}>
@@ -425,57 +438,11 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
             display: 'flex', flexDirection: 'column', gap: 16,
           }}>
 
-            {/* Status */}
-            <section style={{
-              background: 'white', border: '1px solid #c6c6cd',
-              borderRadius: 12, padding: '22px',
-            }}>
-              <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
-                color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
-                textTransform: 'uppercase', marginBottom: 14,
-              }}>Status Atual</div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: sit.dot }} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>
-                  {proposicao.situacao && proposicao.situacao.length < 60 ? proposicao.situacao : sit.label}
-                </span>
-              </div>
-
-              {proposicao.situacao && proposicao.situacao.length >= 60 && (
-                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
-                  {proposicao.situacao.length > 140 ? proposicao.situacao.slice(0, 140) + '…' : proposicao.situacao}
-                </p>
-              )}
-              {dataApresentacao && (
-                <p style={{ margin: '0 0 18px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.4 }}>
-                  Apresentado em {dataApresentacao}{casaLabel ? ` — ${casaLabel}` : ''}
-                </p>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Link href="/login" style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '12px 16px', background: 'var(--brand-2)', color: '#fff',
-                  borderRadius: 8, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-                }}>🔔 Seguir Projeto</Link>
-                {(proposicao.link_camara ?? proposicao.link_senado) && (
-                  <a href={(proposicao.link_camara ?? proposicao.link_senado)!}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '10px 16px', background: 'transparent', color: 'var(--ink-2)',
-                      borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                      border: '1px solid #c6c6cd',
-                    }}
-                  >Ver Documento Original</a>
-                )}
-              </div>
-            </section>
+            {/* Inteligência Cívica (IA) */}
+            <IAPerguntaProjeto projetoId={proposicao.id} tituloProjeto={propRef} />
 
             {/* Autoria */}
-            <section style={{ background: '#131b2e', borderRadius: 12, padding: '22px' }}>
+            <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: '22px' }}>
               <h2 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.02em' }}>
                 {autores.length > 1 ? `Autoria (${autores.length})` : 'Autoria'}
               </h2>
@@ -529,8 +496,57 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
               )}
             </section>
 
+            {/* Status */}
+            <section style={{
+              background: 'var(--panel)', border: '1px solid var(--line)',
+              borderRadius: 12, padding: '22px',
+            }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
+                color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
+                textTransform: 'uppercase', marginBottom: 14,
+              }}>Status Atual</div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: sit.dot }} />
+                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.25 }}>
+                  {proposicao.situacao && proposicao.situacao.length < 60 ? proposicao.situacao : sit.label}
+                </span>
+              </div>
+
+              {proposicao.situacao && proposicao.situacao.length >= 60 && (
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                  {proposicao.situacao.length > 140 ? proposicao.situacao.slice(0, 140) + '…' : proposicao.situacao}
+                </p>
+              )}
+              {dataApresentacao && (
+                <p style={{ margin: '0 0 18px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.4 }}>
+                  Apresentado em {dataApresentacao}{casaLabel ? ` — ${casaLabel}` : ''}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Link href="/login" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '12px 16px', background: 'var(--brand-2)', color: '#fff',
+                  borderRadius: 8, fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                }}>🔔 Seguir Projeto</Link>
+                {(proposicao.link_camara ?? proposicao.link_senado) && (
+                  <a href={(proposicao.link_camara ?? proposicao.link_senado)!}
+                    target="_blank" rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '10px 16px', background: 'transparent', color: 'var(--ink-2)',
+                      borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                      border: '1px solid var(--line)',
+                    }}
+                  >Ver Documento Original</a>
+                )}
+              </div>
+            </section>
+
             {/* Documentos */}
-            <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, padding: '20px 22px' }}>
+            <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: '20px 22px' }}>
               <div style={{
                 fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
                 color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
@@ -563,6 +579,12 @@ export default async function ProjetoDetalhe({ params }: PageProps) {
           .projeto-grid aside { position: static !important; }
         }
         .autor-row:hover { background: rgba(255,255,255,0.08) !important; }
+        .vot-row {
+          transition: background 0.15s ease;
+        }
+        .vot-row:hover {
+          background: rgba(255, 255, 255, 0.02) !important;
+        }
       ` }} />
     </div>
   )
@@ -585,8 +607,10 @@ function TimelineItem({ data, titulo, descricao, status, dotColor, urlDocumento 
         position: 'absolute', left: 0, top: 0,
         width: 40, height: 40, borderRadius: '50%',
         background: bg,
-        border: '4px solid white',
-        boxShadow: '0 0 0 2px #c6c6cd',
+        border: '4px solid var(--bg)',
+        boxShadow: status === 'current'
+          ? `0 0 0 2px var(--line), 0 0 12px ${bg}`
+          : '0 0 0 2px var(--line)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, zIndex: 1,
       }}>
@@ -607,7 +631,9 @@ function TimelineItem({ data, titulo, descricao, status, dotColor, urlDocumento 
           {titulo}
         </h4>
         {descricao && (
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>{descricao}</p>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55 }}>
+            <GlossaryHighlighter>{descricao}</GlossaryHighlighter>
+          </p>
         )}
         {urlDocumento && (
           <a href={urlDocumento} target="_blank" rel="noopener noreferrer"
@@ -633,10 +659,10 @@ function VotacoesTable({ rows, tituloCompleto, dataSessao }: { rows: VotacaoPart
   }
 
   return (
-    <section style={{ background: 'white', border: '1px solid #c6c6cd', borderRadius: 12, overflow: 'hidden' }}>
+    <section style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
-        background: '#eff4ff', borderBottom: '1px solid #c6c6cd',
+        background: 'var(--bg-2)', borderBottom: '1px solid var(--line)',
         padding: '20px 28px', display: 'flex', flexWrap: 'wrap',
         alignItems: 'center', justifyContent: 'space-between', gap: 16,
       }}>
@@ -665,14 +691,14 @@ function VotacoesTable({ rows, tituloCompleto, dataSessao }: { rows: VotacaoPart
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
-            <tr style={{ background: 'rgba(211,228,254,0.3)' }}>
+            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
               {['Bancada / Partido', 'Orientação', 'Sim', 'Não', 'Abs', 'Engajamento'].map(h => (
                 <th key={h} style={{
                   padding: '10px 20px',
                   textAlign: h === 'Bancada / Partido' || h === 'Orientação' ? 'left' : 'center',
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
                   color: 'var(--ink)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
-                  borderBottom: '1px solid #c6c6cd',
+                  borderBottom: '1px solid var(--line)',
                 }}>{h}</th>
               ))}
             </tr>
@@ -683,7 +709,7 @@ function VotacoesTable({ rows, tituloCompleto, dataSessao }: { rows: VotacaoPart
               const pct = tot > 0 ? Math.round((Number(row.sim) / tot) * 100) : 0
               const ori = orientacao(row)
               return (
-                <tr key={row.sigla ?? 'sem-partido'} style={{ borderBottom: '1px solid #e5e7eb' }}
+                <tr key={row.sigla ?? 'sem-partido'} style={{ borderBottom: '1px solid var(--line)' }}
                   className="vot-row">
                   <td style={{ padding: '13px 20px', fontWeight: 700, color: 'var(--ink)' }}>
                     {row.sigla ?? 'Sem partido'}
@@ -702,7 +728,7 @@ function VotacoesTable({ rows, tituloCompleto, dataSessao }: { rows: VotacaoPart
                   <td style={{ padding: '13px 20px', textAlign: 'center', color: '#EF4444', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.nao}</td>
                   <td style={{ padding: '13px 20px', textAlign: 'center', color: '#F59E0B', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{row.abstencao}</td>
                   <td style={{ padding: '13px 20px' }}>
-                    <div style={{ background: '#c6c6cd', height: 6, borderRadius: 3, overflow: 'hidden', minWidth: 80 }}>
+                    <div style={{ background: 'var(--line)', height: 6, borderRadius: 3, overflow: 'hidden', minWidth: 80 }}>
                       <div style={{ background: 'var(--brand-2)', height: '100%', width: `${pct}%` }} />
                     </div>
                   </td>
@@ -727,7 +753,7 @@ function DocLink({ href, label }: { href: string; label: string }) {
         padding: '10px 4px', borderRadius: 6,
         fontSize: 13, color: 'var(--brand-2)', fontWeight: 500,
         textDecoration: 'none',
-        borderBottom: '1px solid #f3f4f6',
+        borderBottom: '1px solid var(--line)',
       }}
     >
       📄 <span style={{ textDecoration: 'underline' }}>{label}</span>

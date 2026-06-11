@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { GlossaryTooltip } from '@/components/civic'
 
 import { BotaoAcompanhar } from '@/components/politico/BotaoAcompanhar'
 
@@ -50,10 +51,13 @@ export type PerfilSiteData = {
     uf_municipio: string | null
     funcao: string | null
     ano: number | null
+    tipo_emenda?: string | null
   }[]
   aba: string
   isSeguindo?: boolean
   followIntent?: boolean
+  emendasPixActive?: boolean
+  expliqueVotacaoActive?: boolean
 }
 
 // ─── helpers ───────────────────────────────────────────────────────────────
@@ -115,7 +119,7 @@ function initials(nome: string) {
 
 // ─── component ─────────────────────────────────────────────────────────────
 
-export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, emendas, aba, isSeguindo, followIntent }: PerfilSiteData) {
+export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, emendas, aba, isSeguindo, followIntent, emendasPixActive, expliqueVotacaoActive }: PerfilSiteData) {
   const nome        = politico.nome_eleitoral ?? politico.nome ?? 'Político'
   const sigla       = partido?.sigla ?? '—'
   const cargoLabel  = CARGO_LABEL[politico.cargo ?? ''] ?? politico.cargo ?? '—'
@@ -149,6 +153,8 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
     : null
 
   const totalEmendas = emendas.reduce((s, e) => s + (e.valor_pago ?? e.valor ?? 0), 0)
+  const emendasPix = emendas.filter(e => e.tipo_emenda === 'pix')
+  const totalPix = emendasPix.reduce((s, e) => s + (e.valor_pago ?? e.valor ?? 0), 0)
 
   const activeTab = TABS.find(t => t.id === aba)?.id ?? 'votacoes'
 
@@ -207,19 +213,21 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
 
       {/* ── STATS BAR ── */}
       <div style={{ maxWidth: 1100, margin: '-28px auto 0', padding: '0 24px' }}>
-        <div style={{
-          background: 'var(--panel)', border: '1.5px solid var(--line)',
-          borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          overflow: 'hidden',
-        }}>
+        <div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          style={{
+            background: 'var(--panel)', border: '1.5px solid var(--line)',
+            borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+            overflow: 'hidden',
+          }}
+        >
           {[
             { label: 'Presença nas votações', value: presencaPct != null ? `${presencaPct.toFixed(0)}%` : '—', color: presencaPct != null ? (presencaPct >= 75 ? 'var(--pos)' : presencaPct >= 50 ? 'var(--warn)' : 'var(--neg)') : 'var(--ink)' },
             { label: 'Gasto da cota / ano',   value: gastoAno != null ? fmt(gastoAno) : '—', color: 'var(--ink)' },
             { label: 'Votações registradas',  value: totalVotacoes ? totalVotacoes.toLocaleString('pt-BR') : '—', color: 'var(--ink)' },
             { label: 'Custo est. do mandato', value: custoTotal > 0 ? fmt(custoTotal) : '—', color: 'var(--ink)' },
           ].map((s, i) => (
-            <div key={i} style={{ padding: '16px 20px', borderLeft: i > 0 ? '1px solid var(--line-soft)' : 'none' }}>
+            <div key={i} className="kpi-stat-item" style={{ padding: '16px 20px' }}>
               <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 500 }}>{s.label}</div>
               <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: s.color }}>{s.value}</div>
             </div>
@@ -230,7 +238,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
       {/* ── CUSTO DO MANDATO ── */}
       {custoTotal > 0 && (
         <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px' }}>
-          <div style={{ background: 'var(--brand-soft)', border: '1px solid rgba(29,58,138,0.2)', borderRadius: 10, padding: '16px 20px' }}>
+          <div style={{ background: 'var(--brand-soft)', border: '1px solid rgba(29,58,138,0.2)', borderRadius: 16, padding: '16px 20px' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--brand)' }}>
               Este mandato custou aproximadamente {fmt(custoTotal)} aos contribuintes
             </div>
@@ -281,15 +289,36 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
             {votacoes.length === 0 ? <EmptyState msg="Nenhuma votação registrada ainda." /> : (
               <>
                 <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Últimas {votacoes.length} votações</div>
-                <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', overflow: 'hidden' }}>
+                <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {votacoes.map((v, i) => {
                     const cfg = VOTO_CONFIG[v.voto ?? ''] ?? { label: v.voto ?? '—', bg: 'var(--bg-2)', color: 'var(--ink-3)' }
                     const data = v.data ? new Date(v.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
                     return (
-                      <div key={v.id} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', borderBottom: i < votacoes.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
-                        <div style={{ fontSize: 11, color: 'var(--ink-3)', width: 72, flexShrink: 0, fontFamily: 'var(--font-mono)' }}>{data}</div>
-                        <div style={{ flex: 1, fontSize: 13, color: 'var(--ink)', lineHeight: 1.4 }}>{v.descricao_simples ?? v.proposicao ?? '(sem descrição)'}</div>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', height: 24, padding: '0 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: cfg.bg, color: cfg.color, flexShrink: 0 }}>
+                      <div key={v.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:py-3 sm:px-4 border-b border-[var(--line-soft)] last:border-b-0 sm:items-center">
+                        <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto flex-shrink-0">
+                          <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>{data}</span>
+                          <span className="sm:hidden" style={{ display: 'inline-flex', alignItems: 'center', height: 24, padding: '0 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: cfg.bg, color: cfg.color, flexShrink: 0 }}>
+                            {cfg.label}
+                          </span>
+                        </div>
+                        <div style={{ flex: 1, fontSize: 13, color: 'var(--ink)', lineHeight: 1.4 }}>
+                          <div>{v.proposicao ?? '(sem descrição)'}</div>
+                          {expliqueVotacaoActive && v.descricao_simples && (
+                            <details style={{ marginTop: 6, cursor: 'pointer' }}>
+                              <summary style={{ fontSize: 11, color: 'var(--brand-2)', fontWeight: 600, userSelect: 'none' }}>
+                                ✨ Explicar Lei (IA)
+                              </summary>
+                              <div style={{
+                                marginTop: 6, padding: '10px 14px', borderRadius: 8,
+                                background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.2)',
+                                color: 'var(--ink-2)', fontSize: 12.5, lineHeight: 1.5,
+                              }}>
+                                {v.descricao_simples}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                        <span className="hidden sm:inline-flex" style={{ display: 'inline-flex', alignItems: 'center', height: 24, padding: '0 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: cfg.bg, color: cfg.color, flexShrink: 0 }}>
                           {cfg.label}
                         </span>
                       </div>
@@ -307,8 +336,8 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
           <>
             {gastosOrdenados.length === 0 ? <EmptyState msg="Nenhum gasto registrado para este ano." /> : (
               <>
-                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Cota parlamentar (CEAP) — {new Date().getFullYear()}</div>
-                <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', overflow: 'hidden' }}>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Cota parlamentar (<GlossaryTooltip term="CEAP">CEAP</GlossaryTooltip>) — {new Date().getFullYear()}</div>
+                <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {gastosOrdenados.map(([cat, valor], i) => {
                     const pct = totalGasto > 0 ? (valor / totalGasto) * 100 : 0
                     return (
@@ -324,7 +353,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                     )
                   })}
                 </div>
-                <div style={{ marginTop: 12, padding: '12px 16px', background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: 12, padding: '12px 16px', background: 'var(--panel)', borderRadius: 12, border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 13, fontWeight: 700 }}>Total {new Date().getFullYear()}</span>
                   <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmt(totalGasto)}</span>
                 </div>
@@ -340,7 +369,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
             {presencaRows.length === 0 ? <EmptyState msg="Dados de presença não disponíveis ainda." /> : (
               <>
                 {presencaMedia != null && (
-                  <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', padding: '20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', padding: '20px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 20 }}>
                     <div>
                       <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Média do período</div>
                       <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.04em', color: presencaMedia >= 75 ? 'var(--pos)' : presencaMedia >= 50 ? 'var(--warn)' : 'var(--neg)' }}>
@@ -354,21 +383,30 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                     </div>
                   </div>
                 )}
-                <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', overflow: 'hidden' }}>
+                <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {presencaRows.map((p, i) => {
                     const pct = p.percentual ?? 0
                     const mesNome = p.mes ? new Date(2020, p.mes - 1).toLocaleString('pt-BR', { month: 'long' }) : '—'
                     return (
-                      <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '10px 16px', borderBottom: i < presencaRows.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
-                        <div style={{ fontSize: 12, color: 'var(--ink-3)', width: 120, flexShrink: 0, textTransform: 'capitalize' }}>{mesNome} {p.ano}</div>
-                        <div style={{ flex: 1, height: 6, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: pct >= 75 ? 'var(--pos)' : pct >= 50 ? 'var(--warn)' : 'var(--neg)', borderRadius: 3 }} />
+                      <div key={i} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:py-2.5 sm:px-4 border-b border-[var(--line-soft)] last:border-b-0 sm:items-center">
+                        <div className="flex items-center justify-between sm:w-32 sm:flex-shrink-0">
+                          <span style={{ fontSize: 12, color: 'var(--ink-3)', textTransform: 'capitalize' }}>{mesNome} {p.ano}</span>
+                          <span className="sm:hidden" style={{ fontSize: 13, fontWeight: 700, color: pct >= 75 ? 'var(--pos)' : pct >= 50 ? 'var(--warn)' : 'var(--neg)', fontFamily: 'var(--font-mono)' }}>
+                            {pct.toFixed(0)}%
+                          </span>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: pct >= 75 ? 'var(--pos)' : pct >= 50 ? 'var(--warn)' : 'var(--neg)', width: 40, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
+                        <div className="flex-1 flex items-center gap-3 w-full">
+                          <div style={{ flex: 1, height: 6, background: 'var(--bg-2)', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${pct}%`, background: pct >= 75 ? 'var(--pos)' : pct >= 50 ? 'var(--warn)' : 'var(--neg)', borderRadius: 3 }} />
+                          </div>
+                        </div>
+                        <div className="hidden sm:block" style={{ fontSize: 13, fontWeight: 700, color: pct >= 75 ? 'var(--pos)' : pct >= 50 ? 'var(--warn)' : 'var(--neg)', width: 40, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
                           {pct.toFixed(0)}%
                         </div>
                         {p.total_sessoes != null && (
-                          <div style={{ fontSize: 10, color: 'var(--ink-3)', width: 70, textAlign: 'right' }}>{p.presencas}/{p.total_sessoes} sessões</div>
+                          <div style={{ fontSize: 10, color: 'var(--ink-3)' }} className="sm:w-[70px] text-right flex-shrink-0">
+                            <span className="sm:hidden">Sessões: </span>{p.presencas}/{p.total_sessoes}
+                          </div>
                         )}
                       </div>
                     )
@@ -386,20 +424,31 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
             {emendas.length === 0 ? <EmptyState msg="Nenhuma emenda registrada para este parlamentar." /> : (
               <>
                 <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-                  <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
+                  <div style={{ background: 'var(--panel)', borderRadius: 12, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
                     <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Total pago</div>
                     <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4, fontFamily: 'var(--font-mono)' }}>{fmt(totalEmendas)}</div>
                   </div>
-                  <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
+                  {emendasPixActive && (
+                    <div style={{ background: 'var(--panel)', borderRadius: 12, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Emendas Pix (Especiais)</div>
+                      <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4, color: 'var(--pos)', fontFamily: 'var(--font-mono)' }}>{fmt(totalPix)}</div>
+                    </div>
+                  )}
+                  <div style={{ background: 'var(--panel)', borderRadius: 12, border: '1px solid var(--line)', padding: '14px 20px', flex: 1, minWidth: 160 }}>
                     <div style={{ fontSize: 10.5, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>Municípios beneficiados</div>
                     <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>{new Set(emendas.map(e => e.municipio_destino ?? e.municipio_nome).filter(Boolean)).size}</div>
                   </div>
                 </div>
-                <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px solid var(--line)', overflow: 'hidden' }}>
+                <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {emendas.map((e, i) => (
                     <div key={e.id} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', borderBottom: i < emendas.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{e.municipio_destino ?? e.municipio_nome ?? '—'}{(e.uf_destino ?? e.uf_municipio) ? ` / ${e.uf_destino ?? e.uf_municipio}` : ''}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {e.municipio_destino ?? e.municipio_nome ?? '—'}{(e.uf_destino ?? e.uf_municipio) ? ` / ${e.uf_destino ?? e.uf_municipio}` : ''}
+                          {emendasPixActive && e.tipo_emenda === 'pix' && (
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--pos-soft)', color: 'var(--pos)' }}>PIX</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{e.area ?? e.funcao ?? '—'} · {e.ano}</div>
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmt(e.valor_pago ?? e.valor ?? 0)}</div>
@@ -413,13 +462,41 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
         )}
 
       </div>
+      <style>{`
+        .kpi-stat-item {
+          border-top: 1px solid var(--line-soft);
+        }
+        .kpi-stat-item:first-child {
+          border-top: none;
+        }
+        @media (min-width: 640px) {
+          .kpi-stat-item {
+            border-top: none;
+          }
+          .kpi-stat-item:nth-child(even) {
+            border-left: 1px solid var(--line-soft);
+          }
+          .kpi-stat-item:nth-child(n+3) {
+            border-top: 1px solid var(--line-soft);
+          }
+        }
+        @media (min-width: 1024px) {
+          .kpi-stat-item {
+            border-top: none !important;
+            border-left: 1px solid var(--line-soft) !important;
+          }
+          .kpi-stat-item:first-child {
+            border-left: none !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
 
 function EmptyState({ msg }: { msg: string }) {
   return (
-    <div style={{ background: 'var(--panel)', borderRadius: 10, border: '1px dashed var(--line-strong)', padding: '48px 24px', textAlign: 'center' }}>
+    <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px dashed var(--line-strong)', padding: '48px 24px', textAlign: 'center' }}>
       <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
       <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-3)' }}>{msg}</p>
       <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--mute)' }}>Os dados são coletados de fontes oficiais e podem demorar alguns dias para aparecer.</p>

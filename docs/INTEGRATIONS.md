@@ -7,7 +7,7 @@ related: [docs/API.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/DATABASE.md, docs
 
 # Integracoes
 
-Este e o manual mestre das integracoes externas identificadas no runtime e nos scripts do projeto. A cobertura prioriza Logto, InfinitePay, Supabase/PostgreSQL e OpenAI, conforme solicitado para o Lote 6.
+Este e o manual mestre das integracoes externas identificadas no runtime e nos scripts do projeto. A cobertura prioriza Logto, InfinitePay, PostgreSQL (VPS) e OpenAI, conforme solicitado para o Lote 6.
 
 ## 1. Matriz Executiva
 
@@ -15,7 +15,7 @@ Este e o manual mestre das integracoes externas identificadas no runtime e nos s
 |---|---|---|---|---|
 | Logto | Identidade, login, cadastro, reset, logout e sessao | `app/src/lib/logto/*`, `app/src/lib/auth/*`, `app/src/app/api/auth/logto/*`, `app/src/proxy.ts` | `LOGTO_ENDPOINT`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_COOKIE_SECRET`, `LOGTO_BASE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PAINEL_URL` | Ativo |
 | InfinitePay | Criacao de checkout de apoio e webhook financeiro | `app/src/app/api/apoio/criar-link/route.ts`, `app/src/app/api/apoio/verificar-pagamento/route.ts`, `app/src/app/api/webhooks/infinitepay/route.ts`, `app/src/app/(site)/apoio/page.tsx` | `INFINITEPAY_HANDLE`, `NEXT_PUBLIC_SITE_URL` | Ativo parcial; webhook incompleto |
-| Supabase/PostgreSQL | Banco relacional principal | `app/src/app/**`, `app/src/app/api/**`, `app/src/lib/auth/profile-linking.ts`, `app/src/actions/resumo-interpretativo.ts`, `etl/**` | `POSTGRES_*`, `SUPABASE_DB_*` no ETL | Ativo |
+| PostgreSQL (VPS) | Banco relacional principal | `app/src/app/**`, `app/src/app/api/**`, `app/src/lib/auth/profile-linking.ts`, `app/src/actions/resumo-interpretativo.ts`, `etl/**` | `POSTGRES_*` | Ativo |
 | OpenAI | Resumo interpretativo e simplificacao de texto | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` | `OPENAI_API_KEY`, `IA_RESUMO_MAX_GERACOES_DIA` | Ativo condicionado a chave |
 
 ## 2. Logto
@@ -158,11 +158,11 @@ sequenceDiagram
 4. Validar origem/assinatura conforme recurso suportado pela InfinitePay.
 5. Amarrar tela de confirmacao a estado persistido ou polling controlado.
 
-## 4. Supabase / PostgreSQL
+## 4. PostgreSQL (VPS)
 
 ### 4.1 Papel
 
-O banco relacional e o nucleo do dominio. A documentacao e a nomenclatura tratam Supabase/PostgreSQL, mas o runtime web acessa diretamente PostgreSQL por `pg`, usando `new Pool()` em paginas, APIs e helpers.
+O banco relacional e o nucleo do dominio. O runtime web acessa diretamente PostgreSQL por `pg`, usando `new Pool()` em paginas, APIs e helpers.
 
 ### 4.2 Arquivos Fonte
 

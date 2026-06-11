@@ -1,0 +1,3869 @@
+{
+  "reuniao": {
+    "reuniao": {
+      "id": 8422,
+      "data": "2025-12-18",
+      "hora": "10:00",
+      "numero": 44,
+      "tipo": {
+        "id": 3,
+        "descricao": "EXTRAORDIN\u00c1RIA",
+        "idCategoria": 0
+      },
+      "descricao": "44\u00aa Reuni\u00e3o Extraordin\u00e1ria de Plen\u00e1rio",
+      "pautaCompleta": true,
+      "resultadoCompleto": true,
+      "situacao": {
+        "codigo": "OCORRIDA",
+        "descricao": "Ocorrida"
+      },
+      "reuniaoDesconvocada": false,
+      "dataPublicacaoAta": "2025-12-20",
+      "textoEncerramento": "Pr\u00f3ximas reuni\u00f5es de Plen\u00e1rio: hoje, ordin\u00e1ria \u00e0s 14 horas e amanh\u00e3, dia 19, solene \u00e0s 14 horas."
+    },
+    "primeiraParte": {
+      "titulo": "1\u00aa Parte",
+      "primeiraFase": {
+        "titulo": "1\u00aa Fase",
+        "descricao": "Expediente",
+        "itens": [
+          "Leitura e aprova\u00e7\u00e3o da ata anterior",
+          "Leitura da correspond\u00eancia"
+        ]
+      },
+      "SegundaFase": {
+        "titulo": "2\u00aa Fase",
+        "descricao": "Grande Expediente",
+        "itens": [
+          "Apresenta\u00e7\u00e3o de proposi\u00e7\u00f5es e oradores inscritos"
+        ]
+      }
+    },
+    "segundaParte": {
+      "titulo": "2\u00aa Parte",
+      "descricao": "Ordem do Dia",
+      "primeiraFase": {
+        "titulo": "1\u00aa Fase",
+        "comunicacoesAtosPresidencia": {
+          "titulo": "Comunica\u00e7\u00f5es e atos da presid\u00eancia"
+        },
+        "apreciacoes": {
+          "titulo": "Aprecia\u00e7\u00e3o de pareceres, requerimentos e indica\u00e7\u00f5es",
+          "ordemDoDia": [
+            {
+              "ordem": 1,
+              "turno": {
+                "codigo": 0,
+                "descricao": "Turno \u00danico"
+              },
+              "tipoApreciacao": {
+                "codigo": 2,
+                "descricao": "Vota\u00e7\u00e3o"
+              },
+              "apreciacaoSobreParecer": false,
+              "parecerPelaInconstitucionalidade": false,
+              "ordemResultado": 1,
+              "faixaConstitucional": false,
+              "primeiraFaseReuniao": true,
+              "proposicao": {
+                "id": 237205,
+                "tipo": {
+                  "id": 5,
+                  "descricao": "Requerimento",
+                  "idCategoria": 0,
+                  "sigla": "RQN"
+                },
+                "numero": 13788,
+                "ano": 2025,
+                "ementaOuAssunto": "Requer seja encaminhado ao secret\u00e1rio de Estado de Educa\u00e7\u00e3o pedido de informa\u00e7\u00f5es sobre o modelo de parceria p\u00fablico-privada que a secretaria de que \u00e9 titular planeja implementar em 112 escolas estaduais, conforme relatado pelo referido secret\u00e1rio em reuni\u00e3o do Assembleia Fiscaliza realizada em 5/6/2025, com os detalhamentos que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idComissao": 849,
+                    "nome": "Comiss\u00e3o de Educa\u00e7\u00e3o, Ci\u00eancia e Tecnologia"
+                  }
+                ]
+              },
+              "descricao": "Vota\u00e7\u00e3o - Turno \u00danico",
+              "tramitacoes": [
+                {
+                  "sequencia": 1,
+                  "textoTramitacao": "A Mesa da Assembleia opina pela aprova\u00e7\u00e3o do requerimento na forma do Substitutivo n\u00ba 1, que apresenta."
+                }
+              ],
+              "acoes": [
+                {
+                  "sequencia": 1,
+                  "descricao": "Aprovado na forma do Substitutivo n\u00ba 1.",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 18,
+                    "descricao": "Aprovado",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 1,
+                    "descricao": "Resultado de proposi\u00e7\u00e3o"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                },
+                {
+                  "sequencia": 2,
+                  "descricao": "Oficie-se",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 42,
+                    "descricao": "Oficie-se",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 2,
+                    "descricao": "Despacho"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                }
+              ]
+            },
+            {
+              "ordem": 2,
+              "turno": {
+                "codigo": 0,
+                "descricao": "Turno \u00danico"
+              },
+              "tipoApreciacao": {
+                "codigo": 2,
+                "descricao": "Vota\u00e7\u00e3o"
+              },
+              "apreciacaoSobreParecer": false,
+              "parecerPelaInconstitucionalidade": false,
+              "ordemResultado": 2,
+              "faixaConstitucional": false,
+              "primeiraFaseReuniao": true,
+              "proposicao": {
+                "id": 237206,
+                "tipo": {
+                  "id": 5,
+                  "descricao": "Requerimento",
+                  "idCategoria": 0,
+                  "sigla": "RQN"
+                },
+                "numero": 13789,
+                "ano": 2025,
+                "ementaOuAssunto": "Requer seja encaminhado ao secret\u00e1rio de Estado de Educa\u00e7\u00e3o pedido de informa\u00e7\u00f5es sobre o programa Trilhas de Futuro Educadores, com os detalhamentos que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idComissao": 849,
+                    "nome": "Comiss\u00e3o de Educa\u00e7\u00e3o, Ci\u00eancia e Tecnologia"
+                  }
+                ]
+              },
+              "descricao": "Vota\u00e7\u00e3o - Turno \u00danico",
+              "tramitacoes": [
+                {
+                  "sequencia": 1,
+                  "textoTramitacao": "A Mesa da Assembleia opina pela aprova\u00e7\u00e3o do requerimento."
+                }
+              ],
+              "acoes": [
+                {
+                  "sequencia": 1,
+                  "descricao": "Aprovado",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 18,
+                    "descricao": "Aprovado",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 1,
+                    "descricao": "Resultado de proposi\u00e7\u00e3o"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                },
+                {
+                  "sequencia": 2,
+                  "descricao": "Oficie-se",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 42,
+                    "descricao": "Oficie-se",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 2,
+                    "descricao": "Despacho"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                }
+              ]
+            },
+            {
+              "ordem": 3,
+              "turno": {
+                "codigo": 0,
+                "descricao": "Turno \u00danico"
+              },
+              "tipoApreciacao": {
+                "codigo": 2,
+                "descricao": "Vota\u00e7\u00e3o"
+              },
+              "apreciacaoSobreParecer": false,
+              "parecerPelaInconstitucionalidade": false,
+              "ordemResultado": 3,
+              "faixaConstitucional": false,
+              "primeiraFaseReuniao": true,
+              "proposicao": {
+                "id": 237207,
+                "tipo": {
+                  "id": 5,
+                  "descricao": "Requerimento",
+                  "idCategoria": 0,
+                  "sigla": "RQN"
+                },
+                "numero": 13790,
+                "ano": 2025,
+                "ementaOuAssunto": "Requer seja encaminhado ao secret\u00e1rio de Estado de Educa\u00e7\u00e3o pedido de informa\u00e7\u00f5es sobre as iniciativas realizadas no \u00e2mbito da A\u00e7\u00e3o 1033 \u2013 Modalidades e Tem\u00e1ticas Especiais \u2013 e da A\u00e7\u00e3o 2116 \u2013 Projeto Sa\u00fade na Escola \u2013, ambas integrantes do Programa 167 \u2013 Programa Estadual de Desenvolvimento da Educa\u00e7\u00e3o B\u00e1sica \u2013, do Plano Plurianual de A\u00e7\u00e3o Governamental \u2013 PPAG \u2013 2025-2027, voltadas \u00e0 amplia\u00e7\u00e3o dos n\u00facleos de acolhimento educacional \u2013 NAEs.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idComissao": 849,
+                    "nome": "Comiss\u00e3o de Educa\u00e7\u00e3o, Ci\u00eancia e Tecnologia"
+                  }
+                ]
+              },
+              "descricao": "Vota\u00e7\u00e3o - Turno \u00danico",
+              "tramitacoes": [
+                {
+                  "sequencia": 1,
+                  "textoTramitacao": "A Mesa da Assembleia opina pela aprova\u00e7\u00e3o do requerimento na forma do Substitutivo n\u00ba 1, que apresenta."
+                }
+              ],
+              "acoes": [
+                {
+                  "sequencia": 1,
+                  "descricao": "Aprovado na forma do Substitutivo n\u00ba 1, com a Emenda n\u00ba 1.",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 18,
+                    "descricao": "Aprovado",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 1,
+                    "descricao": "Resultado de proposi\u00e7\u00e3o"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                },
+                {
+                  "sequencia": 2,
+                  "descricao": "Oficie-se",
+                  "idDeputado": 0,
+                  "idComissao": 0,
+                  "tipoAcao": {
+                    "id": 42,
+                    "descricao": "Oficie-se",
+                    "prontaOrdemDia": false,
+                    "requerimento": false,
+                    "requerVotacao": false,
+                    "idsemantica": 0
+                  },
+                  "classificacao": {
+                    "id": 2,
+                    "descricao": "Despacho"
+                  },
+                  "abrangencia": {
+                    "id": 1,
+                    "descricao": "Proposi\u00e7\u00e3o"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "SegundaFase": {
+        "titulo": "2\u00aa Fase",
+        "ordemDoDia": [
+          {
+            "ordem": 4,
+            "turno": {
+              "codigo": 0,
+              "descricao": "Turno \u00danico"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 4,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 241027,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4828,
+              "ano": 2025,
+              "ementaOuAssunto": "Autoriza a abertura de cr\u00e9dito suplementar ao Or\u00e7amento Fiscal do Estado em favor da unidade or\u00e7ament\u00e1ria Procuradoria-Geral de Justi\u00e7a.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "nome": "Governador do Estado"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - Turno \u00danico",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto e pela rejei\u00e7\u00e3o da Emenda n\u00ba 1."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em turno \u00fanico",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 23,
+                  "descricao": "Aprovado em turno \u00fanico",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "Rejeitada a Emenda n\u00ba 1.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 59,
+                  "descricao": "Rejeitada",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 3,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 5,
+            "turno": {
+              "codigo": 0,
+              "descricao": "Turno \u00danico"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 5,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 242590,
+              "tipo": {
+                "id": 4,
+                "descricao": "Projeto de Resolu\u00e7\u00e3o",
+                "idCategoria": 0,
+                "sigla": "PRE"
+              },
+              "numero": 101,
+              "ano": 2025,
+              "ementaOuAssunto": "Concede o t\u00edtulo de Cidad\u00e3o Honor\u00e1rio do Estado a Licurgo Joseh Mour\u00e3o de Oliveira.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idComissao": 101,
+                  "nome": "Mesa da Assembleia"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - Turno \u00danico",
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em turno \u00fanico",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 23,
+                  "descricao": "Aprovado em turno \u00fanico",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 6,
+            "turno": {
+              "codigo": 0,
+              "descricao": "Turno \u00danico"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 6,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 223160,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 2780,
+              "ano": 2024,
+              "ementaOuAssunto": "Institui a Semana Estadual do Audiovisual Mineiro Guilherme Fiuza Zenha, a ser comemorada na primeira semana de maio.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28869,
+                  "nome": "Deputada Lohanna"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - Turno \u00danico",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Justi\u00e7a conclui pela constitucionalidade do projeto na forma do Substitutivo n\u00ba 1, que apresenta."
+              },
+              {
+                "sequencia": 2,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 2, que apresenta."
+              },
+              {
+                "sequencia": 3,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, da Comiss\u00e3o de Justi\u00e7a."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em turno \u00fanico na forma do Substitutivo n\u00ba  2.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 97,
+                  "descricao": "Aprovado em turno \u00fanico na forma do Substitutivo n\u00ba ",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "Prejudicados o Substitutivo n\u00ba 1 e o projeto original.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 54,
+                  "descricao": "Prejudicados",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 3,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 7,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 7,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 168855,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 742,
+              "ano": 2019,
+              "ementaOuAssunto": "Acrescenta dispositivo \u00e0 Lei n\u00ba 6.763, de 26 de dezembro de 1975, que consolida a legisla\u00e7\u00e3o tribut\u00e1ria do Estado de Minas Gerais e d\u00e1 outras provid\u00eancias.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 21125,
+                  "nome": "Deputado M\u00e1rio Henrique Caixa"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Encerrada a discuss\u00e3o com a apresenta\u00e7\u00e3o de uma emenda do Deputado Gustavo Valadares, que recebeu o n\u00ba 1, e que, nos termos do \u00a7 4\u00ba do art. 189 do Regimento Interno, foi submetida a vota\u00e7\u00e3o independentemente de parecer. ",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 33,
+                  "descricao": "Encerrada a discuss\u00e3o com a apresenta\u00e7\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba 1 ao vencido em 1\u00ba turno, com a Emenda n\u00ba 1. ",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 98,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 3,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 8,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 8,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 180219,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 1844,
+              "ano": 2020,
+              "ementaOuAssunto": "Altera a Lei n\u00ba 23.304, de 30 de maio de 2019, que estabelece a estrutura org\u00e2nica do Poder Executivo do Estado e d\u00e1 outras provid\u00eancias, para transferir para a Secretaria de Estado de Cultura e Turismo a Subsecretaria de Esportes do Estado.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26149,
+                  "nome": "Deputado Coronel Henrique"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba 1 ao vencido em 1\u00ba turno.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 98,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 9,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 9,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 193766,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3466,
+              "ano": 2022,
+              "ementaOuAssunto": "Disp\u00f5e sobre a obrigatoriedade de as empresas de saneamento b\u00e1sico notificarem os estabelecimentos da \u00e1rea de sa\u00fade sobre a suspens\u00e3o do servi\u00e7o de abastecimento de \u00e1gua.\u00a0",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 22581,
+                  "nome": "Deputado Doutor Jean Freire"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Sa\u00fade opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 10,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 10,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 198369,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3975,
+              "ano": 2022,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Munic\u00edpio de Paracatu, considerado o Para\u00edso das Quitandas.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26062,
+                  "nome": "Deputado Charles Santos"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 11,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 11,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 198415,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3983,
+              "ano": 2022,
+              "ementaOuAssunto": "Disp\u00f5e sobre a concess\u00e3o de promo\u00e7\u00e3o por escolaridade adicional para os servidores ocupantes das carreiras de analista universit\u00e1rio e de t\u00e9cnico universit\u00e1rio previstas na Lei n\u00ba\u00a015.463, de 13 de janeiro de 2005.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26098,
+                  "nome": "Deputada Beatriz Cerqueira"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 12,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 12,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 201632,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 366,
+              "ano": 2023,
+              "ementaOuAssunto": "Disp\u00f5e sobre a capacita\u00e7\u00e3o de profissionais de seguran\u00e7a p\u00fablica e agentes de seguran\u00e7a aeroportu\u00e1ria\u00a0para o atendimento a pessoas com transtorno do espectro autista - TEA - no Estado.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 18022,
+                  "nome": "Deputada Nayara Rocha"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Seguran\u00e7a P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba 1 ao vencido em 1\u00ba turno.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 98,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 13,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 13,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 206672,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 935,
+              "ano": 2023,
+              "ementaOuAssunto": "Altera a Lei n\u00ba 11.405, de 28 de janeiro de 1994, que disp\u00f5e sobre a pol\u00edtica estadual de desenvolvimento agr\u00edcola e d\u00e1 outras provid\u00eancias.",
+              "detalhamentoEmentaAssunto": "Acrescenta \u00a7\u00a7 1\u00ba e 2\u00ba ao art. 44, obrigando concession\u00e1ria de servi\u00e7o de saneamento b\u00e1sico a oferecer gratuidade para liga\u00e7\u00e3o nova ou extens\u00e3o de rede de abastecimento de \u00e1gua e esgotamento sanit\u00e1rio a consumidor de baixa renda em zona rural.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 11307,
+                  "nome": "Deputado Ricardo Campos"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 14,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 14,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 207401,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 1039,
+              "ano": 2023,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o bloco carnavalesco Cai N'\u00e1gua.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28870,
+                  "nome": "Deputado Lucas Lasmar"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 15,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 15,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 208349,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 1172,
+              "ano": 2023,
+              "ementaOuAssunto": "Disp\u00f5e sobre as honras f\u00fanebres e os atos de assist\u00eancia \u00e0 fam\u00edlia em luto dos servidores p\u00fablicos civis e militares da \u00e1rea de seguran\u00e7a p\u00fablica do Estado.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 9673,
+                  "nome": "Deputado Sargento Rodrigues"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Seguran\u00e7a P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba 1 ao vencido em 1\u00ba turno.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 98,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 16,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 16,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 209184,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 1250,
+              "ano": 2023,
+              "ementaOuAssunto": "Disp\u00f5e sobre o sistema de reserva de vagas nas sele\u00e7\u00f5es para os programas de est\u00e1gio e resid\u00eancia de n\u00edvel superior e d\u00e1 outras provid\u00eancias.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26145,
+                  "nome": "Deputado Bet\u00e3o"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Educa\u00e7\u00e3o opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Encerrada a discuss\u00e3o em 2\u00ba turno.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 32,
+                  "descricao": "Encerrada a discuss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "Proposi\u00e7\u00e3o n\u00e3o submetida a vota\u00e7\u00e3o nos termos do inciso XXXVII do art. 82 do Regimento Interno.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 94,
+                  "descricao": "Proposi\u00e7\u00e3o n\u00e3o submetida a vota\u00e7\u00e3o nos termos do inciso XXXVII do art. 82 do Regimento Interno.",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 17,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 17,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 211064,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 1512,
+              "ano": 2023,
+              "ementaOuAssunto": "Garante ao consumidor o direito de ter nos boletos e demais guias de cobran\u00e7a\u00a0 a op\u00e7\u00e3o de pagamento por meio de c\u00f3digo de barras e de \"QR code\".",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28866,
+                  "nome": "Deputado Eduardo Azevedo"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Defesa do Consumidor opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "Prejudicado o Substitutivo n\u00ba 1.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 53,
+                  "descricao": "Prejudicado",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 3,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 18,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 18,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 220565,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 2485,
+              "ano": 2024,
+              "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Andradas o im\u00f3vel que especifica.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28877,
+                  "nome": "Deputado Rodrigo Lopes"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 19,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 19,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 227272,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3286,
+              "ano": 2025,
+              "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Inhapim o im\u00f3vel que especifica.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28879,
+                  "nome": "Deputado Z\u00e9 Laviola"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 20,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 20,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 228239,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3448,
+              "ano": 2025,
+              "ementaOuAssunto": "Altera a Lei n\u00ba 20.627, de 17 de janeiro de 2013, que assegura o acesso, no \u00e2mbito do Estado, \u00e0s t\u00e9cnicas de coleta de gametas, de conserva\u00e7\u00e3o de gametas e embri\u00f5es e de reprodu\u00e7\u00e3o humana assistida ao cidad\u00e3o e \u00e0 cidad\u00e3 em idade reprodutiva que receber indica\u00e7\u00e3o de tratamento oncol\u00f3gico que implique risco de esterilidade.",
+              "detalhamentoEmentaAssunto": "Obriga o Estado a informar \u00e0s pessoas em idade reprodutiva que receberem indica\u00e7\u00e3o de tratamento oncol\u00f3gico com risco de esterilidade sobre o direito de acesso, pelo SUS, \u00e0s t\u00e9cnicas de coleta de gametas, de conserva\u00e7\u00e3o de gametas e embri\u00f5es e de reprodu\u00e7\u00e3o humana assistida.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28868,
+                  "nome": "Deputado Grego da Funda\u00e7\u00e3o"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Sa\u00fade opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 21,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 21,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 229581,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3615,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural e religioso do Estado a Catedral de Santo Ant\u00f4nio, no Munic\u00edpio de Campanha.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26119,
+                  "nome": "Deputado Professor Cleiton"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 22,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 22,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 230001,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3647,
+              "ano": 2025,
+              "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o do trecho da Rodovia MG-447 que especifica e autoriza o Poder Executivo a do\u00e1-lo ao Munic\u00edpio de Guiricema.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 22607,
+                  "nome": "Deputado Roberto Andrade"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 23,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 23,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 230016,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3651,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Festival de Violeiros de Dom Cavati, realizado nesse munic\u00edpio.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 18863,
+                  "nome": "Deputado Neilando Pimenta"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 24,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 24,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 230065,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3655,
+              "ano": 2025,
+              "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o dos trechos de rodovia e do p\u00e1tio do Departamento de Estradas de Rodagem do Estado de Minas Gerais - DER-MG -\u00a0que especifica  e autoriza o Poder Executivo a do\u00e1-los ao Munic\u00edpio Bom Jesus do Amparo.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28864,
+                  "nome": "Deputado Delegado Christiano Xavier"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 25,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 33,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 230889,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3733,
+              "ano": 2025,
+              "ementaOuAssunto": "Autoriza o Poder Executivo a transferir para a Uni\u00e3o os bens im\u00f3veis de propriedade do Estado, suas autarquias e funda\u00e7\u00f5es p\u00fablicas, para fins de pagamento da d\u00edvida apurada nos termos do \u00a7 2\u00b0 do art. 2\u00b0 da Lei Complementar Federal n\u00b0 212, de 13 de janeiro de 2025, e d\u00e1 outras provid\u00eancias.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "nome": "Governador do Estado"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta, ao vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Adiada a discuss\u00e3o a requerimento (Dep. Ulysses Gomes)",
+                "idDeputado": 18867,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 7,
+                  "descricao": "Adiada a discuss\u00e3o a requerimento",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 26,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 25,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 231789,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3841,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado a Festa do Congado, realizada no Munic\u00edpio de Dores do Indai\u00e1.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 17919,
+                  "nome": "Deputado Duarte Bechir"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 27,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 26,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 233430,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 3986,
+              "ano": 2025,
+              "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Itamarandiba o im\u00f3vel que especifica.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 18860,
+                  "nome": "Deputado Tadeu Leite"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 28,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 27,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 233535,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4000,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Festival do Quiabo, realizado no Munic\u00edpio de Alpercata.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28867,
+                  "nome": "Deputado Enes C\u00e2ndido"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 21,
+                  "descricao": "Aprovado em 2\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 29,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 28,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 233707,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4017,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o\u00a0Cristo Redentor de Po\u00e7os de Caldas.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26111,
+                  "nome": "Deputado Mauro Tramonte"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 30,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 29,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 234445,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4089,
+              "ano": 2025,
+              "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado os tradicionais bonecos carnavalescos Vov\u00f3 Joana e o Cavalinho, do Munic\u00edpio de Rio Casca.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 28859,
+                  "nome": "Deputado Adriano Alvarenga"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Cultura opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 31,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 30,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 234963,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4162,
+              "ano": 2025,
+              "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Corinto os im\u00f3veis que especifica.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 7762,
+                  "nome": "Deputado Gil Pereira"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 32,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 31,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 237743,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4442,
+              "ano": 2025,
+              "ementaOuAssunto": "Altera a Lei n\u00ba 18.692, de 30 de dezembro de 2009, que uniformiza os crit\u00e9rios de gest\u00e3o e execu\u00e7\u00e3o para transfer\u00eancia gratuita de bens, valores ou benef\u00edcios por \u00f3rg\u00e3os e entidades da administra\u00e7\u00e3o p\u00fablica estadual, compreendidos no \u00e2mbito dos programas sociais que especifica.",
+              "detalhamentoEmentaAssunto": "Inclui o programa Primeira Inf\u00e2ncia Minas no rol de programas sociais que permitem transfer\u00eancia bens, valores ou benef\u00edcios do Poder Executivo aos destinat\u00e1rios que menciona, nos termos da Lei 18.692/2009.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 30744,
+                  "nome": "Deputado Lincoln Drumond"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Fiscaliza\u00e7\u00e3o Financeira opina pela aprova\u00e7\u00e3o do projeto na forma do Substitutivo n\u00ba 1, que apresenta."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba 1.",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 98,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do Substitutivo n\u00ba",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          },
+          {
+            "ordem": 33,
+            "turno": {
+              "codigo": 2,
+              "descricao": "2\u00ba Turno"
+            },
+            "tipoApreciacao": {
+              "codigo": 1,
+              "descricao": "Discuss\u00e3o"
+            },
+            "apreciacaoSobreParecer": false,
+            "parecerPelaInconstitucionalidade": false,
+            "ordemResultado": 32,
+            "faixaConstitucional": false,
+            "primeiraFaseReuniao": false,
+            "proposicao": {
+              "id": 237831,
+              "tipo": {
+                "id": 1,
+                "descricao": "Projeto de Lei",
+                "idCategoria": 0,
+                "sigla": "PL."
+              },
+              "numero": 4454,
+              "ano": 2025,
+              "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o do trecho de rodovia que especifica e autoriza o Poder Executivo a do\u00e1-lo ao Munic\u00edpio de Argirita.",
+              "autoria": [
+                {
+                  "id": 0,
+                  "sequencia": 1,
+                  "primeiroSignatario": true,
+                  "idDeputado": 26105,
+                  "nome": "Deputado Z\u00e9 Guilherme"
+                }
+              ]
+            },
+            "descricao": "Discuss\u00e3o - 2\u00ba Turno",
+            "tramitacoes": [
+              {
+                "sequencia": 1,
+                "textoTramitacao": "A Comiss\u00e3o de Administra\u00e7\u00e3o P\u00fablica opina pela aprova\u00e7\u00e3o do projeto na forma do vencido em 1\u00ba turno."
+              }
+            ],
+            "acoes": [
+              {
+                "sequencia": 1,
+                "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                "idDeputado": 0,
+                "idComissao": 0,
+                "tipoAcao": {
+                  "id": 22,
+                  "descricao": "Aprovado em 2\u00ba turno na forma do vencido em 1\u00ba turno",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 1,
+                  "descricao": "Resultado de proposi\u00e7\u00e3o"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              },
+              {
+                "sequencia": 2,
+                "descricao": "\u00c0 Comiss\u00e3o de Reda\u00e7\u00e3o",
+                "idDeputado": 0,
+                "idComissao": 13,
+                "tipoAcao": {
+                  "id": 1,
+                  "descricao": "\u00c0 Comiss\u00e3o",
+                  "prontaOrdemDia": false,
+                  "requerimento": false,
+                  "requerVotacao": false,
+                  "idsemantica": 0
+                },
+                "classificacao": {
+                  "id": 2,
+                  "descricao": "Despacho"
+                },
+                "abrangencia": {
+                  "id": 1,
+                  "descricao": "Proposi\u00e7\u00e3o"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "terceiraFase": {
+        "titulo": "3\u00aa Fase",
+        "pareceresRedacaoFinal": {
+          "titulo": "Pareceres de reda\u00e7\u00e3o final",
+          "itens": [
+            {
+              "ordem": 1,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 242590,
+                "tipo": {
+                  "id": 4,
+                  "descricao": "Projeto de Resolu\u00e7\u00e3o",
+                  "idCategoria": 0,
+                  "sigla": "PRE"
+                },
+                "numero": 101,
+                "ano": 2025,
+                "ementaOuAssunto": "Concede o t\u00edtulo de Cidad\u00e3o Honor\u00e1rio do Estado a Licurgo Joseh Mour\u00e3o de Oliveira.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idComissao": 101,
+                    "nome": "Mesa da Assembleia"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 promulga\u00e7\u00e3o"
+            },
+            {
+              "ordem": 2,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 168855,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 742,
+                "ano": 2019,
+                "ementaOuAssunto": "Acrescenta dispositivo \u00e0 Lei n\u00ba 6.763, de 26 de dezembro de 1975, que consolida a legisla\u00e7\u00e3o tribut\u00e1ria do Estado de Minas Gerais e d\u00e1 outras provid\u00eancias.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 21125,
+                    "nome": "Deputado M\u00e1rio Henrique Caixa"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 3,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 180219,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 1844,
+                "ano": 2020,
+                "ementaOuAssunto": "Altera a Lei n\u00ba 23.304, de 30 de maio de 2019, que estabelece a estrutura org\u00e2nica do Poder Executivo do Estado e d\u00e1 outras provid\u00eancias, para transferir para a Secretaria de Estado de Cultura e Turismo a Subsecretaria de Esportes do Estado.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26149,
+                    "nome": "Deputado Coronel Henrique"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 4,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 193766,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3466,
+                "ano": 2022,
+                "ementaOuAssunto": "Disp\u00f5e sobre a obrigatoriedade de as empresas de saneamento b\u00e1sico notificarem os estabelecimentos da \u00e1rea de sa\u00fade sobre a suspens\u00e3o do servi\u00e7o de abastecimento de \u00e1gua.\u00a0",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 22581,
+                    "nome": "Deputado Doutor Jean Freire"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 5,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 198369,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3975,
+                "ano": 2022,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Munic\u00edpio de Paracatu, considerado o Para\u00edso das Quitandas.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26062,
+                    "nome": "Deputado Charles Santos"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 6,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 198415,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3983,
+                "ano": 2022,
+                "ementaOuAssunto": "Disp\u00f5e sobre a concess\u00e3o de promo\u00e7\u00e3o por escolaridade adicional para os servidores ocupantes das carreiras de analista universit\u00e1rio e de t\u00e9cnico universit\u00e1rio previstas na Lei n\u00ba\u00a015.463, de 13 de janeiro de 2005.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26098,
+                    "nome": "Deputada Beatriz Cerqueira"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 7,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 201632,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 366,
+                "ano": 2023,
+                "ementaOuAssunto": "Disp\u00f5e sobre a capacita\u00e7\u00e3o de profissionais de seguran\u00e7a p\u00fablica e agentes de seguran\u00e7a aeroportu\u00e1ria\u00a0para o atendimento a pessoas com transtorno do espectro autista - TEA - no Estado.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 18022,
+                    "nome": "Deputada Nayara Rocha"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 8,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 206672,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 935,
+                "ano": 2023,
+                "ementaOuAssunto": "Altera a Lei n\u00ba 11.405, de 28 de janeiro de 1994, que disp\u00f5e sobre a pol\u00edtica estadual de desenvolvimento agr\u00edcola e d\u00e1 outras provid\u00eancias.",
+                "detalhamentoEmentaAssunto": "Acrescenta \u00a7\u00a7 1\u00ba e 2\u00ba ao art. 44, obrigando concession\u00e1ria de servi\u00e7o de saneamento b\u00e1sico a oferecer gratuidade para liga\u00e7\u00e3o nova ou extens\u00e3o de rede de abastecimento de \u00e1gua e esgotamento sanit\u00e1rio a consumidor de baixa renda em zona rural.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 11307,
+                    "nome": "Deputado Ricardo Campos"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 9,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 207401,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 1039,
+                "ano": 2023,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o bloco carnavalesco Cai N'\u00e1gua.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28870,
+                    "nome": "Deputado Lucas Lasmar"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 10,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 208349,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 1172,
+                "ano": 2023,
+                "ementaOuAssunto": "Disp\u00f5e sobre as honras f\u00fanebres e os atos de assist\u00eancia \u00e0 fam\u00edlia em luto dos servidores p\u00fablicos civis e militares da \u00e1rea de seguran\u00e7a p\u00fablica do Estado.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 9673,
+                    "nome": "Deputado Sargento Rodrigues"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 11,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 211064,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 1512,
+                "ano": 2023,
+                "ementaOuAssunto": "Garante ao consumidor o direito de ter nos boletos e demais guias de cobran\u00e7a\u00a0 a op\u00e7\u00e3o de pagamento por meio de c\u00f3digo de barras e de \"QR code\".",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28866,
+                    "nome": "Deputado Eduardo Azevedo"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 12,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 220565,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 2485,
+                "ano": 2024,
+                "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Andradas o im\u00f3vel que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28877,
+                    "nome": "Deputado Rodrigo Lopes"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 13,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 223160,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 2780,
+                "ano": 2024,
+                "ementaOuAssunto": "Institui a Semana Estadual do Audiovisual Mineiro Guilherme Fiuza Zenha, a ser comemorada na primeira semana de maio.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28869,
+                    "nome": "Deputada Lohanna"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 14,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 227272,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3286,
+                "ano": 2025,
+                "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Inhapim o im\u00f3vel que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28879,
+                    "nome": "Deputado Z\u00e9 Laviola"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 15,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 228239,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3448,
+                "ano": 2025,
+                "ementaOuAssunto": "Altera a Lei n\u00ba 20.627, de 17 de janeiro de 2013, que assegura o acesso, no \u00e2mbito do Estado, \u00e0s t\u00e9cnicas de coleta de gametas, de conserva\u00e7\u00e3o de gametas e embri\u00f5es e de reprodu\u00e7\u00e3o humana assistida ao cidad\u00e3o e \u00e0 cidad\u00e3 em idade reprodutiva que receber indica\u00e7\u00e3o de tratamento oncol\u00f3gico que implique risco de esterilidade.",
+                "detalhamentoEmentaAssunto": "Obriga o Estado a informar \u00e0s pessoas em idade reprodutiva que receberem indica\u00e7\u00e3o de tratamento oncol\u00f3gico com risco de esterilidade sobre o direito de acesso, pelo SUS, \u00e0s t\u00e9cnicas de coleta de gametas, de conserva\u00e7\u00e3o de gametas e embri\u00f5es e de reprodu\u00e7\u00e3o humana assistida.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28868,
+                    "nome": "Deputado Grego da Funda\u00e7\u00e3o"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 16,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 229581,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3615,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural e religioso do Estado a Catedral de Santo Ant\u00f4nio, no Munic\u00edpio de Campanha.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26119,
+                    "nome": "Deputado Professor Cleiton"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 17,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 230001,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3647,
+                "ano": 2025,
+                "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o do trecho da Rodovia MG-447 que especifica e autoriza o Poder Executivo a do\u00e1-lo ao Munic\u00edpio de Guiricema.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 22607,
+                    "nome": "Deputado Roberto Andrade"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 18,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 230016,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3651,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Festival de Violeiros de Dom Cavati, realizado nesse munic\u00edpio.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 18863,
+                    "nome": "Deputado Neilando Pimenta"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 19,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 230065,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3655,
+                "ano": 2025,
+                "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o dos trechos de rodovia e do p\u00e1tio do Departamento de Estradas de Rodagem do Estado de Minas Gerais - DER-MG -\u00a0que especifica  e autoriza o Poder Executivo a do\u00e1-los ao Munic\u00edpio Bom Jesus do Amparo.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28864,
+                    "nome": "Deputado Delegado Christiano Xavier"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 20,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 231789,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3841,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado a Festa do Congado, realizada no Munic\u00edpio de Dores do Indai\u00e1.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 17919,
+                    "nome": "Deputado Duarte Bechir"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 21,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 233430,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 3986,
+                "ano": 2025,
+                "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Itamarandiba o im\u00f3vel que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 18860,
+                    "nome": "Deputado Tadeu Leite"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 22,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 233535,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4000,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o Festival do Quiabo, realizado no Munic\u00edpio de Alpercata.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28867,
+                    "nome": "Deputado Enes C\u00e2ndido"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 23,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 233707,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4017,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado o\u00a0Cristo Redentor de Po\u00e7os de Caldas.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26111,
+                    "nome": "Deputado Mauro Tramonte"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 24,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 234445,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4089,
+                "ano": 2025,
+                "ementaOuAssunto": "Reconhece como de relevante interesse cultural do Estado os tradicionais bonecos carnavalescos Vov\u00f3 Joana e o Cavalinho, do Munic\u00edpio de Rio Casca.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 28859,
+                    "nome": "Deputado Adriano Alvarenga"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 25,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 234963,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4162,
+                "ano": 2025,
+                "ementaOuAssunto": "Autoriza o Poder Executivo a doar ao Munic\u00edpio de Corinto os im\u00f3veis que especifica.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 7762,
+                    "nome": "Deputado Gil Pereira"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 26,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 237743,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4442,
+                "ano": 2025,
+                "ementaOuAssunto": "Altera a Lei n\u00ba 18.692, de 30 de dezembro de 2009, que uniformiza os crit\u00e9rios de gest\u00e3o e execu\u00e7\u00e3o para transfer\u00eancia gratuita de bens, valores ou benef\u00edcios por \u00f3rg\u00e3os e entidades da administra\u00e7\u00e3o p\u00fablica estadual, compreendidos no \u00e2mbito dos programas sociais que especifica.",
+                "detalhamentoEmentaAssunto": "Inclui o programa Primeira Inf\u00e2ncia Minas no rol de programas sociais que permitem transfer\u00eancia bens, valores ou benef\u00edcios do Poder Executivo aos destinat\u00e1rios que menciona, nos termos da Lei 18.692/2009.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 30744,
+                    "nome": "Deputado Lincoln Drumond"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 27,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 237831,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4454,
+                "ano": 2025,
+                "ementaOuAssunto": "Disp\u00f5e sobre a desafeta\u00e7\u00e3o do trecho de rodovia que especifica e autoriza o Poder Executivo a do\u00e1-lo ao Munic\u00edpio de Argirita.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "idDeputado": 26105,
+                    "nome": "Deputado Z\u00e9 Guilherme"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            },
+            {
+              "ordem": 28,
+              "aprovacaoParecer": true,
+              "primeiraFaseReuniao": false,
+              "proposicao": {
+                "id": 241027,
+                "tipo": {
+                  "id": 1,
+                  "descricao": "Projeto de Lei",
+                  "idCategoria": 0,
+                  "sigla": "PL."
+                },
+                "numero": 4828,
+                "ano": 2025,
+                "ementaOuAssunto": "Autoriza a abertura de cr\u00e9dito suplementar ao Or\u00e7amento Fiscal do Estado em favor da unidade or\u00e7ament\u00e1ria Procuradoria-Geral de Justi\u00e7a.",
+                "autoria": [
+                  {
+                    "id": 0,
+                    "sequencia": 1,
+                    "primeiroSignatario": true,
+                    "nome": "Governador do Estado"
+                  }
+                ]
+              },
+              "formaAprovacao": "\u00c0 san\u00e7\u00e3o"
+            }
+          ]
+        }
+      }
+    },
+    "hashAtualizacao": -480478836
+  }
+}

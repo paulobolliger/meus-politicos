@@ -5,10 +5,11 @@ import { getLogtoConfig, logtoCallbackPath } from '@/lib/logto/config'
 
 export async function GET(request: NextRequest) {
   const email = request.nextUrl.searchParams.get('email')?.trim()
-  const config = {
-    ...getLogtoConfig(),
-    scopes: ['openid', 'profile', 'email'],
-  }
+  const host = request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  const customBaseUrl = host ? `${proto}://${host}` : undefined
+
+  const config = getLogtoConfig(customBaseUrl)
   const redirectUri = new URL(logtoCallbackPath, config.baseUrl)
   const postRedirectUri = new URL('/login', request.url)
 

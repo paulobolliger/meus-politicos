@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { DeputadoEstadualTabs } from '@/components/site/DeputadoEstadualTabs'
 import type { DepTabData } from '@/components/site/DeputadoEstadualTabs'
+import { isFeatureActive } from '@/lib/flags'
 
 export const revalidate = 86400
 
@@ -162,6 +163,7 @@ export default async function DeputadoEstadualPage({
   const presencaPct = dep.presenca_pct_atual ? Number(dep.presenca_pct_atual) : null
   const gastosStr   = fmtMoeda(dep.gasto_total_ano)
   const temEmendas  = dep.total_emendas_historico && Number(dep.total_emendas_historico) > 0
+  const atuacaoActive = await isFeatureActive('atuacao_parlamentar')
 
   return (
     <>
@@ -179,7 +181,7 @@ export default async function DeputadoEstadualPage({
         {/* ── BREADCRUMB ──────────────────────────────────────────────────── */}
         <nav style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: 13, color: '#9ca3af', marginBottom: 28, flexWrap: 'wrap',
+          fontSize: 13, color: 'var(--ink-3)', marginBottom: 28, flexWrap: 'wrap',
         }}>
           {[
             { label: 'Início',     href: '/' },
@@ -192,12 +194,12 @@ export default async function DeputadoEstadualPage({
               <span>/</span>
             </span>
           ))}
-          <span style={{ color: '#374151', fontWeight: 600 }}>{dep.nome_eleitoral}</span>
+          <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{dep.nome_eleitoral}</span>
         </nav>
 
         {/* ── HERO ────────────────────────────────────────────────────────── */}
         <div style={{
-          background: 'white', border: '1px solid #e5e7eb',
+          background: 'var(--panel)', border: '1px solid var(--line)',
           borderRadius: 16, overflow: 'hidden', marginBottom: 24,
         }}>
           {/* Faixa colorida */}
@@ -231,7 +233,7 @@ export default async function DeputadoEstadualPage({
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                 <span style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-                  color: '#9ca3af', fontFamily: 'var(--font-mono)',
+                  color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',
                 }}>
                   DEPUTADO{dep.sexo === 'F' ? 'A' : ''} ESTADUAL · {siglaUp} · 2023–2026
                 </span>
@@ -247,7 +249,7 @@ export default async function DeputadoEstadualPage({
                 {dep.numero_mandato && (
                   <span style={{
                     fontSize: 11, fontWeight: 600, padding: '2px 10px',
-                    borderRadius: 999, background: '#f3f4f6', color: '#6b7280',
+                    borderRadius: 999, background: 'var(--bg)', color: 'var(--ink-3)',
                   }}>
                     {dep.numero_mandato}º mandato
                   </span>
@@ -258,7 +260,7 @@ export default async function DeputadoEstadualPage({
               <h1 style={{
                 margin: '0 0 6px',
                 fontSize: 'clamp(22px, 3vw, 34px)',
-                fontWeight: 900, color: '#111827',
+                fontWeight: 900, color: 'var(--ink)',
                 fontFamily: 'var(--font-display)',
                 letterSpacing: '-0.02em', lineHeight: 1.1,
               }}>
@@ -266,7 +268,7 @@ export default async function DeputadoEstadualPage({
               </h1>
 
               {dep.nome && dep.nome !== dep.nome_eleitoral && (
-                <p style={{ margin: '0 0 12px', fontSize: 13, color: '#9ca3af' }}>
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--ink-3)' }}>
                   {dep.nome}
                 </p>
               )}
@@ -275,20 +277,20 @@ export default async function DeputadoEstadualPage({
               <div style={{ display: 'flex', gap: 24, marginTop: 14, flexWrap: 'wrap' }}>
                 {idade && (
                   <div>
-                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>IDADE</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: '#111827', fontFamily: 'var(--font-mono)' }}>{idade} anos</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>IDADE</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>{idade} anos</div>
                   </div>
                 )}
                 {dep.naturalidade && (
                   <div>
-                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>NATURALIDADE</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{dep.naturalidade}</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>NATURALIDADE</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-2)' }}>{dep.naturalidade}</div>
                   </div>
                 )}
                 {dep.escolaridade && (
                   <div>
-                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>ESCOLARIDADE</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{dep.escolaridade}</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>ESCOLARIDADE</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-2)' }}>{dep.escolaridade}</div>
                   </div>
                 )}
               </div>
@@ -298,8 +300,8 @@ export default async function DeputadoEstadualPage({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
               <Link href={`/estado/${sigla}/assembleia`} className="dep-action" style={{
                 padding: '9px 18px', borderRadius: 9,
-                border: '1px solid #e5e7eb', background: 'white',
-                color: '#374151', textDecoration: 'none',
+                border: '1px solid var(--line)', background: 'var(--bg)',
+                color: 'var(--ink-2)', textDecoration: 'none',
                 fontSize: 13, fontWeight: 600, textAlign: 'center',
               }}>
                 ← Assembleia
@@ -316,8 +318,8 @@ export default async function DeputadoEstadualPage({
               )}
               <button className="dep-action" style={{
                 padding: '9px 18px', borderRadius: 9,
-                border: '1px solid #e5e7eb', background: 'white',
-                color: '#6b7280', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                border: '1px solid var(--line)', background: 'var(--bg)',
+                color: 'var(--ink-2)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>
                 🔗 Compartilhar
               </button>
@@ -329,64 +331,64 @@ export default async function DeputadoEstadualPage({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
 
           {/* Presença */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '20px 24px' }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>PRESENÇA NAS SESSÕES</div>
+              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>PRESENÇA NAS SESSÕES</div>
               <span style={{ fontSize: 18 }}>✅</span>
             </div>
             {presencaPct !== null ? (
               <>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#10b981', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+                <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--pos)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
                   {presencaPct.toFixed(1)}%
                 </div>
-                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 999 }}>
-                  <div style={{ height: '100%', width: `${presencaPct}%`, background: '#10b981', borderRadius: 999, transition: 'width 0.6s ease' }} />
+                <div style={{ height: 6, background: 'var(--bg)', borderRadius: 999 }}>
+                  <div style={{ height: '100%', width: `${presencaPct}%`, background: 'var(--pos)', borderRadius: 999, transition: 'width 0.6s ease' }} />
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>das sessões plenárias</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 6 }}>das sessões plenárias</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 30, fontWeight: 900, color: '#e5e7eb', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
-                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 999, marginBottom: 6 }} />
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>Em breve</span>
+                <div style={{ fontSize: 30, fontWeight: 900, color: 'var(--line)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
+                <div style={{ height: 6, background: 'var(--bg)', borderRadius: 999, marginBottom: 6 }} />
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>Em breve</span>
               </>
             )}
           </div>
 
           {/* Gastos */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '20px 24px' }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>GASTOS DE GABINETE</div>
+              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>GASTOS DE GABINETE</div>
               <span style={{ fontSize: 18 }}>💰</span>
             </div>
             {gastosStr ? (
               <>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#d97706', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+                <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--warn)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
                   {gastosStr}
                 </div>
-                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 999 }}>
-                  <div style={{ height: '100%', width: '60%', background: '#d97706', borderRadius: 999 }} />
+                <div style={{ height: 6, background: 'var(--bg)', borderRadius: 999 }}>
+                  <div style={{ height: '100%', width: '60%', background: 'var(--warn)', borderRadius: 999 }} />
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>no ano corrente</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 6 }}>no ano corrente</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 30, fontWeight: 900, color: '#e5e7eb', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
-                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 999, marginBottom: 6 }} />
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>Em breve</span>
+                <div style={{ fontSize: 30, fontWeight: 900, color: 'var(--line)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
+                <div style={{ height: 6, background: 'var(--bg)', borderRadius: 999, marginBottom: 6 }} />
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>Em breve</span>
               </>
             )}
           </div>
 
           {/* Votações Ativas */}
-          <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '20px 24px' }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>VOTAÇÕES REGISTRADAS</div>
+              <div style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>VOTAÇÕES REGISTRADAS</div>
               <span style={{ fontSize: 18 }}>🗳️</span>
             </div>
             {dep.total_votacoes ? (
               <>
-                <div style={{ fontSize: 32, fontWeight: 900, color: '#0051d5', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
+                <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--info)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>
                   {dep.total_votacoes}
                 </div>
                 {/* Dots SIM / NÃO / ABS — placeholder ratio */}
@@ -394,23 +396,23 @@ export default async function DeputadoEstadualPage({
                   {Array.from({ length: Math.min(dep.total_votacoes, 20) }, (_, i) => (
                     <div key={i} style={{
                       width: 10, height: 10, borderRadius: '50%',
-                      background: i < dep.total_votacoes! * 0.6 ? '#10b981' :
-                                  i < dep.total_votacoes! * 0.85 ? '#ef4444' : '#f59e0b',
+                      background: i < dep.total_votacoes! * 0.6 ? 'var(--pos)' :
+                                  i < dep.total_votacoes! * 0.85 ? 'var(--neg)' : 'var(--warn)',
                     }} />
                   ))}
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280' }}>votos no total</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>votos no total</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 30, fontWeight: 900, color: '#e5e7eb', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
+                <div style={{ fontSize: 30, fontWeight: 900, color: 'var(--line)', fontFamily: 'var(--font-display)', marginBottom: 10 }}>—</div>
                 {/* Dots skeleton */}
                 <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
                   {[...Array(10)].map((_, i) => (
-                    <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#f3f4f6' }} />
+                    <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--bg)' }} />
                   ))}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>Em breve</span>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>Em breve</span>
               </>
             )}
           </div>
@@ -424,10 +426,10 @@ export default async function DeputadoEstadualPage({
 
             {/* Mandato */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderLeft: `3px solid ${cor}`, borderRadius: 14, padding: '20px 22px',
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
                 MANDATO
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -440,8 +442,8 @@ export default async function DeputadoEstadualPage({
                   { label: 'Mandato',  value: dep.numero_mandato ? `${dep.numero_mandato}º` : '—' },
                 ].map(item => (
                   <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: '#9ca3af' }}>{item.label}</span>
-                    <span style={{ fontSize: 12, color: '#374151', fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>
+                    <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{item.label}</span>
+                    <span style={{ fontSize: 12, color: 'var(--ink-2)', fontWeight: 600, textAlign: 'right', maxWidth: '60%' }}>
                       {item.value}
                     </span>
                   </div>
@@ -451,10 +453,10 @@ export default async function DeputadoEstadualPage({
 
             {/* Dados pessoais */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 14, padding: '20px 22px',
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
                 DADOS PESSOAIS
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -472,10 +474,10 @@ export default async function DeputadoEstadualPage({
                   { label: 'Ocupação',      value: dep.ocupacao ?? '—' },
                 ].map(item => (
                   <div key={item.label}>
-                    <div style={{ fontSize: 10, letterSpacing: '0.06em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>
+                    <div style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
                       {item.label.toUpperCase()}
                     </div>
-                    <div style={{ fontSize: 13, color: item.value === '—' ? '#d1d5db' : '#374151', fontWeight: item.value === '—' ? 400 : 500, marginTop: 1 }}>
+                    <div style={{ fontSize: 13, color: item.value === '—' ? 'var(--mute)' : 'var(--ink-2)', fontWeight: item.value === '—' ? 400 : 500, marginTop: 1 }}>
                       {item.value}
                     </div>
                   </div>
@@ -485,18 +487,18 @@ export default async function DeputadoEstadualPage({
 
             {/* Contato */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 14, padding: '20px 22px',
             }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginBottom: 14 }}>
                 CONTATO E GABINETE
               </div>
               {(dep.email || dep.gabinete_nome || dep.gabinete_telefone) ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {dep.gabinete_nome && (
                     <div>
-                      <div style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>GABINETE</div>
-                      <div style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>{dep.gabinete_nome}</div>
+                      <div style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>GABINETE</div>
+                      <div style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 500 }}>{dep.gabinete_nome}</div>
                     </div>
                   )}
                   {dep.email && (
@@ -505,28 +507,28 @@ export default async function DeputadoEstadualPage({
                     </a>
                   )}
                   {dep.gabinete_telefone && (
-                    <div style={{ fontSize: 13, color: '#374151' }}>📞 {dep.gabinete_telefone}</div>
+                    <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>📞 {dep.gabinete_telefone}</div>
                   )}
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13, color: '#d1d5db' }}>Não disponível</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>Em breve</span>
+                  <span style={{ fontSize: 13, color: 'var(--mute)' }}>Não disponível</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>Em breve</span>
                 </div>
               )}
             </div>
 
             {/* Score de Transparência */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
-              borderLeft: `3px solid #0051d5`,
+              background: 'var(--panel)', border: '1px solid var(--line)',
+              borderLeft: `3px solid var(--brand)`,
               borderRadius: 14, padding: '20px 22px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
                   SCORE DE TRANSPARÊNCIA
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>
                   Em cálculo
                 </span>
               </div>
@@ -534,14 +536,14 @@ export default async function DeputadoEstadualPage({
               <div style={{ textAlign: 'center', padding: '12px 0 16px' }}>
                 <div style={{
                   width: 64, height: 64, borderRadius: '50%', margin: '0 auto 8px',
-                  background: '#f3f4f6',
+                  background: 'var(--bg)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 26, fontWeight: 900, color: '#d1d5db',
+                  fontSize: 26, fontWeight: 900, color: 'var(--mute)',
                   fontFamily: 'var(--font-display)',
                 }}>
                   ?
                 </div>
-                <div style={{ fontSize: 12, color: '#9ca3af' }}>Aguardando dados de votações e gastos</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Aguardando dados de votações e gastos</div>
               </div>
               {/* Sub-scores */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -552,13 +554,13 @@ export default async function DeputadoEstadualPage({
                 ].map(s => (
                   <div key={s.label}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, color: '#374151' }}>{s.label}</span>
-                      <span style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>{s.peso}</span>
+                      <span style={{ fontSize: 11, color: 'var(--ink-2)' }}>{s.label}</span>
+                      <span style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>{s.peso}</span>
                     </div>
-                    <div style={{ height: 5, background: '#f3f4f6', borderRadius: 999 }}>
+                    <div style={{ height: 5, background: 'var(--bg)', borderRadius: 999 }}>
                       <div style={{
                         height: '100%', borderRadius: 999,
-                        background: s.valor !== null ? '#10b981' : '#e5e7eb',
+                        background: s.valor !== null ? 'var(--pos)' : 'var(--line)',
                         width: s.valor !== null
                           ? (typeof s.valor === 'number' && s.valor <= 100 ? `${s.valor}%` : '60%')
                           : '0%',
@@ -571,15 +573,15 @@ export default async function DeputadoEstadualPage({
 
             {/* Emendas */}
             <div style={{
-              background: 'white', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 14, padding: '20px 22px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
                   EMENDAS PARLAMENTARES
                 </div>
                 {!temEmendas && (
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#d97706' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--warn-soft)', color: 'var(--warn)' }}>
                     Em breve
                   </span>
                 )}
@@ -587,20 +589,20 @@ export default async function DeputadoEstadualPage({
               {temEmendas ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>ESTE ANO</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>ESTE ANO</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                       {fmtMoeda(dep.total_emendas_ano)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>HISTÓRICO</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', fontFamily: 'var(--font-display)' }}>
+                    <div style={{ fontSize: 10, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginBottom: 2 }}>HISTÓRICO</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--font-display)' }}>
                       {fmtMoeda(dep.total_emendas_historico)}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: '#d1d5db', padding: '12px 0' }}>
+                <div style={{ fontSize: 13, color: 'var(--mute)', padding: '12px 0' }}>
                   Emendas de deputados estaduais serão integradas em breve.
                 </div>
               )}
@@ -615,17 +617,18 @@ export default async function DeputadoEstadualPage({
             pCor={pCor}
             sigla={sigla}
             estadoNome={cfg.nome}
+            atuacaoActive={atuacaoActive}
           />
         </div>
 
         {/* ── COLEGAS DE PARTIDO ──────────────────────────────────────────── */}
         {colegas.length > 0 && (
           <div style={{
-            background: 'white', border: '1px solid #e5e7eb',
+            background: 'var(--panel)', border: '1px solid var(--line)',
             borderRadius: 14, padding: '22px 28px', marginTop: 20,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: '#9ca3af', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
                 COLEGAS DE {dep.partido} NA ALE {siglaUp} ({colegas.length})
               </div>
               <Link href={`/estado/${sigla}/assembleia?partido=${dep.partido}`} style={{
@@ -640,7 +643,7 @@ export default async function DeputadoEstadualPage({
                   <div className="dep-colega" style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '8px 12px', borderRadius: 10,
-                    border: '1px solid #e5e7eb', background: '#f9fafb',
+                    border: '1px solid var(--line)', background: 'var(--bg)',
                   }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
@@ -656,7 +659,7 @@ export default async function DeputadoEstadualPage({
                       }
                     </div>
                     <span style={{
-                      fontSize: 11, color: '#374151', fontWeight: 500,
+                      fontSize: 11, color: 'var(--ink-2)', fontWeight: 500,
                       overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
                     }}>
                       {c.nome_eleitoral}
@@ -671,16 +674,16 @@ export default async function DeputadoEstadualPage({
         {/* ── FOOTER ──────────────────────────────────────────────────────── */}
         <div style={{
           marginTop: 40, paddingTop: 24,
-          borderTop: '1px solid #f3f4f6',
+          borderTop: '1px solid var(--line)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
         }}>
           <Link href={`/estado/${sigla}/assembleia`} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 600,
+            fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none', fontWeight: 600,
           }}>
             ← Todos os deputados da ALE {siglaUp}
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9ca3af' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-3)' }}>
             ℹ️ Fonte: TSE · Eleitos 2022 · Dados atualizados periodicamente
           </div>
         </div>

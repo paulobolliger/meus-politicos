@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 
 export const runtime = 'nodejs'
 
@@ -10,29 +10,12 @@ type GlossarioRow = {
   categoria: string | null
 }
 
-let _pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 3,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-  return _pool
-}
-
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const pool = getPool()
+  const pool = getPgPool()
 
   const result = await pool.query<GlossarioRow>(
     `

@@ -62,7 +62,7 @@ Este documento consolida as variaveis de ambiente identificadas no codigo, `.env
 
 ## 4. Variaveis por Servico
 
-### 4.1 PostgreSQL / Supabase
+### 4.1 PostgreSQL (VPS)
 
 | Variavel | Fonte esperada | Arquivos consumidores |
 |---|---|---|
@@ -184,7 +184,7 @@ INFINITEPAY_HANDLE=meus-politicos
 OPENAI_API_KEY=
 IA_RESUMO_MAX_GERACOES_DIA=5
 
-# ETL opcional/legado
+# ETL opcional/legado (depreciado, usar POSTGRES_*)
 SUPABASE_DB_HOST=
 SUPABASE_DB_PORT=5432
 SUPABASE_DB_USER=

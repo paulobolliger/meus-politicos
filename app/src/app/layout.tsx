@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Public_Sans, JetBrains_Mono } from "next/font/google"
+import { Public_Sans } from "next/font/google"
 
 import "./globals.css"
 
@@ -7,13 +7,6 @@ const sans = Public_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-sans",
-  display: "swap",
-})
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
   display: "swap",
 })
 
@@ -33,12 +26,21 @@ export const metadata: Metadata = {
     siteName: "Meus Políticos",
     locale: "pt_BR",
     type: "website",
+    images: [
+      {
+        url: "/logos_meus-politicos_colorido_fundobranco.png",
+        width: 1200,
+        height: 630,
+        alt: "Meus Políticos",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Meus Políticos",
     description:
       "Dados públicos. Fontes oficiais. Sem opinião.",
+    images: ["/logos_meus-politicos_colorido_fundobranco.png"],
   },
   icons: {
     icon: [
@@ -57,8 +59,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className={`${sans.variable} ${mono.variable} antialiased`}>
-<body className="min-h-screen">
+    <html lang="pt-BR" className={`${sans.variable} antialiased`}>
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+      </head>
+      <body className="min-h-screen">
         {children}
       </body>
     </html>

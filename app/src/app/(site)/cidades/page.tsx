@@ -68,7 +68,7 @@ function BarCell({ value, max, color }: { value: number; max: number; color: str
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100 }}>
-      <div style={{ flex: 1, height: 4, background: 'var(--line-soft)', borderRadius: 99 }}>
+      <div style={{ flex: 1, height: 4, background: '#0F172A', borderRadius: 99 }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 99 }} />
       </div>
     </div>
@@ -175,12 +175,12 @@ export default async function CidadesPage({
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ background: '#0F172A', minHeight: '100vh', color: '#CBD5E1' }}>
 
       {/* ── Hero ── */}
       <section style={{
         background: 'linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%)',
-        borderBottom: '1px solid var(--line-soft)',
+        borderBottom: '1px solid #334155',
         padding: '48px 24px 32px',
       }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -190,19 +190,19 @@ export default async function CidadesPage({
             fontSize: 'clamp(28px, 5vw, 48px)',
             lineHeight: 1.1,
             letterSpacing: '-0.03em',
-            color: 'var(--ink)',
+            color: '#F8FAFC',
             fontFamily: 'var(--font-display)',
           }}>
             Quanto chegou à sua cidade?
           </h1>
-          <p style={{ marginTop: 12, fontSize: 15, color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: 560 }}>
+          <p style={{ marginTop: 12, fontSize: 15, color: '#94A3B8', lineHeight: 1.6, maxWidth: 560 }}>
             Ranking dos municípios que mais receberam emendas parlamentares.
-            {' '}<strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>Per capita</strong> revela onde o dinheiro realmente chegou — independente do tamanho da cidade.
+            {' '}<strong style={{ color: '#CBD5E1', fontWeight: 600 }}>Per capita</strong> revela onde o dinheiro realmente chegou — independente do tamanho da cidade.
           </p>
 
           {/* Ordenação */}
           <div style={{ display: 'flex', gap: 6, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: 'var(--mute)', marginRight: 4 }}>Ordenar por</span>
+            <span style={{ fontSize: 12, color: '#94A3B8', marginRight: 4 }}>Ordenar por</span>
             <Link href={href({ ord: 'per_capita' })} style={chipStyle(ord === 'per_capita')}>
               Per capita
             </Link>
@@ -220,7 +220,7 @@ export default async function CidadesPage({
 
           {/* Faixa popuacional */}
           <div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginBottom: 6, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: 11, color: '#94A3B8', marginBottom: 6, fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
               PORTE
             </div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -236,7 +236,7 @@ export default async function CidadesPage({
         </div>
 
         {/* UF quick filters */}
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--line-soft)' }}>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #334155' }}>
           <Link href={href({ uf: null })} style={chipStyle(!ufParam)}>Brasil</Link>
           {UFS.map((uf) => (
             <Link key={uf} href={href({ uf: ufParam === uf ? null : uf })}
@@ -259,8 +259,8 @@ export default async function CidadesPage({
         {rows.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
             <div style={{ fontSize: 48, marginBottom: 14 }}>🏘️</div>
-            <p style={{ fontSize: 16, color: 'var(--ink-3)', fontWeight: 500 }}>Nenhum município encontrado.</p>
-            <p style={{ fontSize: 13, color: 'var(--mute)', marginTop: 6 }}>
+            <p style={{ fontSize: 16, color: '#94A3B8', fontWeight: 500 }}>Nenhum município encontrado.</p>
+            <p style={{ fontSize: 13, color: '#94A3B8', marginTop: 6 }}>
               Execute o ETL de emendas e o script IBGE para popular os dados:{' '}
               <code style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-2)', padding: '2px 6px', borderRadius: 4 }}>
                 python etl/ibge/collect_municipios.py
@@ -273,7 +273,7 @@ export default async function CidadesPage({
         {rows.length > 0 && (
           <>
             {/* Summary */}
-            <div style={{ marginBottom: 16, fontSize: 13, color: 'var(--ink-3)' }}>
+            <div style={{ marginBottom: 16, fontSize: 13, color: '#94A3B8' }}>
               {rows.length === 100
                 ? 'Top 100 municípios'
                 : `${rows.length} município${rows.length !== 1 ? 's' : ''}`}
@@ -293,48 +293,48 @@ export default async function CidadesPage({
             >
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--line-soft)' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>#</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>MUNICÍPIO</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>POPULAÇÃO</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>TOTAL RECEBIDO</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>PER CAPITA</th>
-                    <th style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}></th>
-                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: 'var(--mute)', fontWeight: 600 }}>PARLAMENTARES</th>
+                  <tr style={{ borderBottom: '1px solid #334155' }}>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>#</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>MUNICÍPIO</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>POPULAÇÃO</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>TOTAL RECEBIDO</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>PER CAPITA</th>
+                    <th style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}></th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', color: '#94A3B8', fontWeight: 600 }}>PARLAMENTARES</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, i) => (
                     <tr key={row.codigo_ibge} style={{
-                      borderBottom: i < rows.length - 1 ? '1px solid var(--line-soft)' : 'none',
+                      borderBottom: i < rows.length - 1 ? '1px solid #334155' : 'none',
                     }}>
-                      <td style={{ padding: '12px 16px', color: 'var(--mute)', fontFamily: 'var(--font-mono)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '12px 16px', color: '#94A3B8', fontFamily: 'var(--font-mono)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
                         {i + 1}
                       </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 13.5 }}>{row.nome}</div>
-                        <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 1, fontFamily: 'var(--font-mono)' }}>
+                        <div style={{ fontWeight: 600, color: '#F8FAFC', fontSize: 13.5 }}>{row.nome}</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1, fontFamily: 'var(--font-mono)' }}>
                           {row.uf}
                           {row.faixa_populacional ? ` · ${FAIXA_LABEL[row.faixa_populacional as Faixa] ?? row.faixa_populacional}` : ''}
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#94A3B8', fontFamily: 'var(--font-mono)', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
                         {fmtPop(row.populacao)}
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#F8FAFC', fontFamily: 'var(--font-mono)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(row.total_emendas)}
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: 'var(--brand)', fontFamily: 'var(--font-mono)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#fbbf24', fontFamily: 'var(--font-mono)', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
                         {row.per_capita > 0 ? `R$ ${row.per_capita.toFixed(2)}/hab` : '—'}
                       </td>
                       <td style={{ padding: '12px 16px', minWidth: 120 }}>
                         <BarCell
                           value={ord === 'per_capita' ? row.per_capita : row.total_emendas}
                           max={barMax}
-                          color="var(--brand)"
+                          color="#8B5CF6"
                         />
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'right', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#94A3B8', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                         {row.qtd_parlamentares}
                       </td>
                     </tr>
@@ -355,11 +355,11 @@ export default async function CidadesPage({
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, color: 'var(--mute)', fontFamily: 'var(--font-mono)', minWidth: 20 }}>
+                        <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'var(--font-mono)', minWidth: 20 }}>
                           #{i + 1}
                         </span>
-                        <span style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--ink)' }}>{row.nome}</span>
-                        <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', marginLeft: 'auto', flexShrink: 0 }}>
+                        <span style={{ fontSize: 14.5, fontWeight: 600, color: '#F8FAFC' }}>{row.nome}</span>
+                        <span style={{ fontSize: 11, color: '#94A3B8', fontFamily: 'var(--font-mono)', marginLeft: 'auto', flexShrink: 0 }}>
                           {row.uf}
                         </span>
                       </div>
@@ -374,20 +374,20 @@ export default async function CidadesPage({
                   </div>
                   <div style={{ display: 'flex', gap: 16, marginTop: 10, paddingLeft: 28 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: 'var(--mute)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>PER CAPITA</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--brand)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>PER CAPITA</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: '#fbbf24', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                         {row.per_capita > 0 ? `R$ ${row.per_capita.toFixed(2)}` : '—'}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: 'var(--mute)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>TOTAL</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>TOTAL</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#F8FAFC', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(row.total_emendas)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: 'var(--mute)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>POPULAÇÃO</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-2)', fontFamily: 'var(--font-mono)' }}>
+                      <div style={{ fontSize: 10, color: '#94A3B8', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 2 }}>POPULAÇÃO</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#CBD5E1', fontFamily: 'var(--font-mono)' }}>
                         {fmtPop(row.populacao)}
                       </div>
                     </div>
@@ -397,8 +397,8 @@ export default async function CidadesPage({
             </div>
 
             {/* Nota metodológica */}
-            <div style={{ marginTop: 32, padding: '14px 18px', background: 'var(--bg-2)', borderRadius: 8, fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--ink-2)' }}>Nota:</strong> Dados de emendas do Portal da Transparência do Governo Federal.
+            <div style={{ marginTop: 32, padding: '14px 18px', background: 'var(--bg-2)', borderRadius: 8, fontSize: 12, color: '#94A3B8', lineHeight: 1.6 }}>
+              <strong style={{ color: '#CBD5E1' }}>Nota:</strong> Dados de emendas do Portal da Transparência do Governo Federal.
               Per capita calculado com base na população do Censo 2022 (IBGE).
               Municípios sem dados de população são excluídos do cálculo per capita.
               {' '}<Link href="/metodologia" style={{ color: 'var(--brand-2)', textDecoration: 'none', fontWeight: 500 }}>Ver metodologia completa →</Link>

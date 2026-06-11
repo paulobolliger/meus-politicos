@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ESTADOS, type Regiao, type EstadoConfig } from '@/lib/estados-config'
 import { CarouselBtn } from '@/components/site/CarouselBtn'
+import { EstadoMapWrapper } from '@/components/site/EstadoMapWrapper'
+import { getPgPool } from '@/lib/db/pool'
 
 export const metadata: Metadata = {
   title: 'Estados do Brasil | Meus Políticos',
@@ -20,7 +22,7 @@ const BANDEIRAS: Record<string, string> = {
   CE: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Bandeira_do_Cear%C3%A1.svg',
   DF: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Bandeira_do_Distrito_Federal_%28Brasil%29.svg',
   ES: 'https://upload.wikimedia.org/wikipedia/commons/4/43/Bandeira_do_Esp%C3%ADrito_Santo.svg',
-  GO: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Bandeira_de_Goi%C3%A1s.svg',
+  GO: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Flag_of_Goi%C3%A1s.svg',
   MA: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Bandeira_do_Maranh%C3%A3o.svg',
   MG: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/Bandeira_de_Minas_Gerais.svg',
   MS: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Bandeira_de_Mato_Grosso_do_Sul.svg',
@@ -56,7 +58,7 @@ const REGIAO_META: Record<Regiao, { id: string; cor: string; descricao: string }
   'Norte':          { id: 'norte',        cor: '#009668', descricao: '7 estados · Maior extensão territorial' },
   'Nordeste':       { id: 'nordeste',     cor: '#D97706', descricao: '9 estados · Rico polo cultural e energético' },
   'Centro-Oeste':   { id: 'centro-oeste', cor: '#F59E0B', descricao: '3 estados + DF · Coração político e agronegócio' },
-  'Sudeste':        { id: 'sudeste',      cor: '#0051d5', descricao: '4 estados · Maior polo econômico e populacional' },
+  'Sudeste':        { id: 'sudeste',      cor: '#8B5CF6', descricao: '4 estados · Maior polo econômico e populacional' },
   'Sul':            { id: 'sul',          cor: '#10B981', descricao: '3 estados · Altos índices de desenvolvimento' },
 }
 
@@ -70,28 +72,73 @@ function buildRegioes(): RegiaoItem[] {
   })
 }
 
+function fmtPop(v: number | null | undefined): string {
+  if (v == null) return '—'
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}mi`
+  if (v >= 1000) return `${(v / 1000).toFixed(0)}k`
+  return String(v)
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function EstadosPage() {
+export default async function EstadosPage() {
   const regioes = buildRegioes()
+  const pool = getPgPool()
+
+  // Buscar dados de enriquecimento no banco de dados
+  const enrichedData: Record<string, {
+    populacao: number | null
+    idh: number | null
+    pacto_tipo: 'doador' | 'receptor' | null
+    nome_governador: string | null
+    governador_partido: string | null
+  }> = {}
+
+  try {
+    const { rows } = await pool.query(`
+      SELECT 
+        e.sigla,
+        e.populacao::int AS populacao,
+        e.idh::float8 AS idh,
+        p.tipo AS pacto_tipo,
+        g.nome_governador,
+        g.partido_sigla AS governador_partido
+      FROM estados_economia e
+      LEFT JOIN estados_pacto_federativo p ON p.sigla = e.sigla AND p.ano = (SELECT MAX(ano) FROM estados_pacto_federativo WHERE sigla = e.sigla)
+      LEFT JOIN estados_governos g ON g.sigla = e.sigla AND g.is_atual = true
+      WHERE e.ano = (SELECT MAX(ano) FROM estados_economia WHERE sigla = e.sigla)
+    `)
+    
+    for (const r of rows) {
+      enrichedData[r.sigla.toUpperCase()] = {
+        populacao: r.populacao,
+        idh: r.idh,
+        pacto_tipo: r.pacto_tipo,
+        nome_governador: r.nome_governador,
+        governador_partido: r.governador_partido,
+      }
+    }
+  } catch (err) {
+    console.error('[EstadosPage] Falha ao carregar dados do banco:', err)
+  }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)' }}>
 
       {/* ── Hero ── */}
       <section style={{
         backgroundImage: [
-          'radial-gradient(#e5eeff 0.5px, transparent 0.5px)',
-          'radial-gradient(#e5eeff 0.5px, #f8f9ff 0.5px)',
+          'radial-gradient(#334155 0.5px, transparent 0.5px)',
+          'radial-gradient(#334155 0.5px, var(--bg) 0.5px)',
         ].join(','),
         backgroundSize: '20px 20px',
         backgroundPosition: '0 0, 10px 10px',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid var(--line)',
         padding: '48px 0 40px',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
           <div className="estados-hero-grid" style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 360px',
+            gridTemplateColumns: '1fr 480px',
             gap: 48,
             alignItems: 'center',
           }}>
@@ -134,8 +181,8 @@ export default function EstadosPage() {
                     display: 'inline-block',
                     padding: '7px 16px',
                     borderRadius: 999,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
+                    background: 'var(--panel)',
+                    border: '1px solid var(--line)',
                     fontSize: 13, fontWeight: 600,
                     color: 'var(--ink-2)',
                     textDecoration: 'none',
@@ -147,42 +194,9 @@ export default function EstadosPage() {
               </div>
             </div>
 
-            {/* Right: decorative SVG map placeholder */}
-            <div style={{
-              position: 'relative',
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: 16,
-              overflow: 'hidden',
-              aspectRatio: '1 / 1',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <svg viewBox="0 0 500 500" style={{ width: '85%', height: '85%' }} aria-hidden="true">
-                <g fill="#c7d7f5" stroke="#ffffff" strokeWidth="1.5">
-                  <path d="M120,50 L200,40 L250,80 L220,150 L150,160 L100,120 Z"/>
-                  <path d="M250,80 L350,100 L380,180 L300,220 L240,160 Z"/>
-                  <path d="M150,160 L240,160 L280,250 L200,300 L140,240 Z"/>
-                  <path d="M280,250 L350,230 L380,300 L300,350 L260,300 Z"/>
-                  <path d="M200,300 L260,300 L300,400 L220,450 L180,380 Z"/>
-                </g>
-                <circle cx="280" cy="240" r="6" fill="#0051d5">
-                  <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite"/>
-                  <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="330" cy="150" r="4" fill="#316bf3"/>
-                <circle cx="200" cy="350" r="4" fill="#316bf3"/>
-              </svg>
-              <div style={{
-                position: 'absolute', bottom: 14, left: 0, right: 0,
-                textAlign: 'center',
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-                color: 'var(--ink-3)', textTransform: 'uppercase',
-                fontFamily: 'var(--font-mono)',
-              }}>
-                Mapa interativo · em breve
-              </div>
+            {/* Right: Interactive map */}
+            <div style={{ display: 'flex', width: '100%', justifyContent: 'center' }}>
+              <EstadoMapWrapper />
             </div>
           </div>
         </div>
@@ -227,97 +241,149 @@ export default function EstadosPage() {
                 scrollSnapType: 'x mandatory',
               }}
             >
-              {regiao.estados.map((estado) => (
-                <Link
-                  key={estado.sigla}
-                  href={`/estado/${estado.sigla.toLowerCase()}`}
-                  style={{ textDecoration: 'none', flexShrink: 0, scrollSnapAlign: 'start' }}
-                >
-                  <div className="estado-card" style={{
-                    width: 260,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 12,
-                    padding: '18px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 14,
-                    transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
-                  }}>
+              {regiao.estados.map((estado) => {
+                const info = enrichedData[estado.sigla.toUpperCase()]
+                const pactoTipo = info?.pacto_tipo
+                const govNome = info?.nome_governador
+                const govPartido = info?.governador_partido
+                const pop = info?.populacao
 
-                    {/* Flag + sigla row */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={BANDEIRAS[estado.sigla] ?? ''}
-                        alt={`Bandeira ${estado.nome}`}
-                        width={52} height={52}
-                        style={{ objectFit: 'cover', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
-                        loading="lazy"
-                      />
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-                        color: regiao.cor, fontFamily: 'var(--font-mono)',
-                        background: `${regiao.cor}14`, padding: '3px 8px',
-                        borderRadius: 6,
+                return (
+                  <Link
+                    key={estado.sigla}
+                    href={`/estado/${estado.sigla.toLowerCase()}`}
+                    style={{ textDecoration: 'none', flexShrink: 0, scrollSnapAlign: 'start' }}
+                  >
+                    <div className="estado-card" style={{
+                      width: 260,
+                      background: 'var(--panel)',
+                      border: '1px solid var(--line)',
+                      borderRadius: 12,
+                      padding: '18px 20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 14,
+                      transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
+                    }}>
+
+                      {/* Flag + sigla row */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={BANDEIRAS[estado.sigla] ?? ''}
+                          alt={`Bandeira ${estado.nome}`}
+                          width={52} height={52}
+                          style={{ objectFit: 'cover', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+                          loading="lazy"
+                        />
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+                          color: regiao.cor, fontFamily: 'var(--font-mono)',
+                          background: `${regiao.cor}14`, padding: '3px 8px',
+                          borderRadius: 6,
+                        }}>
+                          {estado.sigla}
+                        </span>
+                      </div>
+
+                      {/* Name + capital + governor */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6 }}>
+                          <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>
+                            {estado.nome}
+                          </h3>
+                          {pactoTipo && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700,
+                              color: pactoTipo === 'receptor' ? 'var(--pos)' : 'var(--warn)',
+                              background: pactoTipo === 'receptor' ? 'var(--pos-soft)' : 'var(--warn-soft)',
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              textTransform: 'uppercase',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {pactoTipo === 'receptor' ? 'Receptor 📥' : 'Doador 📤'}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)' }}>
+                          Capital: {estado.capital}
+                        </p>
+                        {govNome && (
+                          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--ink-3)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={`${govNome} (${govPartido})`}>
+                            Gov: <strong style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{govNome}</strong> {govPartido ? `(${govPartido})` : ''}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Stats grid */}
+                      <div style={{
+                        display: 'grid', gridTemplateColumns: '1fr 1fr',
+                        gap: '12px 8px', paddingTop: 14,
+                        borderTop: '1px solid var(--line)',
                       }}>
-                        {estado.sigla}
-                      </span>
-                    </div>
-
-                    {/* Name + capital */}
-                    <div>
-                      <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>
-                        {estado.nome}
-                      </h3>
-                      <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-3)' }}>
-                        Capital: {estado.capital}
-                      </p>
-                    </div>
-
-                    {/* Stats grid */}
-                    <div style={{
-                      display: 'grid', gridTemplateColumns: '1fr 1fr',
-                      gap: 8, paddingTop: 14,
-                      borderTop: '1px solid #f0f0f0',
-                    }}>
-                      <div>
-                        <div style={{
-                          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-                          color: 'var(--ink-3)', textTransform: 'uppercase',
-                          fontFamily: 'var(--font-mono)', marginBottom: 2,
-                        }}>
-                          {estado.sigla === 'DF' ? "RA's" : 'Municípios'}
+                        <div>
+                          <div style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                            color: 'var(--mute)', textTransform: 'uppercase',
+                            fontFamily: 'var(--font-sans)', marginBottom: 2,
+                          }}>
+                            {estado.sigla === 'DF' ? "RA's" : 'Municípios'}
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                            {estado.municipios.toLocaleString('pt-BR')}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
-                          {estado.municipios.toLocaleString('pt-BR')}
+                        <div>
+                          <div style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                            color: 'var(--mute)', textTransform: 'uppercase',
+                            fontFamily: 'var(--font-sans)', marginBottom: 2,
+                          }}>
+                            População
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                            {fmtPop(pop)}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                            color: 'var(--mute)', textTransform: 'uppercase',
+                            fontFamily: 'var(--font-sans)', marginBottom: 2,
+                          }}>
+                            Dep. Federais
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                            {estado.depu_federais}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                            color: 'var(--mute)', textTransform: 'uppercase',
+                            fontFamily: 'var(--font-sans)', marginBottom: 2,
+                          }}>
+                            Dep. Estaduais
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
+                            {estado.depu_estaduais}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div style={{
-                          fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-                          color: 'var(--ink-3)', textTransform: 'uppercase',
-                          fontFamily: 'var(--font-mono)', marginBottom: 2,
-                        }}>
-                          Deputados
-                        </div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-mono)' }}>
-                          {estado.depu_federais}
-                        </div>
+
+                      {/* CTA */}
+                      <div style={{
+                        fontSize: 13, fontWeight: 700,
+                        color: regiao.cor,
+                        paddingTop: 4,
+                      }}>
+                        Ver detalhes →
                       </div>
                     </div>
-
-                    {/* CTA */}
-                    <div style={{
-                      fontSize: 13, fontWeight: 700,
-                      color: regiao.cor,
-                      paddingTop: 4,
-                    }}>
-                      Ver detalhes →
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         ))}
@@ -328,18 +394,18 @@ export default function EstadosPage() {
         @media (max-width: 960px) {
           .estados-hero-grid { grid-template-columns: 1fr !important; }
         }
-        .estados-bc:hover { color: var(--brand-2) !important; }
+        .estados-bc:hover { color: var(--brand) !important; }
         .estados-regiao-btn:hover {
-          background: #0051d5 !important;
-          color: white !important;
-          border-color: #0051d5 !important;
+          background: var(--brand-2) !important;
+          color: var(--ink) !important;
+          border-color: var(--brand-2) !important;
         }
         .estados-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .estados-carousel::-webkit-scrollbar { display: none; }
         .estado-card:hover {
-          border-color: #0051d5 !important;
+          border-color: var(--brand) !important;
           transform: translateY(-3px) !important;
-          box-shadow: 0 8px 20px rgba(0,81,213,0.08) !important;
+          box-shadow: 0 8px 20px rgba(139,92,246,0.15) !important;
         }
       ` }} />
     </div>

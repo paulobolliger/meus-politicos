@@ -15,6 +15,7 @@ import {
   Search,
   Users,
   Vote,
+  Heart,
 } from 'lucide-react'
 
 type NavItem = {
@@ -30,34 +31,35 @@ type NavSection = {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    title: 'EXPLORACAO',
+    title: 'PAINEL CIDADÃO',
     items: [
-      { label: 'Inicio', href: '/home', icon: <Home size={18} /> },
-      { label: 'Buscar', href: '/busca', icon: <Search size={18} /> },
-      { label: 'Meu estado', href: '/meu-estado', icon: <MapPin size={18} /> },
-      { label: 'Projetos de Lei', href: '/proposicoes', icon: <ScrollText size={18} /> },
-      { label: 'Candidatos 2026', href: '/candidatos-2026', icon: <Vote size={18} /> },
+      { label: 'Início', href: '/painel', icon: <Home size={18} /> },
+      { label: 'Meus políticos', href: '/painel/meus-politicos', icon: <Users size={18} /> },
+      { label: 'Comparar', href: '/painel/comparar', icon: <Scale size={18} /> },
     ],
   },
   {
-    title: 'MONITORAMENTO',
+    title: 'EXPLORAÇÃO',
     items: [
-      { label: 'Meus politicos', href: '/meus-politicos', icon: <Users size={18} /> },
-      { label: 'Comparar', href: '/comparar', icon: <Scale size={18} /> },
+      { label: 'Buscar políticos', href: '/busca', icon: <Search size={18} /> },
+      { label: 'Câmara Federal', href: '/camara', icon: <ScrollText size={18} /> },
+      { label: 'Senado Federal', href: '/senado', icon: <Vote size={18} /> },
+      { label: 'Estados & Cidades', href: '/estado', icon: <MapPin size={18} /> },
+      { label: 'Partidos', href: '/partidos', icon: <Activity size={18} /> },
+      { label: 'Projetos de Lei', href: '/projetos', icon: <BookOpen size={18} /> },
+      { label: 'Eleições', href: '/eleicao', icon: <Vote size={18} /> },
     ],
   },
   {
-    title: 'REFERENCIA',
+    title: 'APOIO',
     items: [
-      { label: 'Metodologia', href: '/metodologia', icon: <Activity size={18} /> },
-      { label: 'Fontes', href: '/fontes', icon: <FileText size={18} /> },
-      { label: 'Glossário', href: '/glossario', icon: <BookOpen size={18} /> },
+      { label: 'Apoiar projeto', href: '/apoio', icon: <Heart size={18} /> },
     ],
   },
 ]
 
 function isItemActive(pathname: string, href: string) {
-  if (href === '/home') return pathname === '/home' || pathname === '/'
+  if (href === '/painel') return pathname === '/painel'
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -65,14 +67,16 @@ function SidebarBlock({
   collapsed,
   pathname,
   onNavigate,
+  sections = NAV_SECTIONS,
 }: {
   collapsed: boolean
   pathname: string
   onNavigate?: () => void
+  sections?: NavSection[]
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {NAV_SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div key={section.title}>
           {!collapsed && (
             <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--mute)', marginBottom: 8 }}>
@@ -87,7 +91,7 @@ function SidebarBlock({
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  className="mono"
+                  className={`mono sidebar-item ${active ? 'sidebar-item-active' : ''}`}
                   style={{
                     height: 34,
                     display: 'flex',
@@ -95,18 +99,21 @@ function SidebarBlock({
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     gap: collapsed ? 0 : 8,
                     padding: collapsed ? '0 8px' : '0 10px',
-                    border: `1px solid ${active ? 'var(--brand-2)' : 'var(--line)'}`,
-                    background: active ? 'var(--brand-soft)' : 'transparent',
-                    color: active ? 'var(--brand-2)' : 'var(--ink-3)',
                     textDecoration: 'none',
                     fontSize: 11,
                     letterSpacing: '0.06em',
-                    fontWeight: active ? 700 : 500,
                   }}
                   title={item.label}
                 >
                   {item.icon}
-                  {!collapsed && item.label}
+                  {!collapsed && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      {item.label}
+                      {section.title === 'EXPLORAÇÃO' && (
+                        <span style={{ opacity: 0.65, fontSize: 9 }} aria-hidden="true">↗</span>
+                      )}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -121,10 +128,46 @@ function SidebarBlock({
 export function AppMobileTopbar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [user, setUser] = useState<{ name: string | null } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [flags, setFlags] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data.user)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
+
+    fetch('/api/flags')
+      .then((res) => res.json())
+      .then((data) => {
+        setFlags(data)
+      })
+      .catch(() => {})
+  }, [])
+
+  const activeSections = useMemo(() => {
+    return NAV_SECTIONS.map((section) => {
+      if (section.title === 'PAINEL CIDADÃO') {
+        return {
+          ...section,
+          items: section.items.filter(
+            (item) => item.href !== '/painel/comparar' || flags['comparativo_parlamentares']
+          ),
+        }
+      }
+      return section
+    })
+  }, [flags])
 
   return (
     <>
@@ -138,7 +181,7 @@ export function AppMobileTopbar() {
           borderBottom: '1px solid var(--line)',
           background: 'var(--panel)',
           position: 'sticky',
-          top: 0,
+          top: 32,
           zIndex: 30,
         }}
       >
@@ -158,11 +201,12 @@ export function AppMobileTopbar() {
             fontSize: 12,
             letterSpacing: '0.08em',
             cursor: 'pointer',
+            borderRadius: 8,
           }}
         >
           MENU
         </button>
-        <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
+        <Link href="/painel" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
           <Image
             src="/logos_meus-politicos_colorido_semfundo.png"
             alt="Meus Politicos"
@@ -172,11 +216,11 @@ export function AppMobileTopbar() {
           />
         </Link>
         <a
-          href="https://meuspoliticos.com.br"
+          href="/"
           className="mono"
           style={{ fontSize: 10.5, color: 'var(--ink-3)', textDecoration: 'none', letterSpacing: '0.06em' }}
         >
-          site publico
+          voltar ao site
         </a>
       </div>
 
@@ -223,18 +267,19 @@ export function AppMobileTopbar() {
                   background: 'var(--panel)',
                   color: 'var(--ink-3)',
                   cursor: 'pointer',
+                  borderRadius: 8,
                 }}
               >
                 X
               </button>
             </div>
 
-            <SidebarBlock collapsed={false} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <SidebarBlock collapsed={false} pathname={pathname} onNavigate={() => setMobileOpen(false)} sections={activeSections} />
 
             <div style={{ flex: 1 }} />
 
             <a
-              href="https://meuspoliticos.com.br"
+              href="/"
               className="mono"
               style={{
                 border: '1px solid var(--line)',
@@ -247,28 +292,57 @@ export function AppMobileTopbar() {
                 fontSize: 11,
                 letterSpacing: '0.08em',
                 background: 'var(--panel)',
+                borderRadius: 8,
               }}
             >
-              {'<- SITE PUBLICO'}
+              {'<- VOLTAR AO SITE'}
             </a>
-            <Link
-              href="/login"
-              onClick={() => setMobileOpen(false)}
-              style={{
-                display: 'block',
-                padding: '10px 16px',
-                textAlign: 'center',
-                background: 'var(--brand-2)',
-                color: 'white',
-                fontSize: 12,
-                fontWeight: 600,
-                textDecoration: 'none',
-                fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.06em',
-              }}
-            >
-              ENTRAR →
-            </Link>
+            {loading ? (
+              <div style={{ height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>...</span>
+              </div>
+            ) : user ? (
+              <a
+                href="/api/auth/logto/sign-out"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  display: 'block',
+                  padding: '10px 16px',
+                  textAlign: 'center',
+                  background: 'var(--line-strong)',
+                  color: 'var(--ink-2)',
+                  border: '1px solid var(--line-strong)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.06em',
+                  borderRadius: 8,
+                }}
+              >
+                SAIR
+              </a>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  display: 'block',
+                  padding: '10px 16px',
+                  textAlign: 'center',
+                  background: 'var(--brand-2)',
+                  color: 'white',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.06em',
+                  borderRadius: 8,
+                }}
+              >
+                ENTRAR →
+              </Link>
+            )}
           </aside>
         </>
       )}
@@ -280,6 +354,9 @@ export function AppMobileTopbar() {
 export function AppSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [user, setUser] = useState<{ name: string | null } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [flags, setFlags] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const saved = localStorage.getItem('mp-sidebar-collapsed')
@@ -287,8 +364,41 @@ export function AppSidebar() {
   }, [])
 
   useEffect(() => {
+    fetch('/api/auth/session')
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data.user)
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
+
+    fetch('/api/flags')
+      .then((res) => res.json())
+      .then((data) => {
+        setFlags(data)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     localStorage.setItem('mp-sidebar-collapsed', collapsed ? '1' : '0')
   }, [collapsed])
+
+  const activeSections = useMemo(() => {
+    return NAV_SECTIONS.map((section) => {
+      if (section.title === 'PAINEL CIDADÃO') {
+        return {
+          ...section,
+          items: section.items.filter(
+            (item) => item.href !== '/painel/comparar' || flags['comparativo_parlamentares']
+          ),
+        }
+      }
+      return section
+    })
+  }, [flags])
 
   const sidebarWidth = useMemo(() => (collapsed ? 74 : 224), [collapsed])
 
@@ -305,7 +415,7 @@ export function AppSidebar() {
         position: 'sticky',
         top: 32,
         height: 'calc(100vh - 32px)',
-        overflow: 'hidden',
+        overflowY: 'auto',
         transition: 'width 0.18s ease, min-width 0.18s ease, padding 0.18s ease',
       }}
     >
@@ -319,7 +429,7 @@ export function AppSidebar() {
           gap: collapsed ? 10 : 8,
         }}
       >
-        <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
+        <Link href="/painel" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
           {collapsed ? (
             <Image
               src="/icon.png"
@@ -350,6 +460,7 @@ export function AppSidebar() {
             color: 'var(--ink-3)',
             fontSize: 10,
             cursor: 'pointer',
+            borderRadius: 8,
           }}
           title={collapsed ? 'Expandir' : 'Recolher'}
         >
@@ -357,7 +468,7 @@ export function AppSidebar() {
         </button>
       </div>
 
-      <SidebarBlock collapsed={collapsed} pathname={pathname} />
+      <SidebarBlock collapsed={collapsed} pathname={pathname} sections={activeSections} />
 
       <div style={{ flex: 1 }} />
 
@@ -368,7 +479,7 @@ export function AppSidebar() {
           </span>
         )}
         <a
-          href="https://meuspoliticos.com.br"
+          href="/"
           className="mono"
           style={{
             border: '1px solid var(--line)',
@@ -381,39 +492,81 @@ export function AppSidebar() {
             fontSize: 10.5,
             letterSpacing: '0.08em',
             background: 'transparent',
+            borderRadius: 8,
           }}
         >
-          {collapsed ? 'SITE' : '<- SITE PUBLICO'}
+          {collapsed ? 'HOME' : '<- VOLTAR AO SITE'}
         </a>
-        {collapsed ? (
-          <Link
-            href="/login"
-            title="Entrar / Criar conta"
-            style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </Link>
+        {loading ? (
+          <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="mono" style={{ fontSize: 10.5, color: 'var(--mute)' }}>...</span>
+          </div>
+        ) : user ? (
+          collapsed ? (
+            <a
+              href="/api/auth/logto/sign-out"
+              title="Sair da conta"
+              style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--brand-2)', textDecoration: 'none' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: 'rotate(180deg)' }}>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </a>
+          ) : (
+            <a
+              href="/api/auth/logto/sign-out"
+              style={{
+                display: 'block',
+                padding: '10px 16px',
+                textAlign: 'center',
+                background: 'var(--line-strong)',
+                color: 'var(--ink-2)',
+                border: '1px solid var(--line-strong)',
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.06em',
+                borderRadius: 8,
+              }}
+            >
+              SAIR
+            </a>
+          )
         ) : (
-          <Link
-            href="/login"
-            style={{
-              display: 'block',
-              padding: '10px 16px',
-              textAlign: 'center',
-              background: 'var(--brand-2)',
-              color: 'white',
-              fontSize: 12,
-              fontWeight: 600,
-              textDecoration: 'none',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '0.06em',
-            }}
-          >
-            ENTRAR →
-          </Link>
+          collapsed ? (
+            <Link
+              href="/login"
+              title="Entrar / Criar conta"
+              style={{ display: 'flex', justifyContent: 'center', padding: 12, color: 'var(--ink-3)', textDecoration: 'none' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              style={{
+                display: 'block',
+                padding: '10px 16px',
+                textAlign: 'center',
+                background: 'var(--brand-2)',
+                color: 'white',
+                fontSize: 12,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.06em',
+                borderRadius: 8,
+              }}
+            >
+              ENTRAR →
+            </Link>
+          )
         )}
       </div>
     </div>

@@ -226,7 +226,7 @@ Username:  contato@meuspoliticos.com.br
 
 **`.env.local`:**
 ```
-RESEND_API_KEY=re_Se4uTEFo_PANsmSN2pUjVX9Q8xxK4sZJ7
+RESEND_API_KEY=re_PLACEHOLDER_KEY
 RESEND_FROM=noreply@meuspoliticos.com.br
 ```
 
@@ -261,7 +261,7 @@ NEXT_PUBLIC_APP_URL=https://app.meuspoliticos.com.br
 NEXT_PUBLIC_PAINEL_URL=https://painel.meuspoliticos.com.br
 
 # E-mail transacional
-RESEND_API_KEY=re_Se4uTEFo_PANsmSN2pUjVX9Q8xxK4sZJ7
+RESEND_API_KEY=re_PLACEHOLDER_KEY
 RESEND_FROM=noreply@meuspoliticos.com.br
 
 # APIs externas

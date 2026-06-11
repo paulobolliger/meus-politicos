@@ -28,17 +28,17 @@ function PresencaRing({ value }: { value: number | null }) {
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (percent / 100) * circumference
 
-  let ringColor = '#9ca3af'
+  let ringColor = 'var(--mute)'
   if (value != null) {
-    if (percent >= 80) ringColor = '#16a34a'
-    else if (percent >= 60) ringColor = '#ca8a04'
-    else ringColor = '#dc2626'
+    if (percent >= 80) ringColor = 'var(--pos)'
+    else if (percent >= 60) ringColor = 'var(--warn)'
+    else ringColor = 'var(--neg)'
   }
 
   return (
     <div className="flex items-center gap-3">
       <svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true">
-        <circle cx="44" cy="44" r={radius} stroke="#e2e8f0" strokeWidth={stroke} fill="none" />
+        <circle cx="44" cy="44" r={radius} stroke="var(--line)" strokeWidth={stroke} fill="none" />
         <circle
           cx="44"
           cy="44"
@@ -51,12 +51,12 @@ function PresencaRing({ value }: { value: number | null }) {
           strokeLinecap="round"
           transform="rotate(-90 44 44)"
         />
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="16" fontWeight="700" fill="#0f172a">
+        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="16" fontWeight="700" fill="var(--ink)">
           {value == null ? 'N/I' : `${percent}%`}
         </text>
       </svg>
       <div>
-        <p className="text-sm text-slate-500">Média {value == null ? 'UF' : 'da UF'}: {NA}</p>
+        <p className="text-sm text-[var(--ink-3)]">Média {value == null ? 'UF' : 'da UF'}: {NA}</p>
       </div>
     </div>
   )
@@ -110,14 +110,26 @@ export function ModoAnalista({ politico }: Props) {
     atualizado_em: politico.collected_at,
   }
 
+  // Estilo de painel escuro e glassmórfico uniforme do portal
+  const cardStyle: React.CSSProperties = {
+    background: 'rgba(30, 41, 59, 0.45)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid var(--line)',
+    borderRadius: 16,
+    padding: '20px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    transition: 'all 0.2s ease',
+  }
+
   return (
     <>
       <section className="container-shell py-6">
         <div className="grid gap-4 lg:grid-cols-2">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
+          <article style={cardStyle} className="hover:border-[var(--brand)]">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-slate-900">Radar de desempenho</h2>
-              <Link href="/metodologia" className="text-xs font-semibold text-[#2952cc] hover:underline">
+              <h2 className="text-base font-semibold text-[var(--ink)]">Radar de desempenho</h2>
+              <Link href="/metodologia" className="text-xs font-semibold text-[var(--brand-2)] hover:underline">
                 Metodologia pública
               </Link>
             </div>
@@ -129,7 +141,7 @@ export function ModoAnalista({ politico }: Props) {
               <ScoreRow label="Eficiência gastos" value={null} mediaUf={null} />
             </div>
 
-            <p className="mt-4 text-xs text-slate-400">
+            <p className="mt-4 text-xs text-[var(--mute)]">
               Scores calculados com base em dados oficiais da Câmara dos Deputados, Senado Federal e TSE. Metodologia pública em{' '}
               <Link href="/metodologia" className="underline">
                 meuspoliticos.com.br/metodologia
@@ -139,13 +151,13 @@ export function ModoAnalista({ politico }: Props) {
           </article>
 
           <div className="space-y-4">
-            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
-              <h2 className="text-base font-semibold text-slate-900">Contato do gabinete</h2>
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <article style={cardStyle} className="hover:border-[var(--brand)]">
+              <h2 className="text-base font-semibold text-[var(--ink)]">Contato do gabinete</h2>
+              <ul className="mt-3 space-y-2 text-sm text-[var(--ink-2)]">
                 <li>
                   📧{' '}
                   {contatoEmail !== null && contatoEmail !== NA ? (
-                    <a href={`mailto:${contatoEmail}`} className="font-medium text-[#2952cc] hover:underline">
+                    <a href={`mailto:${contatoEmail}`} className="font-medium text-[var(--brand-2)] hover:underline">
                       {contatoEmail}
                     </a>
                   ) : (
@@ -157,10 +169,10 @@ export function ModoAnalista({ politico }: Props) {
               </ul>
             </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
-              <h2 className="text-base font-semibold text-slate-900">Redes sociais</h2>
+            <article style={cardStyle} className="hover:border-[var(--brand)]">
+              <h2 className="text-base font-semibold text-[var(--ink)]">Redes sociais</h2>
               {redesComUrl.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">Sem redes sociais cadastradas</p>
+                <p className="mt-3 text-sm text-[var(--ink-3)]">Sem redes sociais cadastradas</p>
               ) : (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {redesComUrl.map((rede) => {
@@ -172,6 +184,10 @@ export function ModoAnalista({ politico }: Props) {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${socialButtonClass(platform)}`}
+                        style={{
+                          borderColor: 'var(--line)',
+                          color: 'var(--ink-2)',
+                        }}
                       >
                         {platform.includes('twitter') || platform === 'x' ? '𝕏' : null}
                         {platform.includes('instagram') ? '◉' : null}
@@ -201,10 +217,10 @@ export function ModoAnalista({ politico }: Props) {
 
       <section className="container-shell pb-6">
         <div className="grid gap-4 md:grid-cols-3">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md md:row-span-2">
+          <article style={cardStyle} className="md:row-span-2 hover:border-[var(--brand)]">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Últimas votações</h3>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-3)]">Últimas votações</h3>
+              <span className="rounded-full bg-[rgba(255,255,255,0.05)] border border-[var(--line)] px-2 py-0.5 text-xs font-semibold text-[var(--ink-2)]">
                 {formatOptionalNumber(politico.total_votacoes)}
               </span>
             </div>
@@ -219,11 +235,11 @@ export function ModoAnalista({ politico }: Props) {
               ) : (
                 <ul className="space-y-2">
                   {votacoesFeed.slice(0, 5).map((item) => (
-                    <li key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-sm text-slate-700">
+                    <li key={item.id} className="rounded-xl border border-[var(--line)] bg-[rgba(15,23,42,0.4)] p-3">
+                      <p className="text-sm text-[var(--ink-2)]">
                         {votoIcon(item.voto)} {item.descricao}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">{item.data}</p>
+                      <p className="mt-1 text-xs text-[var(--mute)]">{item.data}</p>
                     </li>
                   ))}
                 </ul>
@@ -231,29 +247,29 @@ export function ModoAnalista({ politico }: Props) {
             </div>
 
             <div className="mt-4">
-              <Link href={`/politicos/${politico.slug}`} className="text-sm font-semibold text-[#2952cc] hover:underline">
+              <Link href={`/politicos/${politico.slug}`} className="text-sm font-semibold text-[var(--brand-2)] hover:underline">
                 Ver todas
               </Link>
             </div>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Cota parlamentar</h3>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{formatCurrency(politico.gasto_total_ano)}</p>
+          <article style={cardStyle} className="hover:border-[var(--brand)]">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-3)]">Cota parlamentar</h3>
+            <p className="mt-2 text-2xl font-bold text-[var(--ink)]">{formatCurrency(politico.gasto_total_ano)}</p>
 
             {gastoPctTeto == null ? (
-              <p className="mt-3 text-sm text-slate-500">{NA}</p>
+              <p className="mt-3 text-sm text-[var(--ink-3)]">{NA}</p>
             ) : (
               <>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-[#2952cc]" style={{ width: `${gastoPctTeto}%` }} />
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--bg-2)] border border-[var(--line)]">
+                  <div className="h-full rounded-full bg-[var(--brand-2)]" style={{ width: `${gastoPctTeto}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{gastoPctTeto}% do teto de {politico.uf ?? NA}</p>
+                <p className="mt-2 text-xs text-[var(--ink-3)]">{gastoPctTeto}% do teto de {politico.uf ?? NA}</p>
                 <div className="mt-3 flex items-end gap-1">
                   {gastosMensais.map((mes) => (
                     <div key={mes.mes} className="flex flex-1 flex-col items-center gap-1">
-                      <div className="w-full rounded bg-[#dbe4ff]" style={{ height: `${mes.pct + 10}px` }} />
-                      <span className="text-[10px] text-slate-500">{mes.mes}</span>
+                      <div className="w-full rounded bg-[var(--brand-soft)]" style={{ height: `${mes.pct + 10}px` }} />
+                      <span className="text-[10px] text-[var(--ink-3)]">{mes.mes}</span>
                     </div>
                   ))}
                 </div>
@@ -261,52 +277,52 @@ export function ModoAnalista({ politico }: Props) {
             )}
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Presença nas sessões</h3>
+          <article style={cardStyle} className="hover:border-[var(--brand)]">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-3)]">Presença nas sessões</h3>
             <div className="mt-3">
               <PresencaRing value={politico.presenca_pct_atual} />
             </div>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md md:col-span-2">
+          <article style={cardStyle} className="md:col-span-2 hover:border-[var(--brand)]">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Atividade legislativa (LES)</h3>
-              <span className="rounded-full bg-[#eef3ff] px-2 py-0.5 text-xs font-semibold text-[#2952cc]">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-3)]">Atividade legislativa (LES)</h3>
+              <span className="rounded-full bg-[var(--brand-soft)] border border-[var(--line)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-2)]">
                 Metodologia Cambridge 2014
               </span>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Projetos</p>
-                <p className="text-xl font-bold text-slate-900">{NA}</p>
+              <div className="rounded-xl border border-[var(--line)] bg-[rgba(15,23,42,0.4)] p-3">
+                <p className="text-xs text-[var(--ink-3)]">Projetos</p>
+                <p className="text-xl font-bold text-[var(--ink)]">{NA}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Em comissão</p>
-                <p className="text-xl font-bold text-slate-900">{NA}</p>
+              <div className="rounded-xl border border-[var(--line)] bg-[rgba(15,23,42,0.4)] p-3">
+                <p className="text-xs text-[var(--ink-3)]">Em comissão</p>
+                <p className="text-xl font-bold text-[var(--ink)]">{NA}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Sancionados</p>
-                <p className="text-xl font-bold text-slate-900">{NA}</p>
+              <div className="rounded-xl border border-[var(--line)] bg-[rgba(15,23,42,0.4)] p-3">
+                <p className="text-xs text-[var(--ink-3)]">Sancionados</p>
+                <p className="text-xl font-bold text-[var(--ink)]">{NA}</p>
               </div>
             </div>
-            <p className="mt-3 text-sm text-slate-500">{NA}</p>
+            <p className="mt-3 text-sm text-[var(--ink-3)]">{NA}</p>
           </article>
 
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+          <article style={cardStyle} className="hover:border-[var(--brand)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Emendas</h3>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">Em breve</span>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--ink-3)]">Emendas</h3>
+              <span className="rounded-full bg-[rgba(255,255,255,0.05)] border border-[var(--line)] px-2 py-0.5 text-xs font-semibold text-[var(--ink-3)]">Em breve</span>
             </div>
-            <p className="mt-3 text-sm text-slate-500">Esta seção será habilitada assim que os dados estiverem disponíveis.</p>
+            <p className="mt-3 text-sm text-[var(--ink-3)]">Esta seção será habilitada assim que os dados estiverem disponíveis.</p>
           </article>
         </div>
       </section>
 
       {hasPersonalSection ? (
         <section className="container-shell pb-6">
-          <article className="rounded-2xl border border-slate-200 bg-[#f5f6fa] p-4 sm:p-5">
-            <h2 className="text-base font-semibold text-slate-900">Perfil pessoal</h2>
-            <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+          <article style={cardStyle} className="hover:border-[var(--brand)] bg-[rgba(30,41,59,0.25)]">
+            <h2 className="text-base font-semibold text-[var(--ink)]">Perfil pessoal</h2>
+            <div className="mt-3 grid gap-2 text-sm text-[var(--ink-2)] sm:grid-cols-2">
               <p>
                 Nascimento: {formatDate(politico.data_nascimento)} em {politico.naturalidade ?? NA}/{politico.uf_nascimento ?? NA}
               </p>
@@ -328,16 +344,16 @@ export function ModoAnalista({ politico }: Props) {
         </section>
       ) : null}
 
-      <footer className="container-shell pb-10 text-center text-xs text-slate-500">
+      <footer className="container-shell pb-10 text-center text-xs text-[var(--mute)]">
         <p>Dados coletados de fontes oficiais · Última atualização: {politico.collected_at ? formatDate(politico.collected_at) : NA}</p>
         <p className="mt-2 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/metodologia" className="font-semibold text-[#2952cc] hover:underline">
+          <Link href="/metodologia" className="font-semibold text-[var(--brand-2)] hover:underline">
             Metodologia
           </Link>
-          <Link href="/fontes" className="font-semibold text-[#2952cc] hover:underline">
+          <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">
             Fontes
           </Link>
-          <a href="mailto:contato@meuspoliticos.com.br" className="font-semibold text-[#2952cc] hover:underline">
+          <a href="mailto:contato@meuspoliticos.com.br" className="font-semibold text-[var(--brand-2)] hover:underline">
             Reportar erro
           </a>
         </p>

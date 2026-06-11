@@ -22,11 +22,12 @@ const getRequiredEnv = (name: string) => {
   return value
 }
 
-export const getLogtoConfig = (): LogtoNextConfig => ({
+export const getLogtoConfig = (customBaseUrl?: string): LogtoNextConfig => ({
   endpoint: getRequiredEnv('LOGTO_ENDPOINT'),
   appId: getRequiredEnv('LOGTO_APP_ID'),
   appSecret: getRequiredEnv('LOGTO_APP_SECRET'),
-  baseUrl: getBaseUrl(),
+  baseUrl: customBaseUrl ?? getBaseUrl(),
   cookieSecret: getRequiredEnv('LOGTO_COOKIE_SECRET'),
   cookieSecure: process.env.NODE_ENV === 'production',
+  scopes: ['openid', 'profile', 'email'],
 })

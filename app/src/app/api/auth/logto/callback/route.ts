@@ -22,7 +22,11 @@ function getRedirectUrl(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const config = getLogtoConfig()
+  const host = request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  const customBaseUrl = host ? `${proto}://${host}` : undefined
+
+  const config = getLogtoConfig(customBaseUrl)
   const callbackUrl = new URL(
     `${request.nextUrl.pathname}${request.nextUrl.search}${request.nextUrl.hash}`,
     config.baseUrl,

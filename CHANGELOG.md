@@ -25,6 +25,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Updated ETL documentation assumptions to recognize root `requirements.txt` as the Python dependency reference while keeping ETL orchestration as an open gap.
 
+## [4.1.0] - 2026-06-02
+
+### Added
+- Created database migration `db/migrations/20260602000000_remove_auth_users_fkeys.sql` to decouple `public.perfis` and `public.acompanhamentos` from the legacy `auth.users` Supabase table.
+- Added `createProfileForLogtoUserPostgres` function to `app/src/lib/auth/profile-linking.ts` to insert new profile entries.
+- Added auto-provisioning logic in `app/src/lib/auth/current-user.ts` to automatically register new Logto users with a default profile.
+
+### Changed
+- Reorganized the database structure: renamed `/supabase` directory to `/db`, and renamed `/db/001_schema.sql` to `/db/schema.sql`.
+- Updated all `/docs` files (`ARCHITECTURE.md`, `DEPLOYMENT.md`, `ENVIRONMENT.md`, `INTEGRATIONS.md`, `DATABASE.md`, `GAP_ANALYSIS.md`, `TODO_PRODUCTION.md`) and root files (`README.md`, `AI_INSTRUCTIONS.md`) to point to the new `/db` directory and PostgreSQL (VPS) standalone database runtime.
+
+### Fixed
+- Decoupled runtime auth logic from `auth.users` database constraints, fixing the issue where new Logto-only users were resolved as `null` and blocked from accessing protected routes.
+
 ## [4.0.0-audit] - 2026-06-02
 
 ### Added

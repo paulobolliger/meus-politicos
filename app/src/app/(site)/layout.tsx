@@ -1,6 +1,7 @@
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteHeader } from '@/components/site/SiteHeader'
 import { ApoioBanner } from '@/components/site/ApoioBanner'
+import { CookieBanner } from '@/components/site/CookieBanner'
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <SiteFooter />
+      <CookieBanner />
     </>
   )
 }

@@ -332,7 +332,7 @@ export function HomeApp() {
           </div>
 
           {/* KPI grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', border: '1px solid var(--line-strong)', maxWidth: 720 }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 border border-[var(--line-strong)] max-w-[720px]">
             {[
               { value: '513', label: 'REPRESENTANTES' },
               { value: '378.695', label: 'VOTAÇÕES' },
@@ -341,10 +341,7 @@ export function HomeApp() {
             ].map((kpi, i) => (
               <div
                 key={kpi.label}
-                style={{
-                  padding: '14px 16px',
-                  borderLeft: i > 0 ? '1px solid var(--line-strong)' : undefined,
-                }}
+                className="p-[14px_16px] border-l border-t sm:border-t-0 border-[var(--line-strong)] [&:nth-child(2n+1)]:border-l-0 sm:[&:nth-child(2n+1)]:border-l sm:first:border-l-0 [&:nth-child(-n+2)]:border-t-0"
               >
                 <div className="mono" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--ink)' }}>
                   {kpi.value}
@@ -362,8 +359,8 @@ export function HomeApp() {
       <ActivityTicker />
 
       {/* ── SEÇÃO 3: Votações + Mapa ───────────────────────────────────────── */}
-      <section style={{ maxWidth: 1320, margin: '0 auto', padding: '24px 24px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16, alignItems: 'start' }}>
+      <section className="max-w-[1320px] mx-auto p-[24px_24px_0]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 items-start">
 
           {/* Tabela de votações */}
           <Panel>
@@ -487,8 +484,8 @@ export function HomeApp() {
       </section>
 
       {/* ── SEÇÃO 4: KPI grid com sparklines ──────────────────────────────── */}
-      <section style={{ maxWidth: 1320, margin: '0 auto', padding: '24px 24px 0' }}>
-        <div style={{ border: '1px solid var(--line-strong)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <section className="max-w-[1320px] mx-auto p-[24px_24px_0]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 border border-[var(--line-strong)]">
           {[
             {
               label: 'PRESENÇA MÉDIA · 30D',
@@ -521,10 +518,7 @@ export function HomeApp() {
           ].map((kpi, i) => (
             <div
               key={kpi.label}
-              style={{
-                padding: '20px 20px 16px',
-                borderLeft: i > 0 ? '1px solid var(--line-strong)' : undefined,
-              }}
+              className="p-[20px_20px_16px] border-l border-t lg:border-t-0 border-[var(--line-strong)] [&:nth-child(2n+1)]:border-l-0 lg:[&:nth-child(2n+1)]:border-l lg:first:border-l-0 [&:nth-child(-n+2)]:border-t-0"
             >
               <div className="mono" style={{ fontSize: 9.5, letterSpacing: '0.12em', color: 'var(--ink-3)', marginBottom: 8 }}>
                 {kpi.label}
@@ -544,8 +538,8 @@ export function HomeApp() {
       </section>
 
       {/* ── SEÇÃO 5: Rastreabilidade ───────────────────────────────────────── */}
-      <section style={{ maxWidth: 1320, margin: '0 auto', padding: '48px 24px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+      <section className="max-w-[1320px] mx-auto p-[48px_24px_0]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
           {/* Esquerda: texto */}
           <div>
@@ -663,16 +657,10 @@ export function HomeApp() {
       </section>
 
       {/* ── SEÇÃO 6: CTA ──────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1320, margin: '0 auto', padding: '48px 24px 64px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1.4fr 1fr',
-          gap: 0,
-          border: '1px solid var(--line-strong)',
-          background: 'var(--panel)',
-        }}>
+      <section className="max-w-[1320px] mx-auto p-[48px_24px_64px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-0 border border-[var(--line-strong)] bg-[var(--panel)]">
           {/* Esquerda */}
-          <div style={{ padding: '48px 48px', borderRight: '1px solid var(--line-strong)' }}>
+          <div className="p-6 md:p-12 border-b lg:border-b-0 lg:border-r border-[var(--line-strong)]">
             <div className="mono" style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--ink-3)', marginBottom: 20 }}>
               $ mp register --account
             </div>

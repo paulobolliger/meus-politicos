@@ -29,6 +29,9 @@ export function SystemBar() {
         fontSize: 10.5,
         color: 'var(--ink-3)',
         letterSpacing: '0.04em',
+        position: 'sticky',
+        top: 0,
+        zIndex: 45,
       }}
     >
       <div

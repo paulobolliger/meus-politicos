@@ -1,78 +1,301 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
+import { getPgPool } from '@/lib/db/pool'
 
-const INFINITEPAY_API = 'https://api.checkout.infinitepay.io/links'
-const HANDLE = process.env.INFINITEPAY_HANDLE ?? ''
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://meuspoliticos.com.br'
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? ''
+const ASAAS_API_URL = process.env.ASAAS_API_URL ?? 'https://sandbox.asaas.com/api/v3'
+
+interface CartaoInfo {
+  holderName: string
+  number: string
+  expiry: string // MM/AA
+  ccv: string
+  postalCode: string
+  addressNumber: string
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { nome, email, tipo, valor } = body as {
+    const {
+      nome,
+      email,
+      cpfCnpj,
+      telefone,
+      tipo,
+      valor,
+      formaPagamento,
+      cartaoInfo
+    } = body as {
       nome: string
       email: string
+      cpfCnpj: string
+      telefone: string
       tipo: 'mensal' | 'unica'
       valor: number // em reais
+      formaPagamento: 'pix' | 'cartao'
+      cartaoInfo?: CartaoInfo
     }
 
-    if (!nome || !email || !valor) {
+    if (!nome || !email || !cpfCnpj || !valor || !formaPagamento) {
       return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
     }
-    if (!HANDLE) {
-      console.error('[InfinitePay] INFINITEPAY_HANDLE não configurado')
-      return NextResponse.json({ error: 'Configuração de pagamento indisponível.' }, { status: 500 })
+
+    if (!ASAAS_API_KEY || ASAAS_API_KEY === 'mock_api_key_for_testing') {
+      console.error('[Asaas] API Key do Asaas não configurada corretamente.')
+      return NextResponse.json({ error: 'Gateway de pagamento em manutenção.' }, { status: 500 })
     }
 
-    const order_nsu = `apoio-${tipo}-${Date.now()}-${randomUUID().slice(0, 8)}`
-    const valorCentavos = Math.round(valor * 100)
-    const descricao = tipo === 'mensal' ? 'Apoio Cívico Mensal' : 'Apoio Cívico'
+    const cleanCpfCnpj = cpfCnpj.replace(/\D/g, '')
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanPhone = telefone.replace(/\D/g, '') || '11999999999'
 
-    const redirect_url = `${BASE_URL}/apoio/confirmacao`
-    const webhook_url = `${BASE_URL}/api/webhooks/infinitepay`
+    // 1. Buscar ou Criar Cliente no Asaas
+    let customerId = ''
+    try {
+      const searchRes = await fetch(`${ASAAS_API_URL}/customers?cpfCnpj=${cleanCpfCnpj}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': ASAAS_API_KEY
+        }
+      })
 
-    const payload = {
-      handle: HANDLE,
-      order_nsu,
-      items: [
-        {
-          description: descricao,
-          quantity: 1,
-          price: valorCentavos,
+      if (searchRes.ok) {
+        const searchData = await searchRes.json()
+        if (searchData.data && searchData.data.length > 0) {
+          customerId = searchData.data[0].id
+        }
+      }
+    } catch (err) {
+      console.warn('[Asaas] Falha ao pesquisar cliente por CPF/CNPJ:', err)
+    }
+
+    if (!customerId) {
+      const createRes = await fetch(`${ASAAS_API_URL}/customers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': ASAAS_API_KEY
         },
-      ],
-      redirect_url,
-      webhook_url,
-      customer: {
-        name: nome,
-        email,
-      },
+        body: JSON.stringify({
+          name: nome.trim(),
+          email: cleanEmail,
+          cpfCnpj: cleanCpfCnpj,
+          phone: cleanPhone,
+          notificationDisabled: true
+        })
+      })
+
+      if (!createRes.ok) {
+        const errText = await createRes.text()
+        console.error('[Asaas] Erro ao criar cliente:', createRes.status, errText)
+        return NextResponse.json({ error: 'Falha ao registrar dados do pagador no Asaas.' }, { status: 400 })
+      }
+
+      const createData = await createRes.json()
+      customerId = createData.id
     }
 
-    const response = await fetch(INFINITEPAY_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    // 2. Definir dados de controle
+    const order_nsu = `apoio-${tipo}-${Date.now()}-${randomUUID().slice(0, 8)}`
+    
+    // Obter data de vencimento (Hoje no horário de Brasília)
+    const brazilDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+    const year = brazilDate.getFullYear()
+    const month = String(brazilDate.getMonth() + 1).padStart(2, '0')
+    const day = String(brazilDate.getDate()).padStart(2, '0')
+    const dueDate = `${year}-${month}-${day}`
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('[InfinitePay] Erro ao criar link:', response.status, errText)
-      return NextResponse.json({ error: 'Falha ao gerar link de pagamento.' }, { status: 502 })
+    // 3. Processar Cobrança Pix
+    if (formaPagamento === 'pix') {
+      const paymentRes = await fetch(`${ASAAS_API_URL}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': ASAAS_API_KEY
+        },
+        body: JSON.stringify({
+          customer: customerId,
+          billingType: 'PIX',
+          value: valor,
+          dueDate,
+          externalReference: order_nsu,
+          description: tipo === 'mensal' ? 'Apoio Cívico Mensal (Pix)' : 'Apoio Cívico (Pix)'
+        })
+      })
+
+      if (!paymentRes.ok) {
+        const errText = await paymentRes.text()
+        console.error('[Asaas] Erro ao criar pagamento Pix:', paymentRes.status, errText)
+        return NextResponse.json({ error: 'Falha ao gerar cobrança Pix no Asaas.' }, { status: 400 })
+      }
+
+      const paymentData = await paymentRes.json()
+      const paymentId = paymentData.id
+
+      // Obter QR Code e Copia e Cola
+      const qrRes = await fetch(`${ASAAS_API_URL}/payments/${paymentId}/pixQrCode`, {
+        method: 'GET',
+        headers: {
+          'access_token': ASAAS_API_KEY
+        }
+      })
+
+      if (!qrRes.ok) {
+        const errText = await qrRes.text()
+        console.error('[Asaas] Erro ao obter QR Code Pix:', qrRes.status, errText)
+        return NextResponse.json({ error: 'Falha ao gerar QR Code do Pix.' }, { status: 400 })
+      }
+
+      const qrData = await qrRes.json()
+
+      // Registrar no Banco de Dados local
+      const pool = getPgPool()
+      await pool.query(
+        `INSERT INTO doacoes (
+          order_nsu,
+          transaction_nsu,
+          invoice_slug,
+          amount_centavos,
+          capture_method,
+          receipt_url,
+          tipo,
+          status,
+          raw_payload
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'pendente', $8)`,
+        [
+          order_nsu,
+          paymentId,
+          paymentData.invoiceUrl || null,
+          Math.round(valor * 100),
+          'pix',
+          paymentData.invoiceUrl || null,
+          tipo,
+          JSON.stringify(paymentData)
+        ]
+      )
+
+      return NextResponse.json({
+        success: true,
+        type: 'pix',
+        paymentId,
+        order_nsu,
+        qrCode: qrData.encodedImage,
+        copiaCola: qrData.payload
+      })
     }
 
-    const data = await response.json()
+    // 4. Processar Cobrança Cartão de Crédito
+    if (formaPagamento === 'cartao') {
+      if (!cartaoInfo) {
+        return NextResponse.json({ error: 'Dados do cartão de crédito ausentes.' }, { status: 400 })
+      }
 
-    // InfinitePay retorna { url } ou { link } com o link de checkout
-    const paymentUrl = data.url ?? data.link ?? data.checkout_url
+      const [expMonth, expYear] = cartaoInfo.expiry.split('/')
+      if (!expMonth || !expYear) {
+        return NextResponse.json({ error: 'Data de validade do cartão inválida.' }, { status: 400 })
+      }
 
-    if (!paymentUrl) {
-      console.error('[InfinitePay] Resposta sem URL:', data)
-      return NextResponse.json({ error: 'URL de pagamento não retornada.' }, { status: 502 })
+      const fullYear = expYear.trim().length === 2 ? `20${expYear.trim()}` : expYear.trim()
+      const remoteIp = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || '177.100.100.100'
+
+      const paymentRes = await fetch(`${ASAAS_API_URL}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'access_token': ASAAS_API_KEY
+        },
+        body: JSON.stringify({
+          customer: customerId,
+          billingType: 'CREDIT_CARD',
+          value: valor,
+          dueDate,
+          externalReference: order_nsu,
+          description: tipo === 'mensal' ? 'Apoio Cívico Mensal (Cartão)' : 'Apoio Cívico (Cartão)',
+          creditCard: {
+            holderName: cartaoInfo.holderName.trim(),
+            number: cartaoInfo.number.replace(/\s+/g, ''),
+            expiryMonth: expMonth.trim(),
+            expiryYear: fullYear,
+            ccv: cartaoInfo.ccv.trim()
+          },
+          creditCardHolderInfo: {
+            name: nome.trim(),
+            email: cleanEmail,
+            cpfCnpj: cleanCpfCnpj,
+            postalCode: cartaoInfo.postalCode.replace(/\D/g, ''),
+            addressNumber: cartaoInfo.addressNumber.trim(),
+            phone: cleanPhone
+          },
+          remoteIp
+        })
+      })
+
+      if (!paymentRes.ok) {
+        const errText = await paymentRes.text()
+        console.error('[Asaas] Erro ao criar pagamento Cartão:', paymentRes.status, errText)
+        
+        try {
+          const errJson = JSON.parse(errText)
+          if (errJson.errors && errJson.errors.length > 0) {
+            const errorMsg = errJson.errors.map((e: any) => e.description).join('; ')
+            return NextResponse.json({ error: errorMsg }, { status: 400 })
+          }
+        } catch {
+          // Ignora e retorna padrão
+        }
+
+        return NextResponse.json({ error: 'Erro ao processar o cartão de crédito.' }, { status: 400 })
+      }
+
+      const paymentData = await paymentRes.json()
+      const paymentId = paymentData.id
+      const isPaid = paymentData.status === 'CONFIRMED' || paymentData.status === 'RECEIVED'
+
+      // Registrar no Banco de Dados local
+      const pool = getPgPool()
+      await pool.query(
+        `INSERT INTO doacoes (
+          order_nsu,
+          transaction_nsu,
+          invoice_slug,
+          amount_centavos,
+          capture_method,
+          receipt_url,
+          tipo,
+          status,
+          pago_em,
+          raw_payload
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          order_nsu,
+          paymentId,
+          paymentData.invoiceUrl || null,
+          Math.round(valor * 100),
+          'credit_card',
+          paymentData.transactionReceiptUrl || paymentData.invoiceUrl || null,
+          tipo,
+          isPaid ? 'pago' : 'pendente',
+          isPaid ? new Date() : null,
+          JSON.stringify(paymentData)
+        ]
+      )
+
+      return NextResponse.json({
+        success: true,
+        type: 'cartao',
+        paymentId,
+        order_nsu,
+        status: paymentData.status
+      })
     }
 
-    return NextResponse.json({ url: paymentUrl, order_nsu })
+    return NextResponse.json({ error: 'Forma de pagamento não suportada.' }, { status: 400 })
   } catch (err) {
-    console.error('[InfinitePay] Erro interno:', err)
-    return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 })
+    console.error('[Asaas] Erro interno no backend:', err)
+    return NextResponse.json({ error: 'Erro interno no servidor.' }, { status: 500 })
   }
 }

@@ -176,7 +176,11 @@ def get_json(url: str, params: dict = None, headers: dict = None,
         try:
             r = requests.get(url, params=params, headers=h, timeout=30)
             r.raise_for_status()
-            return r.json()
+            try:
+                return r.json()
+            except ValueError as e:
+                log.warning(f"Resposta de {url} não é um JSON válido: {e}")
+                return None
         except requests.exceptions.HTTPError as e:
             log.warning(f"HTTP {e.response.status_code} em {url} (tentativa {i+1})")
             if e.response.status_code in (404, 400):

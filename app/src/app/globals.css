@@ -50,47 +50,46 @@
 
 :root {
   /* Surface */
-  --bg: #f4f5f0;
-  --bg-2: #edeee7;
-  --panel: #ffffff;
-  --panel-2: #fafaf7;
-  --line: #e3e5dd;
-  --line-strong: #cdcfc4;
+  --bg: #0F172A;
+  --bg-2: #0F172A;
+  --panel: #1E293B;
+  --panel-2: #1E293B;
+  --line: #334155;
+  --line-strong: #475569;
 
   /* Ink */
-  --ink: #0a0e1a;
-  --ink-2: #1f2937;
-  --ink-3: #525866;
-  --mute: #8a8f9c;
+  --ink: #F8FAFC;
+  --ink-2: #CBD5E1;
+  --ink-3: #94A3B8;
+  --mute: #64748B;
 
   /* Brand */
-  --brand: #1d3a8a;
-  --brand-2: #2952cc;
-  --brand-soft: #e6ecff;
+  --brand: #8B5CF6;
+  --brand-2: #6366F1;
+  --brand-soft: rgba(139, 92, 246, 0.15);
 
   /* Acento */
-  --accent: #c2410c;
-  --accent-soft: #fde9d4;
-  --accent-gold: #d97706;
-  --accent-gold-soft: #fef3c7;
+  --accent: #fbbf24;
+  --accent-soft: rgba(251, 191, 36, 0.15);
+  --accent-gold: #fbbf24;
+  --accent-gold-soft: rgba(251, 191, 36, 0.15);
 
   /* Status */
-  --pos: #046c4e;
-  --pos-soft: #e1f3ea;
-  --neg: #b1271c;
-  --neg-soft: #fde4e0;
-  --warn: #8a5a0a;
-  --warn-soft: #fbecc8;
-  --info: #1e4ed8;
-  --info-soft: #e2ebff;
+  --pos: #10B981;
+  --pos-soft: rgba(16, 185, 129, 0.15);
+  --neg: #F43F5E;
+  --neg-soft: rgba(244, 63, 94, 0.15);
+  --warn: #F59E0B;
+  --warn-soft: rgba(245, 158, 11, 0.15);
+  --info: #3B82F6;
+  --info-soft: rgba(59, 130, 246, 0.15);
 
-  /* Font vars */
   --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-mono: var(--font-sans);
   --font-display: 'Public Sans', system-ui, -apple-system, sans-serif;
 
   /* Borders */
-  --line-soft: #eeefe9;
+  --line-soft: #334155;
 
   /* Surface alias — usado em componentes do painel */
   --surface: var(--panel);
@@ -107,29 +106,29 @@
 
 html.theme-dark,
 html[data-theme="dark"] {
-  --bg: #07080d;
-  --bg-2: #0c0e15;
-  --panel: #10131c;
-  --panel-2: #161a26;
-  --line: #1f2333;
-  --line-strong: #2d3247;
-  --ink: #e9edf6;
-  --ink-2: #c4cbdb;
-  --ink-3: #8e95a8;
-  --mute: #5b6175;
-  --brand: #6b8cff;
-  --brand-2: #8aa3ff;
-  --brand-soft: rgba(107, 140, 255, 0.12);
-  --accent: #f5a25c;
-  --accent-soft: rgba(245, 162, 92, 0.12);
-  --pos: #4ade80;
-  --pos-soft: rgba(74, 222, 128, 0.12);
-  --neg: #f87171;
-  --neg-soft: rgba(248, 113, 113, 0.12);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.12);
-  --info: #93b4ff;
-  --info-soft: rgba(147, 180, 255, 0.12);
+  --bg: #0F172A;
+  --bg-2: #0F172A;
+  --panel: #1E293B;
+  --panel-2: #1E293B;
+  --line: #334155;
+  --line-strong: #475569;
+  --ink: #F8FAFC;
+  --ink-2: #CBD5E1;
+  --ink-3: #94A3B8;
+  --mute: #64748B;
+  --brand: #8B5CF6;
+  --brand-2: #6366F1;
+  --brand-soft: rgba(139, 92, 246, 0.15);
+  --accent: #fbbf24;
+  --accent-soft: rgba(251, 191, 36, 0.15);
+  --pos: #10B981;
+  --pos-soft: rgba(16, 185, 129, 0.15);
+  --neg: #F43F5E;
+  --neg-soft: rgba(244, 63, 94, 0.15);
+  --warn: #F59E0B;
+  --warn-soft: rgba(245, 158, 11, 0.15);
+  --info: #3B82F6;
+  --info-soft: rgba(59, 130, 246, 0.15);
 
   --background: var(--bg);
   --foreground: var(--ink);
@@ -168,7 +167,7 @@ html.theme-dark body {
   font-weight: 500;
 }
 
-/* Headings — Inter com tracking apertado */
+/* Headings — Public Sans com tracking apertado */
 .display, h1, h2, h3 {
   font-family: var(--font-sans);
   font-feature-settings: 'cv05', 'cv08';
@@ -201,7 +200,7 @@ html.theme-dark body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--line);
   }
 }
 
@@ -209,4 +208,38 @@ html.theme-dark body {
   .container-shell {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.year-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.year-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--brand) !important;
+}
+
+/* Sidebar Item Styles */
+.sidebar-item {
+  color: var(--ink-3) !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  font-weight: 500 !important;
+  transition: all 0.18s ease !important;
+}
+.sidebar-item:hover {
+  color: var(--ink) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--line) !important;
+  border-radius: 8px !important;
+}
+.sidebar-item-active {
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  color: var(--brand-2) !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
 }

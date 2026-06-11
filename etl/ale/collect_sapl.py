@@ -44,13 +44,9 @@ ANOS_PADRAO = [ANO_ATUAL - 1, ANO_ATUAL]
 # Mapa UF → domínio SAPL
 SAPL_DOMINIOS = {
     'AC': 'https://sapl.al.ac.leg.br',
-    'AM': 'https://sapl.al.am.leg.br',
+    'AP': 'https://sapl.alap.leg.br',
+    'AM': 'https://sapl.aleam.gov.br',
     'RR': 'https://sapl.al.rr.leg.br',
-    'PI': 'https://sapl.pi.leg.br',
-    'TO': 'https://sapl.al.to.leg.br',
-    'SE': 'https://sapl.al.se.leg.br',
-    'AL': 'https://sapl.al.al.leg.br',
-    'MS': 'https://sapl.al.ms.leg.br',
 }
 
 # Mapa de voto SAPL (inteiros)
@@ -106,7 +102,7 @@ def sapl_paginate(base_url: str, endpoint: str, params: dict = None) -> list[dic
 
 def collect_parlamentares(conn, uf: str, base_url: str) -> int:
     log.info(f"[SAPL/{uf}] Coletando parlamentares...")
-    parlamentares = sapl_paginate(base_url, 'parlamentar/parlamentar')
+    parlamentares = sapl_paginate(base_url, 'parlamentares/parlamentar')
 
     total = 0
     with conn.cursor() as cur:

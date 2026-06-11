@@ -31,10 +31,10 @@ const blocos = [
 
 export default function SobrePage() {
   return (
-    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
+    <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)] text-[var(--ink)]">
       <section className="relative overflow-hidden border-b border-[var(--line)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff] to-transparent" />
-        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[var(--brand-soft)]/10 to-transparent" />
+        <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[var(--brand-2)]/5 blur-3xl" />
 
         <div className="container-shell relative py-14 sm:py-20">
           <div className="max-w-4xl space-y-6">
@@ -46,22 +46,22 @@ export default function SobrePage() {
             </div>
 
             <div className="space-y-5">
-              <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">
                 Transparência política para qualquer cidadão.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
                 Sem narrativa. Sem opinião. Só dados verificáveis, de fontes oficiais, apresentados de forma simples.
               </p>
-              <p className="max-w-2xl text-sm leading-6 text-slate-500">
-                Veja todas as fontes em <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:underline">/fontes</Link> e a metodologia dos scores em <Link href="/metodologia" className="font-semibold text-[var(--brand-2)] hover:underline">/metodologia</Link>.
+              <p className="max-w-2xl text-sm leading-6 text-[var(--ink-3)]">
+                Veja todas as fontes em <Link href="/fontes" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">/fontes</Link> e a metodologia dos scores em <Link href="/metodologia" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">/metodologia</Link>.
               </p>
-              <p className="max-w-2xl text-sm leading-6 text-slate-500">
+              <p className="max-w-2xl text-sm leading-6 text-[var(--ink-3)]">
                 Esta página resume a visão do projeto. Para a versão completa da tese pública, veja o{' '}
-                <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:underline">
+                <Link href="/manifesto" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">
                   manifesto
                 </Link>
                 . Para a camada operacional, veja{' '}
-                <Link href="/como-funciona" className="font-semibold text-[var(--brand-2)] hover:underline">
+                <Link href="/como-funciona" className="font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">
                   como funciona
                 </Link>
                 .
@@ -71,7 +71,7 @@ export default function SobrePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm sm:p-6">
                 <p className="mono text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">Posicionamento</p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
                   O sistema operacional da cidadania.
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--ink-3)]">
@@ -82,13 +82,13 @@ export default function SobrePage() {
 
               <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm sm:p-6">
                 <p className="mono text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">Manifesto público</p>
-                <p className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
                   Somos infraestrutura.
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--ink-3)]">
                   Essa é a frase de posicionamento que guia imprensa, pitches e apresentações institucionais.
                 </p>
-                <Link href="/manifesto" className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-2)] hover:underline">
+                <Link href="/manifesto" className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline">
                   Ler o manifesto completo
                 </Link>
               </div>
@@ -107,7 +107,7 @@ export default function SobrePage() {
                 <div className="flex size-11 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)] text-[var(--brand-2)]">
                   <Icon className="size-5" aria-hidden="true" />
                 </div>
-                <h2 className="mt-5 text-lg font-bold tracking-tight text-slate-950">{item.title}</h2>
+                <h2 className="mt-5 text-lg font-bold tracking-tight text-[var(--ink)]">{item.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--ink-3)]">{item.description}</p>
               </article>
             )
@@ -119,7 +119,7 @@ export default function SobrePage() {
         <div className="container-shell">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-3xl">
                 O cidadão pesquisa qualquer político e vê, em segundos.
               </h2>
               <p className="mt-3 text-sm leading-6 text-[var(--ink-3)] sm:text-base">
@@ -133,7 +133,7 @@ export default function SobrePage() {
                 (item) => (
                   <div key={item} className="rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-4">
                     <Users className="size-5 text-[var(--brand-2)]" aria-hidden="true" />
-                    <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{item}</p>
+                    <p className="mt-3 text-sm font-semibold text-[var(--ink-2)]">{item}</p>
                   </div>
                 )
               )}
@@ -148,7 +148,7 @@ export default function SobrePage() {
             <div className="flex size-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)] text-[var(--brand-2)]">
               <ShieldCheck className="size-6" aria-hidden="true" />
             </div>
-            <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-950">Neutralidade editorial</h2>
+            <h2 className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)]">Neutralidade editorial</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--ink-3)] sm:text-base">
               O Meus Políticos não tem filiação partidária, não recebe financiamento de partidos ou grupos políticos e
               não emite opinião sobre candidatos, partidos ou ideologias. Acreditamos que cidadãos bem informados tomam
@@ -160,14 +160,14 @@ export default function SobrePage() {
             <div className="flex size-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)] text-[var(--brand-2)]">
               <Mail className="size-6" aria-hidden="true" />
             </div>
-            <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-950">Quem somos</h2>
+            <h2 className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)]">Quem somos</h2>
             <p className="mt-3 text-sm leading-6 text-[var(--ink-3)]">
               O Meus Políticos é desenvolvido e operado pela NORO GURU, NORO Tecnologia e Turismo Ltda, CNPJ
               63.429.497/0001-88, empresa brasileira com sede em Campinas/SP.
             </p>
             <a
               href="mailto:contato@meuspoliticos.com.br"
-              className="mt-5 inline-flex text-sm font-semibold text-[var(--brand-2)] hover:underline"
+              className="mt-5 inline-flex text-sm font-semibold text-[var(--brand-2)] hover:text-violet-300 hover:underline"
             >
               contato@meuspoliticos.com.br
             </a>
@@ -183,7 +183,7 @@ export default function SobrePage() {
                 <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                   Explore dados públicos com clareza.
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-white/68 sm:text-base">
+                <p className="mt-3 text-sm leading-6 text-white/70 sm:text-base">
                   Pesquise políticos, entenda contexto institucional e acompanhe representantes em uma plataforma
                   neutra. Se quiser a tese pública do projeto, leia também o manifesto.
                 </p>
