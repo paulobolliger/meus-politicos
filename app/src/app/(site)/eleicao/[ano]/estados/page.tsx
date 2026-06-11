@@ -6,11 +6,7 @@ import { ESTADOS, SIGLAS_ORDENADAS } from '@/lib/estados-config'
 export const revalidate = 86400
 
 export function generateStaticParams() {
-  return [
-    { ano: '2026' },
-    { ano: '2024' },
-    { ano: '2022' },
-  ]
+  return []
 }
 
 export async function generateMetadata(

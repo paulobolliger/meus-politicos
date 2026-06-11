@@ -9,11 +9,7 @@ export const revalidate = 86400
 
 // ─── Static params ──────────────────────────────────────────────────────────
 export function generateStaticParams() {
-  return [
-    { sigla: 'sp', slug_cidade: 'sao-paulo-sp' },
-    { sigla: 'rj', slug_cidade: 'rio-de-janeiro-rj' },
-    { sigla: 'ac', slug_cidade: 'rio-branco-ac' },
-  ]
+  return []
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────

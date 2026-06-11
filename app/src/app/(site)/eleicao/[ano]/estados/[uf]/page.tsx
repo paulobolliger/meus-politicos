@@ -7,14 +7,7 @@ import { getEstado, SIGLAS_ORDENADAS } from '@/lib/estados-config'
 export const revalidate = 86400
 
 export function generateStaticParams() {
-  const years = ['2026', '2024', '2022']
-  const params: { ano: string; uf: string }[] = []
-  years.forEach((ano) => {
-    SIGLAS_ORDENADAS.forEach((uf) => {
-      params.push({ ano, uf: uf.toLowerCase() })
-    })
-  })
-  return params
+  return []
 }
 
 export async function generateMetadata(

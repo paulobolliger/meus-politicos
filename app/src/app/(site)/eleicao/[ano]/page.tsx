@@ -7,11 +7,7 @@ export const revalidate = 86400
 
 // ─── Static params ──────────────────────────────────────────────────────────
 export function generateStaticParams() {
-  return [
-    { ano: '2026' },
-    { ano: '2024' },
-    { ano: '2022' },
-  ]
+  return []
 }
 
 // ─── Pool singleton ───────────────────────────────────────────────────────────

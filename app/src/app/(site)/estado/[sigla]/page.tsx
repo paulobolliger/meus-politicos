@@ -17,7 +17,7 @@ export const revalidate = 86400
 
 // ─── Static params ──────────────────────────────────────────────────────────
 export function generateStaticParams() {
-  return Object.keys(ESTADOS).map((s) => ({ sigla: s.toLowerCase() }))
+  return []
 }
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
