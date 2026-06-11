@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
 export function LoginForm() {
   const searchParams = useSearchParams()
@@ -42,7 +42,7 @@ export function LoginForm() {
   }
 
   // Animações
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -52,12 +52,12 @@ export function LoginForm() {
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 15, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: 'spring', stiffness: 300, damping: 24 }
+      transition: { type: 'spring' as const, stiffness: 300, damping: 24 }
     }
   }
 
