@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 import { HomeCidadaoClient } from '@/components/site/home/HomeCidadaoClient'
 
 export const metadata: Metadata = {
@@ -25,22 +25,8 @@ type VotacaoRecenteRow = {
   voto: string | null
 }
 
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host: process.env.POSTGRES_HOST ?? 'localhost',
-    port: Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-    user: process.env.POSTGRES_USER ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5,
-    idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
-
 export default async function HomePage() {
-  const pool = getPool()
+  const pool = getPgPool()
 
   // 1. Buscar votações recentes da Câmara (proposicao_id preenchido), agrupar por votação
   const { rows: raw } = await pool.query<VotacaoRecenteRow>(

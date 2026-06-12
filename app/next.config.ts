@@ -7,11 +7,11 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 loadEnvConfig(path.resolve(__dirname, ".."))
 
-let version = "0.2.0"
+let version = "0.2.1"
 try {
   const gitHash = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
-  version = `v0.2.0-${gitBranch}+${gitHash}`
+  version = `v0.2.1-${gitBranch}+${gitHash}`
 } catch (e) {
   // fallback
 }
