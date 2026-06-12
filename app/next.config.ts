@@ -3,14 +3,15 @@ import path from "path"
 
 import { loadEnvConfig } from "@next/env"
 import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 
 loadEnvConfig(path.resolve(__dirname, ".."))
 
-let version = "0.1.0"
+let version = "0.2.0"
 try {
   const gitHash = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
-  version = `v0.1.0-${gitBranch}+${gitHash}`
+  version = `v0.2.0-${gitBranch}+${gitHash}`
 } catch (e) {
   // fallback
 }
@@ -58,4 +59,10 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: "noro-tecnologia-ltda",
+  project: "meus-politicos",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  automaticVercelMonitors: true,
+})
