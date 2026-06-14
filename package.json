@@ -16,6 +16,7 @@
     "test:e2e": "npm --prefix app run test:e2e"
   },
   "dependencies": {
+    "next-themes": "^0.4.6",
     "prop-types": "^15.8.1"
   }
 }

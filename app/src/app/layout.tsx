@@ -3,6 +3,7 @@ import { Public_Sans } from "next/font/google"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import Script from "next/script"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { ThemeProvider } from "@/components/system/theme-provider"
 
 import "./globals.css"
 
@@ -69,7 +70,14 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
       </head>
       <body className="min-h-screen">
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
         <SpeedInsights />
       </body>
       <GoogleAnalytics gaId="G-GD1H9ENSR8" />
