@@ -1,27 +1,14 @@
-import { Pool } from 'pg'
 import { getEstado } from '@/lib/estados-config'
+import { getPgPool } from '@/lib/db/pool'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { DeputadoEstadualTabs } from '@/components/site/DeputadoEstadualTabs'
 import type { DepTabData } from '@/components/site/DeputadoEstadualTabs'
 import { isFeatureActive } from '@/lib/flags'
 
 export const revalidate = 86400
-
-// ─── Pool singleton ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 // ─── Partido → cor ────────────────────────────────────────────────────────────
 const PARTIDO_COR: Record<string, string> = {
@@ -87,7 +74,7 @@ export async function generateMetadata(
   { params }: { params: Promise<{ sigla: string; slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await params
-  const pool = getPool()
+  const pool = getPgPool()
   const res = await pool.query<{ nome_eleitoral: string; partido: string | null; uf: string }>(
     `SELECT p.nome_eleitoral, pt.sigla AS partido, p.uf
      FROM politicos p LEFT JOIN partidos pt ON pt.id = p.partido_id
@@ -114,7 +101,7 @@ export default async function DeputadoEstadualPage({
   const cfg = getEstado(siglaUp)
   if (!cfg) notFound()
 
-  const pool = getPool()
+  const pool = getPgPool()
 
   // ─── Fetch deputado ────────────────────────────────────────────────────────
   const depResult = await pool.query<DeputadoFull>(
@@ -163,6 +150,8 @@ export default async function DeputadoEstadualPage({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
+        .dep-detail-page,
+        .dep-detail-page * { box-sizing: border-box; }
         .dep-colega:hover { border-color: ${pCor} !important; transform: translateY(-2px); }
         .dep-colega { transition: border-color 0.15s, transform 0.15s; }
         .dep-action:hover { opacity: 0.85; }
@@ -171,7 +160,7 @@ export default async function DeputadoEstadualPage({
         .back-link { transition: color 0.15s; }
       ` }} />
 
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px' }}>
+      <div className="dep-detail-page" style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px', overflowX: 'clip' }}>
 
         {/* ── BREADCRUMB ──────────────────────────────────────────────────── */}
         <nav style={{
@@ -213,17 +202,17 @@ export default async function DeputadoEstadualPage({
               fontSize: 48, fontWeight: 900, color: 'white',
               fontFamily: 'var(--font-display)',
               boxShadow: `0 8px 24px ${pCor}33`,
-              overflow: 'hidden',
+              overflow: 'hidden', position: 'relative',
             }}>
               {dep.foto_url
-                ? <img src={dep.foto_url} alt={dep.nome_eleitoral}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <Image src={dep.foto_url} alt={dep.nome_eleitoral}
+                    fill sizes="120px" unoptimized style={{ objectFit: 'cover' }} />
                 : inicial
               }
             </div>
 
             {/* Identidade */}
-            <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               {/* Chips */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                 <span style={{
@@ -323,7 +312,7 @@ export default async function DeputadoEstadualPage({
         </div>
 
         {/* ── KPI STRIP ───────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16, marginBottom: 24 }}>
 
           {/* Presença */}
           <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: '20px 24px' }}>
@@ -414,7 +403,7 @@ export default async function DeputadoEstadualPage({
         </div>
 
         {/* ── GRID PRINCIPAL ──────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 20, alignItems: 'start' }}>
 
           {/* ── COL ESQUERDA ────────────────────────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -645,11 +634,11 @@ export default async function DeputadoEstadualPage({
                       background: `${pCor}22`, overflow: 'hidden',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 13, fontWeight: 700, color: pCor,
-                      fontFamily: 'var(--font-display)',
+                      fontFamily: 'var(--font-display)', position: 'relative',
                     }}>
                       {c.foto_url
-                        ? <img src={c.foto_url} alt={c.nome_eleitoral}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <Image src={c.foto_url} alt={c.nome_eleitoral}
+                            fill sizes="34px" unoptimized style={{ objectFit: 'cover' }} />
                         : c.nome_eleitoral.charAt(0)
                       }
                     </div>

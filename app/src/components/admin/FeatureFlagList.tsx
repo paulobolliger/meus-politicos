@@ -171,7 +171,7 @@ function FlagCard({ flag }: { flag: FeatureFlag }) {
   const [rollout, setRollout] = useState(flag.rollout_pct)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   async function handleToggle() {
     const newAtivo = !ativo

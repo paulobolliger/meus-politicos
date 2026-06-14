@@ -1,7 +1,8 @@
-import { getEstado, ESTADOS } from '@/lib/estados-config'
+import { getEstado } from '@/lib/estados-config'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { EstadoAnchorNav } from '@/components/site/EstadoAnchorNav'
 import { getPgPool } from '@/lib/db/pool'
 import {
@@ -558,7 +559,7 @@ export default async function EstadoPage(
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)' }}>
+    <div className="estado-detail-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', overflowX: 'clip' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -583,18 +584,18 @@ export default async function EstadoPage(
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 32, flexWrap: 'wrap' }}>
 
             {/* Esquerda: bandeira + dados */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flex: 1, minWidth: 280 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, flex: 1, minWidth: 0 }}>
               {/* Bandeira */}
               <div style={{
                 width: 150, height: 100, flexShrink: 0,
                 borderRadius: 8, overflow: 'hidden',
                 border: '1px solid var(--line)',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.35)',
-                background: 'var(--panel)',
+                background: 'var(--panel)', position: 'relative',
               }}>
                 {bandeira ? (
-                  <img src={bandeira} alt={`Bandeira de ${cfg.nome}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <Image src={bandeira} alt={`Bandeira de ${cfg.nome}`} fill sizes="150px"
+                    unoptimized loading="eager" style={{ objectFit: 'cover' }} />
                 ) : (
                   <div style={{
                     width: '100%', height: '100%',
@@ -635,12 +636,12 @@ export default async function EstadoPage(
 
             {/* Direita: card do governador */}
             {governador && (
-              <div style={{
+              <div className="estado-governador-card" style={{
                 background: 'var(--panel)',
                 border: '1px solid var(--line)',
                 borderRadius: 14, padding: '24px 28px',
                 display: 'flex', alignItems: 'center', gap: 20,
-                minWidth: 340, minHeight: 140, flexShrink: 0,
+                width: 'min(340px, 100%)', minHeight: 140, flexShrink: 1,
                 boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
               }}>
                 {/* Photo with party border */}
@@ -653,10 +654,11 @@ export default async function EstadoPage(
                       border: `3px solid ${partyColor}`, 
                       boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30,
+                      position: 'relative',
                     }}>
                       {governador.foto_url
-                        ? <img src={governador.foto_url} alt={governador.nome_governador}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <Image src={governador.foto_url} alt={governador.nome_governador}
+                            fill sizes="76px" unoptimized style={{ objectFit: 'cover' }} />
                         : '👤'
                       }
                     </div>
@@ -719,7 +721,7 @@ export default async function EstadoPage(
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignSelf: 'center', flexShrink: 0 }}>
+                <div className="estado-governador-actions">
                   <Link href={`/estado/${sigla.toLowerCase()}/executivo`}
                     style={{
                       padding: '8px 14px', borderRadius: 8,
@@ -768,7 +770,7 @@ export default async function EstadoPage(
         {/* 5 KPI cards */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))',
           gap: 16, marginBottom: 28,
         }}>
           {[
@@ -836,7 +838,7 @@ export default async function EstadoPage(
         {/* Stats secundários */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(180px, 100%), 1fr))',
           gap: 12,
           padding: '16px 24px',
           background: 'var(--panel)', borderRadius: 10,
@@ -898,6 +900,24 @@ export default async function EstadoPage(
         </div>
 
         <style dangerouslySetInnerHTML={{ __html: `
+          .estado-detail-page,
+          .estado-detail-page * {
+            box-sizing: border-box;
+          }
+          .estado-governador-card {
+            flex-wrap: wrap;
+            min-width: 0;
+          }
+          .estado-governador-actions {
+            display: grid;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+          }
+          .estado-governador-actions a {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+          }
           @media (min-width: 860px) {
             .ale-grid {
               grid-template-columns: 2fr 1fr !important;
@@ -976,10 +996,11 @@ export default async function EstadoPage(
                         border: `3px solid ${partyColor}`, 
                         boxShadow: '0 4px 10px rgba(0,0,0,0.25)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+                        position: 'relative',
                       }}>
                         {ale.presidente_foto
-                          ? <img src={ale.presidente_foto} alt={ale.presidente_nome}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ? <Image src={ale.presidente_foto} alt={ale.presidente_nome}
+                              fill sizes="60px" unoptimized style={{ objectFit: 'cover' }} />
                           : '👤'
                         }
                       </div>
@@ -1121,7 +1142,7 @@ export default async function EstadoPage(
                 {senadores.map((s) => {
                   const pCor = s.partidos?.sigla ? (PARTIDO_COR[s.partidos.sigla] ?? '#64748b') : 'var(--line)';
                   return (
-                    <Link key={s.id} href={`/p/${s.slug}`} style={{ textDecoration: 'none', flex: '1 1 280px', minWidth: 260 }}>
+                    <Link key={s.id} href={`/p/${s.slug}`} style={{ textDecoration: 'none', flex: '1 1 280px', minWidth: 0 }}>
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 14,
                         padding: '14px 20px', borderRadius: 12,
@@ -1135,9 +1156,10 @@ export default async function EstadoPage(
                           background: 'var(--line)', flexShrink: 0,
                           border: '2px solid var(--panel)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                          position: 'relative',
                         }}>
                           {s.foto_url
-                            ? <img src={s.foto_url} alt={s.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ? <Image src={s.foto_url} alt={s.nome_eleitoral} fill sizes="48px" unoptimized style={{ objectFit: 'cover' }} />
                             : '👤'
                           }
                         </div>
@@ -1543,7 +1565,7 @@ export default async function EstadoPage(
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 24, alignItems: 'start' }}>
 
           {/* Timeline chart */}
           <div style={{

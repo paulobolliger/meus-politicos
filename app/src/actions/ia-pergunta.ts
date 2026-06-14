@@ -10,6 +10,49 @@ export type Message = {
   timestamp: string
 }
 
+type ProjetoContext = {
+  tipo: string
+  numero: string | number
+  ano: number
+  ementa: string | null
+  ementa_simples: string | null
+  titulo_simplificado: string | null
+  situacao: string | null
+}
+
+type PoliticoContext = {
+  nome: string
+  nome_eleitoral: string | null
+  cargo: string
+  uf: string | null
+  presenca_pct_atual: number | null
+  gasto_total_ano: number | null
+  total_votacoes: number | null
+  partido_sigla: string | null
+}
+
+type EmendaContext = {
+  codigo_emenda: string
+  ano: number
+  valor: number | null
+  valor_pago: number | null
+  municipio_nome: string | null
+  uf_municipio: string | null
+  funcao: string | null
+  area: string | null
+  tipo_emenda: string | null
+  autor_nome: string | null
+  partido_sigla: string | null
+}
+
+type VerbeteContext = {
+  termo: string
+  definicao_simples: string
+  definicao_tecnica: string | null
+  exemplo: string | null
+  categoria: string | null
+}
+
 const SYSTEM_PROMPT = `Você é a "Inteligência Cívica" do portal Meus Políticos.
 Seu objetivo é explicar projetos de lei de forma extremamente simples, neutra e didática para cidadãos leigos, sem jargões jurídicos ("sem juridiquês").
 REGRAS:
@@ -31,7 +74,7 @@ export async function perguntarIA(
     const db = getPgPool()
     
     // Busca informações detalhadas do projeto no banco de dados para alimentar o contexto do prompt
-    const { rows } = await db.query(
+    const { rows } = await db.query<ProjetoContext>(
       `SELECT tipo, numero, ano, ementa, ementa_simples, titulo_simplificado, situacao 
        FROM proposicoes 
        WHERE id = $1 LIMIT 1`,
@@ -83,14 +126,14 @@ Situação atual: ${projeto.situacao ?? 'Em tramitação'}`
     }
 
     return { resposta: reply }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[IA Pergunta Projeto Error]:', error)
     return { erro: 'Erro ao processar a pergunta da Inteligência Cívica.' }
   }
 }
 
 // Resposta determinística local baseada no projeto se a chave da API estiver indisponível
-function obterRespostaLocal(projeto: any, pergunta: string): string {
+function obterRespostaLocal(projeto: ProjetoContext, pergunta: string): string {
   const query = pergunta.toLowerCase()
   const nomePL = `${projeto.tipo} ${projeto.numero}/${projeto.ano}`
   const tema = projeto.titulo_simplificado || 'esta matéria legislativa'
@@ -134,7 +177,7 @@ export async function perguntarPoliticoIA(
 
   try {
     const db = getPgPool()
-    const { rows } = await db.query(
+    const { rows } = await db.query<PoliticoContext>(
       `SELECT p.nome, p.nome_eleitoral, p.cargo::text AS cargo, p.uf,
               p.presenca_pct_atual, p.gasto_total_ano, p.total_votacoes,
               pt.sigla AS partido_sigla
@@ -201,7 +244,7 @@ REGRAS:
   }
 }
 
-function obterRespostaPoliticoLocal(politico: any, pergunta: string): string {
+function obterRespostaPoliticoLocal(politico: PoliticoContext, pergunta: string): string {
   const query = pergunta.toLowerCase()
   const nome = politico.nome_eleitoral || politico.nome
   const cargo = politico.cargo === 'senador' ? 'Senador(a)' : 'Deputado(a) Federal'
@@ -245,7 +288,7 @@ export async function perguntarEmendaIA(
     const db = getPgPool()
     
     // Busca informações detalhadas da emenda no banco de dados para alimentar o contexto do prompt
-    const { rows } = await db.query(
+    const { rows } = await db.query<EmendaContext>(
       `SELECT e.numero_emenda AS codigo_emenda, e.ano, e.valor, e.valor_pago,
               e.municipio_nome, e.uf_municipio, e.funcao, e.area, e.tipo_emenda,
               p.nome_eleitoral AS autor_nome, pt.sigla AS partido_sigla
@@ -308,13 +351,13 @@ REGRAS:
     }
 
     return { resposta: reply }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[IA Pergunta Emenda Error]:', error)
     return { erro: 'Erro ao processar a pergunta sobre a emenda.' }
   }
 }
 
-function obterRespostaEmendaLocal(emenda: any, pergunta: string): string {
+function obterRespostaEmendaLocal(emenda: EmendaContext, pergunta: string): string {
   const query = pergunta.toLowerCase()
   const cod = emenda.codigo_emenda
   const cidade = emenda.municipio_nome || 'município'
@@ -349,7 +392,7 @@ export async function perguntarGlossarioIA(
 
   try {
     const db = getPgPool()
-    const { rows } = await db.query(
+    const { rows } = await db.query<VerbeteContext>(
       `SELECT termo, definicao_simples, definicao_tecnica, exemplo, categoria 
        FROM glossario 
        WHERE slug = $1 LIMIT 1`,
@@ -411,7 +454,7 @@ REGRAS:
   }
 }
 
-function obterRespostaGlossarioLocal(verbete: any, pergunta: string): string {
+function obterRespostaGlossarioLocal(verbete: VerbeteContext, pergunta: string): string {
   const query = pergunta.toLowerCase()
   const termo = verbete.termo
 
@@ -434,4 +477,3 @@ ${verbete.exemplo ? `- **Na prática:** *${verbete.exemplo}*` : ''}
 
 Caso tenha dúvidas mais específicas, você pode consultar o regimento interno das Casas Legislativas ou a Constituição Federal.`
 }
-

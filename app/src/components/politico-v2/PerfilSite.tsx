@@ -171,7 +171,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
       {/* ── HERO ── */}
       <section style={{ background: 'var(--brand)', padding: '40px 24px 56px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div className="perfil-hero">
             <div style={{ width: 88, height: 88, borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: cores.bg }}>
               {politico.foto_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -182,7 +182,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                 </div>
               )}
             </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
+            <div className="perfil-identity">
               <h1 style={{ margin: 0, fontSize: 'clamp(26px, 5vw, 42px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 {nome}
               </h1>
@@ -195,7 +195,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                 ))}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="perfil-actions">
               <BotaoAcompanhar
                 politicoId={politico.id}
                 politicoSlug={slug}
@@ -203,7 +203,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                 followIntent={followIntent}
                 variant="hero"
               />
-              <button style={{ height: 38, padding: '0 16px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
+              <button style={{ width: '100%', height: 44, padding: '0 16px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontSize: 13, cursor: 'pointer' }}>
                 ↗ Compartilhar
               </button>
             </div>
@@ -290,7 +290,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
               <>
                 <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Últimas {votacoes.length} votações</div>
                 <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
-                  {votacoes.map((v, i) => {
+                  {votacoes.map((v) => {
                     const cfg = VOTO_CONFIG[v.voto ?? ''] ?? { label: v.voto ?? '—', bg: 'var(--bg-2)', color: 'var(--ink-3)' }
                     const data = v.data ? new Date(v.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
                     return (
@@ -441,7 +441,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                 </div>
                 <div style={{ background: 'var(--panel)', borderRadius: 16, border: '1px solid var(--line)', overflow: 'hidden' }}>
                   {emendas.map((e, i) => (
-                    <div key={e.id} style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '12px 16px', borderBottom: i < emendas.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
+                    <div key={e.id} className="perfil-emenda-row" style={{ borderBottom: i < emendas.length - 1 ? '1px solid var(--line-soft)' : 'none' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                           {e.municipio_destino ?? e.municipio_nome ?? '—'}{(e.uf_destino ?? e.uf_municipio) ? ` / ${e.uf_destino ?? e.uf_municipio}` : ''}
@@ -451,7 +451,7 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{e.area ?? e.funcao ?? '—'} · {e.ano}</div>
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmt(e.valor_pago ?? e.valor ?? 0)}</div>
+                      <div className="perfil-emenda-value">{fmt(e.valor_pago ?? e.valor ?? 0)}</div>
                     </div>
                   ))}
                 </div>
@@ -463,6 +463,33 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
 
       </div>
       <style>{`
+        .perfil-hero {
+          display: grid;
+          grid-template-columns: 88px minmax(0, 1fr);
+          gap: 16px;
+          align-items: start;
+        }
+        .perfil-identity {
+          min-width: 0;
+        }
+        .perfil-actions {
+          display: grid;
+          grid-column: 1 / -1;
+          gap: 8px;
+          width: 100%;
+        }
+        .perfil-emenda-row {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 14px 16px;
+        }
+        .perfil-emenda-value {
+          color: var(--ink);
+          font-family: var(--font-mono);
+          font-size: 13px;
+          font-weight: 700;
+        }
         .kpi-stat-item {
           border-top: 1px solid var(--line-soft);
         }
@@ -470,6 +497,26 @@ export function PerfilSite({ politico, partido, votacoes, gastos, presencaRows, 
           border-top: none;
         }
         @media (min-width: 640px) {
+          .perfil-hero {
+            grid-template-columns: 88px minmax(0, 1fr) auto;
+            gap: 24px;
+          }
+          .perfil-actions {
+            display: flex;
+            flex-direction: column;
+            grid-column: auto;
+            min-width: 150px;
+          }
+          .perfil-emenda-row {
+            align-items: center;
+            flex-direction: row;
+            gap: 16px;
+            padding: 12px 16px;
+          }
+          .perfil-emenda-value {
+            flex-shrink: 0;
+            text-align: right;
+          }
           .kpi-stat-item {
             border-top: none;
           }

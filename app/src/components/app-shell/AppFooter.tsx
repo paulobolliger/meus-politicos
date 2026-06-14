@@ -29,9 +29,9 @@ export function AppFooter() {
           <Link href="/fontes" style={{ fontSize: 12, color: 'var(--ink-3)', textDecoration: 'none' }}>
             Fontes
           </Link>
-          <a href="/" style={{ fontSize: 12, color: 'var(--brand-2)', textDecoration: 'none' }}>
+          <Link href="/" style={{ fontSize: 12, color: 'var(--brand-2)', textDecoration: 'none' }}>
             &larr; Voltar ao site
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

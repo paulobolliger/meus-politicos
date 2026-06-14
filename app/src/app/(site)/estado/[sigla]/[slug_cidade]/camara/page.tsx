@@ -160,7 +160,13 @@ export default async function CamaraPage(
   const cor = cfg.cor
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px' }}>
+    <div className="camara-municipal-page" style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px', boxSizing: 'border-box', overflowX: 'clip' }}>
+      <style>{`
+        .camara-municipal-page,
+        .camara-municipal-page * {
+          box-sizing: border-box;
+        }
+      `}</style>
       
       {/* Breadcrumb */}
       <nav style={{

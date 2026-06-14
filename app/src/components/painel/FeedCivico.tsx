@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 
 import { Panel } from '@/components/civic'
 import { BotaoAcompanhar } from '@/components/politico/BotaoAcompanhar'
@@ -145,10 +146,13 @@ export function FeedCivico({
                   >
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                       {p.fotoUrl ? (
-                        <img 
+                        <Image
                           src={p.fotoUrl} 
                           alt={p.nomeEleitoral} 
-                          style={{ width: 40, height: 40, borderRadius: 999, objectFit: 'cover', border: '1px solid var(--line)' }}
+                          width={40}
+                          height={40}
+                          unoptimized
+                          style={{ borderRadius: 999, objectFit: 'cover', border: '1px solid var(--line)' }}
                         />
                       ) : (
                         <div style={{ width: 40, height: 40, borderRadius: 999, background: 'var(--brand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 12 }}>

@@ -3,6 +3,7 @@ import { getEstado } from '@/lib/estados-config'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { VereadorTabs } from '@/components/site/VereadorTabs'
 import type { VerTabData } from '@/components/site/VereadorTabs'
 import { isFeatureActive } from '@/lib/flags'
@@ -52,14 +53,6 @@ function calcIdade(dataNasc: string | null): number | null {
     (hoje.getMonth() === nasc.getMonth() && hoje.getDate() >= nasc.getDate())
   if (!mesPassou) idade--
   return idade
-}
-
-function fmtMoeda(v: string | null): string | null {
-  if (!v || Number(v) === 0) return null
-  const n = Number(v)
-  if (n >= 1_000_000) return `R$ ${(n / 1_000_000).toFixed(1).replace('.', ',')}mi`
-  if (n >= 1_000)     return `R$ ${(n / 1_000).toFixed(1).replace('.', ',')}k`
-  return `R$ ${n.toLocaleString('pt-BR')}`
 }
 
 const PARTIDO_COR: Record<string, string> = {
@@ -199,10 +192,10 @@ export default async function VereadorPage(
               fontSize: 48, fontWeight: 900, color: 'white',
               fontFamily: 'var(--font-display)',
               boxShadow: `0 8px 24px ${pCor}33`,
-              overflow: 'hidden',
+              overflow: 'hidden', position: 'relative',
             }}>
               {ver.foto_url ? (
-                <img src={ver.foto_url} alt={ver.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Image src={ver.foto_url} alt={ver.nome_eleitoral} fill sizes="110px" unoptimized style={{ objectFit: 'cover' }} />
               ) : inicial}
             </div>
 
@@ -295,10 +288,11 @@ export default async function VereadorPage(
                           width: 36, height: 36, borderRadius: '50%', overflow: 'hidden',
                           background: `linear-gradient(135deg, ${pCor} 0%, ${pCor}99 100%)`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0
+                          fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0,
+                          position: 'relative',
                         }}>
                           {c.foto_url ? (
-                            <img src={c.foto_url} alt={c.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <Image src={c.foto_url} alt={c.nome_eleitoral} fill sizes="36px" unoptimized style={{ objectFit: 'cover' }} />
                           ) : initChar}
                         </div>
                         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

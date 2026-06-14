@@ -7,14 +7,15 @@ related: [docs/API.md, docs/AUTH.md, docs/ENVIRONMENT.md, docs/DATABASE.md, docs
 
 # Integracoes
 
-Este e o manual mestre das integracoes externas identificadas no runtime e nos scripts do projeto. A cobertura prioriza Logto, InfinitePay, PostgreSQL (VPS) e OpenAI, conforme solicitado para o Lote 6.
+Este e o manual mestre das integracoes externas identificadas no runtime e nos scripts do projeto. Estado revisado em 2026-06-12: Logto, Asaas, PostgreSQL (VPS) e OpenAI sao as integracoes principais. InfinitePay permanece apenas como webhook legado compativel.
 
 ## 1. Matriz Executiva
 
 | Servico | Papel no produto | Arquivos fontes de consumo | Variaveis associadas | Status |
 |---|---|---|---|---|
 | Logto | Identidade, login, cadastro, reset, logout e sessao | `app/src/lib/logto/*`, `app/src/lib/auth/*`, `app/src/app/api/auth/logto/*`, `app/src/proxy.ts` | `LOGTO_ENDPOINT`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_COOKIE_SECRET`, `LOGTO_BASE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PAINEL_URL` | Ativo |
-| InfinitePay | Criacao de checkout de apoio e webhook financeiro | `app/src/app/api/apoio/criar-link/route.ts`, `app/src/app/api/apoio/verificar-pagamento/route.ts`, `app/src/app/api/webhooks/infinitepay/route.ts`, `app/src/app/(site)/apoio/page.tsx` | `INFINITEPAY_HANDLE`, `NEXT_PUBLIC_SITE_URL` | Ativo parcial; webhook incompleto |
+| Asaas | Cobranca Pix/cartao, consulta e webhook financeiro | `app/src/app/api/apoio/criar-link/route.ts`, `app/src/app/api/apoio/verificar-pagamento/route.ts`, `app/src/app/api/webhooks/asaas/route.ts`, `app/src/app/(site)/apoio/page.tsx` | `ASAAS_API_KEY`, `ASAAS_API_URL`, `ASAAS_WEBHOOK_TOKEN` | Ativo; depende de credenciais e migration `doacoes` |
+| InfinitePay | Compatibilidade de webhook financeiro legado | `app/src/app/api/webhooks/infinitepay/route.ts` | `INFINITEPAY_HANDLE` | Legado; valida por back-channel e persiste idempotentemente |
 | PostgreSQL (VPS) | Banco relacional principal | `app/src/app/**`, `app/src/app/api/**`, `app/src/lib/auth/profile-linking.ts`, `app/src/actions/resumo-interpretativo.ts`, `etl/**` | `POSTGRES_*` | Ativo |
 | OpenAI | Resumo interpretativo e simplificacao de texto | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` | `OPENAI_API_KEY`, `IA_RESUMO_MAX_GERACOES_DIA` | Ativo condicionado a chave |
 
@@ -89,35 +90,40 @@ sequenceDiagram
 | Redirect URIs | Dependem de env/provider | Validar em cada ambiente |
 | Segredos Logto no client | Nao identificado | Manter sem prefixo `NEXT_PUBLIC_` |
 
-## 3. InfinitePay
+## 3. Pagamentos
 
 ### 3.1 Papel
 
-InfinitePay e a integracao de pagamento ativa para apoio financeiro. O fluxo cria um link de checkout externo e espera confirmacao por webhook. A criacao do link esta implementada; a persistencia da confirmacao ainda nao.
+Asaas e a integracao ativa para apoio financeiro. O backend cria cliente e cobranca Pix ou cartao, persiste a doacao pendente e confirma o pagamento por consulta ou webhook autenticado. InfinitePay nao cria novos checkouts; seu webhook foi mantido para compatibilidade com transacoes legadas.
 
 ### 3.2 Arquivos Fonte
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `app/src/app/(site)/apoio/page.tsx` | UI de apoio; chama `/api/apoio/criar-link` e redireciona para checkout |
+| `app/src/app/(site)/apoio/page.tsx` | UI de apoio; chama `/api/apoio/criar-link` |
 | `app/src/app/(checkout)/apoio/confirmacao/page.tsx` | Tela de confirmacao pos-pagamento |
-| `app/src/app/api/apoio/criar-link/route.ts` | Cria link na InfinitePay |
-| `app/src/app/api/apoio/verificar-pagamento/route.ts` | Consulta status de pagamento por `order_nsu`/`transaction_nsu` |
-| `app/src/app/api/webhooks/infinitepay/route.ts` | Recebe notificacao externa; atualmente loga e nao persiste |
+| `app/src/app/api/apoio/criar-link/route.ts` | Cria cliente/cobranca Asaas e persiste `doacoes` |
+| `app/src/app/api/apoio/verificar-pagamento/route.ts` | Consulta no Asaas apenas pagamentos previamente registrados |
+| `app/src/app/api/webhooks/asaas/route.ts` | Valida token e faz upsert idempotente da confirmacao |
+| `app/src/app/api/webhooks/infinitepay/route.ts` | Valida transacao legada por back-channel e faz upsert |
 
 ### 3.3 Variaveis
 
 | Variavel | Uso |
 |---|---|
-| `INFINITEPAY_HANDLE` | Enviado na criacao/verificacao de pagamento |
-| `NEXT_PUBLIC_SITE_URL` | Monta `redirect_url` e `webhook_url` em `/api/apoio/criar-link` |
+| `ASAAS_API_KEY` | Credencial server-side para clientes e cobrancas |
+| `ASAAS_API_URL` | Base do Asaas; default sandbox |
+| `ASAAS_WEBHOOK_TOKEN` | Token obrigatorio do webhook Asaas |
+| `INFINITEPAY_HANDLE` | Necessario apenas para validar webhooks legados |
 
 ### 3.4 Endpoints Externos
 
 | Endpoint externo | Consumidor interno | Metodo |
 |---|---|---|
-| `https://api.checkout.infinitepay.io/links` | `/api/apoio/criar-link` | POST |
-| `https://api.checkout.infinitepay.io/payment_check` | `/api/apoio/verificar-pagamento` | POST |
+| `${ASAAS_API_URL}/customers` | `/api/apoio/criar-link` | GET/POST |
+| `${ASAAS_API_URL}/payments` | `/api/apoio/criar-link` | POST |
+| `${ASAAS_API_URL}/payments/{id}` | `/api/apoio/verificar-pagamento` | GET |
+| `https://api.checkout.infinitepay.io/payment_check` | `/api/webhooks/infinitepay` | POST |
 
 ### 3.5 Fluxo Operacional
 
@@ -126,37 +132,32 @@ sequenceDiagram
   actor U as Usuario
   participant SITE as /apoio
   participant API as API apoio
-  participant IP as InfinitePay
+  participant GW as Asaas
   participant DB as PostgreSQL
 
   U->>SITE: Escolhe tipo/valor
   SITE->>API: POST /api/apoio/criar-link
-  API->>IP: POST /links
-  IP-->>API: url/link + order_nsu
-  API-->>SITE: url, order_nsu
-  SITE-->>U: Redirect checkout
-  IP-->>U: Pagamento externo
-  IP->>API: POST /api/webhooks/infinitepay
-  API--x DB: Persistencia ainda nao implementada
-  API-->>IP: { ok: true }
+  API->>GW: Cria cliente e cobranca
+  API->>DB: Insere doacao pendente
+  GW-->>API: Pix QR Code ou status do cartao
+  API-->>SITE: Dados da cobranca
+  GW->>API: POST /api/webhooks/asaas
+  API->>DB: Upsert da doacao paga
+  API-->>GW: { ok: true }
 ```
 
-### 3.6 Falhas Criticas
+### 3.6 Controles e riscos residuais
 
 | Falha | Evidencia | Impacto |
 |---|---|---|
-| Webhook nao persiste doacao | Comentario/TODO em `app/src/app/api/webhooks/infinitepay/route.ts` | Confirmacao financeira nao vira estado de negocio |
-| Sem validacao criptografica do webhook | Nenhuma env de assinatura identificada | Risco de eventos falsos |
-| `/api/apoio/verificar-pagamento` sem consumidor UI mapeado | Auditoria de consumo do Lote 5 | Verificacao manual/cliente nao usada |
-| Ordem/idempotencia nao documentada no banco | `order_nsu`/`transaction_nsu` nao persistidos pelo webhook | Duplicidade/perda de eventos |
+| Token Asaas ausente | Webhook retorna `503` e nao aceita evento anonimo | Configurar `ASAAS_WEBHOOK_TOKEN` antes do go-live |
+| Migration nao aplicada | Inserts/upserts em `doacoes` falham | Aplicar `db/migrations/20260603000000_create_doacoes.sql` |
+| Endpoint de verificacao publico | Restrito a `transaction_nsu` existente no banco | Adicionar rate limit no edge/gateway |
+| InfinitePay legado | Depende de `payment_check` e `INFINITEPAY_HANDLE` | Remover quando nao houver transacoes legadas |
 
-### 3.7 Requisitos para Fechamento
+### 3.7 Estado de fechamento
 
-1. Definir tabela `doacoes` ou confirmar tabela existente.
-2. Persistir `order_nsu`, `transaction_nsu`, tipo, valor, status e payload bruto.
-3. Implementar idempotencia por `transaction_nsu` ou chave equivalente.
-4. Validar origem/assinatura conforme recurso suportado pela InfinitePay.
-5. Amarrar tela de confirmacao a estado persistido ou polling controlado.
+Persistencia, idempotencia e autenticidade do webhook ativo estao implementadas. Permanecem como tarefas operacionais aplicar a migration, configurar os segredos, testar no sandbox Asaas e adicionar rate limiting.
 
 ## 4. PostgreSQL (VPS)
 
@@ -277,7 +278,7 @@ Embora o Lote 6 priorize quatro servicos, o codigo/ETL tambem indica dependencia
 
 | Servico/Fonte | Onde aparece | Papel |
 |---|---|---|
-| ViaCEP | `app/src/components/meu-estado/MeuEstadoContent.tsx`, `CepForm.tsx` | Busca de CEP/localidade |
+| ViaCEP | Sem consumidor ativo | Integracao removida com a descontinuacao de `/meu-estado` |
 | APIs Camara | `etl/camara/*` | Deputados, votacoes, gastos, proposicoes |
 | APIs Senado | `etl/senado/*` | Senadores, votacoes, gastos |
 | TSE | `etl/tse/*` | Eleitos/candidatos |
@@ -290,7 +291,7 @@ Embora o Lote 6 priorize quatro servicos, o codigo/ETL tambem indica dependencia
 
 | Integracao | Estado | Observacao |
 |---|---|---|
-| Stripe | Removida do runtime ativo mapeado | Ainda aparece em docs legados como `docs/SECURITY.md`; fluxo atual usa InfinitePay |
+| Stripe | Removida do runtime ativo mapeado | Ainda aparece em docs legados; fluxo atual usa Asaas |
 | Supabase Auth como auth primario | Substituido por Logto no runtime | `auth.users` ainda participa da reconciliacao de email legado |
 
 ## 8. Ordem Recomendada de Saneamento
@@ -298,7 +299,7 @@ Embora o Lote 6 priorize quatro servicos, o codigo/ETL tambem indica dependencia
 | Prioridade | Integracao | Acao |
 |---|---|---|
 | P0 | Resend/docs | Revogar chave exposta e remover valor real de `docs/meuspoliticos_master.md` |
-| P0/P1 | InfinitePay | Persistir webhook com idempotencia e validacao |
+| P1 | Asaas | Validar sandbox, migration, token e monitoramento por ambiente |
 | P1 | PostgreSQL/Supabase | Centralizar factory de conexao e padronizar envs |
 | P1 | ETL/public APIs | Criar acionamento real e observavel para scripts Python |
 | P1 | Logto | Validar massa de `perfis.logto_sub` e redirects por ambiente |
@@ -306,4 +307,4 @@ Embora o Lote 6 priorize quatro servicos, o codigo/ETL tambem indica dependencia
 
 ## 9. Resumo de Engenharia
 
-As integracoes centrais estao presentes, mas em niveis diferentes de maturidade. Logto esta integrado de ponta a ponta para sessao e RBAC. PostgreSQL/Supabase sustenta o dominio, porem com conexoes repetidas e defaults divergentes. OpenAI esta isolada no server/ETL, com risco controlavel por limite diario. InfinitePay e o ponto mais fraco: cria checkout, mas a confirmacao financeira ainda nao fecha o ciclo de persistencia.
+As integracoes centrais estao presentes, mas em niveis diferentes de maturidade. Logto esta integrado de ponta a ponta para sessao e RBAC. PostgreSQL sustenta o dominio, porem com conexoes repetidas e defaults divergentes. OpenAI esta isolada no server/ETL, com risco controlavel por limite diario. O fluxo Asaas fecha criacao e confirmacao financeira em codigo, mas ainda exige validacao operacional no sandbox e em producao.

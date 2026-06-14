@@ -1,27 +1,14 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { getPgPool } from '@/lib/db/pool'
 
 export const revalidate = 86400
 
 // ─── Static params ──────────────────────────────────────────────────────────
 export function generateStaticParams() {
   return []
-}
-
-// ─── Pool singleton ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -125,7 +112,7 @@ export default async function CandidatosPage({
   const porPagina = 24
   const offset = (pagina - 1) * porPagina
 
-  const pool = getPool()
+  const pool = getPgPool()
 
   // Build query conditions
   const conditions: string[] = ['c.eleicao_ano = $1']
@@ -375,11 +362,13 @@ export default async function CandidatosPage({
                     flexShrink: 0,
                   }}>
                     {c.foto_url ? (
-                      <img
+                      <Image
                         src={c.foto_url}
                         alt={nome}
+                        fill
+                        sizes="(max-width: 640px) 100vw, 25vw"
+                        unoptimized
                         style={{
-                          width: '100%', height: '100%',
                           objectFit: 'cover', objectPosition: 'top center',
                         }}
                       />

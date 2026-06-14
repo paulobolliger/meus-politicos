@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type {
   CamaraStats, DestaqueDeputado, PartidoHemiciclo, ProposicaoRecente,
   PresidenteStats, PartidoStats, ConsolidadoKPIs,
@@ -75,8 +76,8 @@ function Hemiciclo({ partidos }: { partidos: PartidoHemiciclo[] }) {
     coords.sort((a, b) => a.angle - b.angle)
 
     return coords.map((c, i) => ({
-      x: c.x,
-      y: c.y,
+      x: c.x.toFixed(4),
+      y: c.y.toFixed(4),
       color: colorArray[i] ?? '#94a3b8'
     }))
   }, [colorArray])
@@ -159,13 +160,15 @@ export function CamaraClient({
       }}>
         {/* Foto da Câmara */}
         {!imgError && (
-          <img
+          <Image
             src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Plen%C3%A1rioCamaradeputados.jpg"
             alt="Plenário da Câmara dos Deputados"
+            fill
+            unoptimized
+            sizes="100vw"
+            loading="eager"
             onError={() => setImgError(true)}
             style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
               objectFit: 'cover', objectPosition: 'center 45%',
             }}
           />
@@ -233,7 +236,7 @@ export function CamaraClient({
         marginTop: -40,
         position: 'relative', zIndex: 10,
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
 
           {/* Membros */}
           <GlassCard>
@@ -299,7 +302,7 @@ export function CamaraClient({
           MESA DIRETORA (PRESIDENTE) + HISTÓRIA DA CÂMARA
       ════════════════════════════════════════════════════════════════════ */}
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '56px 32px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }} className="lg:grid-cols-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 32 }} className="lg:grid-cols-3">
           
           {/* Card do Presidente (Hugo Motta) - Ocupa 2 colunas no desktop */}
           <div style={{
@@ -322,10 +325,13 @@ export function CamaraClient({
               <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div style={{ position: 'relative', width: 100, height: 133, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', background: 'var(--bg-2)', flexShrink: 0 }}>
                   {presidente.foto_url ? (
-                    <img
+                    <Image
                       src={presidente.foto_url}
                       alt={presidente.nome_eleitoral ?? 'Presidente da Câmara'}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      fill
+                      sizes="100px"
+                      unoptimized
+                      style={{ objectFit: 'cover' }}
                     />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: 'var(--ink-3)' }}>
@@ -352,7 +358,7 @@ export function CamaraClient({
             {/* KPIs do Presidente */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))',
               gap: 16,
               paddingTop: 16,
               borderTop: '1px solid var(--line)',
@@ -446,7 +452,7 @@ export function CamaraClient({
           HEMICICLO + ATIVIDADE RECENTE
       ════════════════════════════════════════════════════════════════════ */}
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '56px 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '7fr 5fr', gap: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))', gap: 32 }}>
 
           {/* ── Hemiciclo ─────────────────────────────────────────────── */}
           <div>
@@ -626,7 +632,7 @@ export function CamaraClient({
       ════════════════════════════════════════════════════════════════════ */}
       <section style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)', padding: '56px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }} className="lg:grid-cols-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 32 }} className="lg:grid-cols-3">
             
             {/* Colunas 1 e 2 - 6 KPIs consolidados */}
             <div className="lg:col-span-2">
@@ -635,7 +641,7 @@ export function CamaraClient({
                 A Câmara em números
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
                 
                 {/* 1. Média Gasto */}
                 <Link href="/busca?cargo=deputado_federal" style={{ textDecoration: 'none' }}>
@@ -878,7 +884,7 @@ export function CamaraClient({
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20 }}>
             {[
               {
                 icon: '⚖️',
@@ -999,7 +1005,7 @@ export function CamaraClient({
           </div>
 
           {/* Grid de cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: 16 }}>
             {destaques.map(dep => (
               <DestaqueCard key={dep.id} dep={dep} />
             ))}
@@ -1013,7 +1019,7 @@ export function CamaraClient({
       ════════════════════════════════════════════════════════════════════ */}
       <section style={{ borderTop: '1px solid var(--line)', background: 'var(--bg)', padding: '48px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32 }} className="md:grid-cols-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 32 }} className="md:grid-cols-3">
             
             {/* Endereço */}
             <div>
@@ -1099,12 +1105,14 @@ function DestaqueCard({ dep }: { dep: DestaqueDeputado }) {
         {/* Foto — proporção quadrada, grayscale → color */}
         <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
           {dep.foto_url && !imgErr ? (
-            <img
+            <Image
               src={dep.foto_url}
               alt={nome}
               onError={() => setImgErr(true)}
+              fill
+              sizes="(max-width: 640px) 100vw, 25vw"
+              unoptimized
               style={{
-                width: '100%', height: '100%',
                 objectFit: 'cover', objectPosition: 'top',
                 filter: hover ? 'grayscale(0%) brightness(1.03)' : 'grayscale(60%)',
                 transform: hover ? 'scale(1.04)' : 'scale(1.08)',

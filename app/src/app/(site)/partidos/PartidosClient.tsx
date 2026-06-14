@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type PartidoCard = {
@@ -76,13 +77,16 @@ function LogoBox({ partido, size = 64 }: { partido: PartidoCard; size?: number }
         width: size, height: size, borderRadius: 10,
         background: '#fff', border: '1px solid #e5e7eb',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, overflow: 'hidden', padding: 6,
+        flexShrink: 0, overflow: 'hidden', padding: 6, position: 'relative',
       }}>
-        <img
+        <Image
           src={src}
           alt={partido.sigla}
           onError={onError}
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          fill
+          sizes={`${size}px`}
+          unoptimized
+          style={{ objectFit: 'contain', padding: 6 }}
         />
       </div>
     )
@@ -126,7 +130,7 @@ function PartidoCardItem({ partido }: { partido: PartidoCard }) {
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
         <LogoBox partido={partido} size={64} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
             <span style={{
               fontWeight: 800, fontSize: 22, color: '#011549', lineHeight: 1,
               letterSpacing: '-0.5px',
@@ -449,7 +453,7 @@ export function PartidosClient({
   }, [partidos])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafd' }}>
+    <div className="partidos-page" style={{ minHeight: '100vh', background: '#f8fafd' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{
@@ -651,7 +655,7 @@ export function PartidosClient({
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
             gap: 20,
           }}>
             {visiveis.map(partido => (
@@ -676,7 +680,7 @@ export function PartidosClient({
           padding: '36px 40px',
           boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
           gap: 48,
           alignItems: 'center',
         }}>
@@ -776,7 +780,20 @@ export function PartidosClient({
           </div>
         </div>
       </div>
-
+      <style>{`
+        .partidos-page,
+        .partidos-page * {
+          box-sizing: border-box;
+        }
+        .partidos-page input,
+        .partidos-page button,
+        .partidos-page select {
+          max-width: 100%;
+        }
+        .partidos-page [style*="display: flex"] > * {
+          min-width: 0;
+        }
+      `}</style>
     </div>
   )
 }

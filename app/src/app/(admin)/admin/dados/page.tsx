@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Pool } from 'pg'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 import { AdminPageHeader } from '@/components/admin/AdminCard'
 import { PoliticoEditorSection } from '@/components/admin/PoliticoEditorSection'
 import { MatchEmendaButton } from '@/components/admin/MatchEmendaButton'
@@ -51,24 +51,6 @@ type PoliticoEditorRow = {
   cargo: string
 }
 
-let pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
-}
-
 function toNumber(value: number | string | null): number | null {
   if (value === null) return null
   const numberValue = Number(value)
@@ -86,7 +68,7 @@ export default async function DadosQualidadePage({
 
   const params = await searchParams
   const busca = params.busca ?? ''
-  const db = getPool()
+  const db = getPgPool()
 
   // Load all parties
   const { rows: partidosRows } = await db.query<{ id: string; sigla: string; nome: string }>(

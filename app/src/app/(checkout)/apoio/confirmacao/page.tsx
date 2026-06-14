@@ -36,13 +36,13 @@ function ConfirmacaoContent() {
       <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <Image src="/logos_meus-politicos_colorido_semfundo.png" alt="Meus Politicos" height={24} width={120} style={{ objectFit: 'contain' }} />
+            <Image src="/logos_meus-politicos_colorido_semfundo.png" alt="Meus Politicos" height={24} width={120} style={{ width: 'auto', height: 24, objectFit: 'contain' }} />
             <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(40,81,203,0.08)', color: '#2851cb', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
               APOIAR
             </span>
           </Link>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#6b7280' }}>
-            <LockIcon /> Pagamento via InfinitePay
+            <LockIcon /> Pagamento via Asaas
           </span>
         </div>
       </header>
@@ -53,7 +53,7 @@ function ConfirmacaoContent() {
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Apoio recebido</h1>
         <p style={{ fontSize: 15, color: '#4b5563', marginBottom: 32, lineHeight: 1.6 }}>
-          Obrigado por acreditar em transparencia politica. Se o pagamento foi aprovado pela InfinitePay, a confirmacao financeira sera processada pelo provedor.
+          Obrigado por acreditar em transparencia politica. A confirmacao financeira sera processada com seguranca pelo Asaas.
         </p>
 
         {(orderNsu || transactionNsu || slug) && (

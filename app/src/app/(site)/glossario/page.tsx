@@ -9,13 +9,6 @@ export const metadata: Metadata = {
   description: 'Entenda os termos fundamentais da democracia brasileira em linguagem simples: PL, PEC, CEAP, quórum e muito mais.',
 }
 
-const CATS: Record<string, { label: string; color: string }> = {
-  legislativo:   { label: 'Legislativo',   color: '#6366f1' }, // indigo
-  eleitoral:     { label: 'Eleitoral',     color: '#10b981' }, // emerald
-  financeiro:    { label: 'Financeiro',    color: '#f59e0b' }, // amber
-  institucional: { label: 'Institucional', color: '#f43f5e' }, // rose
-}
-
 type TermoRow = {
   slug: string
   termo: string

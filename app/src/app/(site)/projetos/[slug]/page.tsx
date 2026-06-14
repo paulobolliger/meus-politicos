@@ -68,13 +68,6 @@ const TIPO_LABEL: Record<string, string> = {
   MPV: 'Medida Provisória',
 }
 
-const CARGO_LABEL: Record<string, string> = {
-  deputado_federal:  'Dep. Federal',
-  senador:           'Senador(a)',
-  governador:        'Governador(a)',
-  deputado_estadual: 'Dep. Estadual',
-}
-
 type SituacaoInfo = { bg: string; color: string; label: string; dot: string }
 
 function situacaoInfo(s: string | null): SituacaoInfo {

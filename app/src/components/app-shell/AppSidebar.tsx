@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
   BookOpen,
-  FileText,
   Home,
   MapPin,
   Scale,
@@ -133,7 +132,8 @@ export function AppMobileTopbar() {
   const [flags, setFlags] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    setMobileOpen(false)
+    const closeDrawer = window.setTimeout(() => setMobileOpen(false), 0)
+    return () => window.clearTimeout(closeDrawer)
   }, [pathname])
 
   useEffect(() => {
@@ -212,16 +212,16 @@ export function AppMobileTopbar() {
             alt="Meus Politicos"
             height={30}
             width={126}
-            style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+            style={{ width: 'auto', height: 30, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
           />
         </Link>
-        <a
+        <Link
           href="/"
           className="mono"
           style={{ fontSize: 10.5, color: 'var(--ink-3)', textDecoration: 'none', letterSpacing: '0.06em' }}
         >
           voltar ao site
-        </a>
+        </Link>
       </div>
 
       {mobileOpen && (
@@ -254,7 +254,7 @@ export function AppMobileTopbar() {
                 alt="Meus Politicos"
                 height={30}
                 width={120}
-                style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+                style={{ width: 'auto', height: 30, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               />
               <button
                 type="button"
@@ -278,7 +278,7 @@ export function AppMobileTopbar() {
 
             <div style={{ flex: 1 }} />
 
-            <a
+            <Link
               href="/"
               className="mono"
               style={{
@@ -296,7 +296,7 @@ export function AppMobileTopbar() {
               }}
             >
               {'<- VOLTAR AO SITE'}
-            </a>
+            </Link>
             {loading ? (
               <div style={{ height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span className="mono" style={{ fontSize: 11, color: 'var(--mute)' }}>...</span>
@@ -353,15 +353,12 @@ export function AppMobileTopbar() {
 // Sidebar desktop — visível apenas em telas >= 1024px
 export function AppSidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('mp-sidebar-collapsed') === '1'
+  )
   const [user, setUser] = useState<{ name: string | null } | null>(null)
   const [loading, setLoading] = useState(true)
   const [flags, setFlags] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    const saved = localStorage.getItem('mp-sidebar-collapsed')
-    if (saved === '1') setCollapsed(true)
-  }, [])
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -444,7 +441,7 @@ export function AppSidebar() {
               alt="Meus Politicos"
               height={32}
               width={130}
-              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              style={{ width: 'auto', height: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
             />
           )}
         </Link>
@@ -478,7 +475,7 @@ export function AppSidebar() {
             1.680 parlamentares
           </span>
         )}
-        <a
+        <Link
           href="/"
           className="mono"
           style={{
@@ -496,7 +493,7 @@ export function AppSidebar() {
           }}
         >
           {collapsed ? 'HOME' : '<- VOLTAR AO SITE'}
-        </a>
+        </Link>
         {loading ? (
           <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="mono" style={{ fontSize: 10.5, color: 'var(--mute)' }}>...</span>

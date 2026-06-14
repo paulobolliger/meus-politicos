@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import type { BuscaResponse } from '@/types/busca'
@@ -53,7 +53,25 @@ export function BuscaClient() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
 
-  useEffect(() => { setQueryInput(qParam) }, [qParam])
+  const navigateWith = useCallback((updates: Record<string, string | null>, options?: { replace?: boolean }) => {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value) params.delete(key); else params.set(key, value)
+    })
+    if (['cargo', 'uf', 'partido', 'q', 'ordem'].some((k) => k in updates)) params.set('pagina', '1')
+    const next = params.toString()
+    const url = next ? `/busca?${next}` : '/busca'
+    if (options?.replace) {
+      router.replace(url)
+    } else {
+      router.push(url)
+    }
+  }, [router, searchParams])
+
+  useEffect(() => {
+    const syncInput = window.setTimeout(() => setQueryInput(qParam), 0)
+    return () => window.clearTimeout(syncInput)
+  }, [qParam])
 
   // Debounced search on text input
   useEffect(() => {
@@ -62,7 +80,7 @@ export function BuscaClient() {
       navigateWith({ q: queryInput || null }, { replace: true })
     }, 350)
     return () => clearTimeout(timer)
-  }, [queryInput, qParam])
+  }, [navigateWith, queryInput, qParam])
 
   const queryString = useMemo(() => searchParams.toString(), [searchParams])
 
@@ -89,22 +107,7 @@ export function BuscaClient() {
     }
     run()
     return () => { active = false }
-  }, [queryString])
-
-  function navigateWith(updates: Record<string, string | null>, options?: { replace?: boolean }) {
-    const params = new URLSearchParams(searchParams.toString())
-    Object.entries(updates).forEach(([key, value]) => {
-      if (!value) params.delete(key); else params.set(key, value)
-    })
-    if (['cargo', 'uf', 'partido', 'q', 'ordem'].some((k) => k in updates)) params.set('pagina', '1')
-    const next = params.toString()
-    const url = next ? `/busca?${next}` : '/busca'
-    if (options?.replace) {
-      router.replace(url)
-    } else {
-      router.push(url)
-    }
-  }
+  }, [cargo, partido, qParam, queryString, uf])
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

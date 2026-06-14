@@ -14,7 +14,7 @@ const INFINITEPAY_CHECK_API = 'https://api.checkout.infinitepay.io/payment_check
  */
 export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json()
+    const payload = await req.json() as Record<string, unknown>
 
     const {
       invoice_slug,
@@ -27,7 +27,14 @@ export async function POST(req: NextRequest) {
     } = payload
 
     // Validação mínima dos campos obrigatórios
-    if (!order_nsu || !transaction_nsu || !invoice_slug) {
+    if (
+      typeof order_nsu !== 'string' ||
+      !/^apoio-(mensal|unica)-/.test(order_nsu) ||
+      typeof transaction_nsu !== 'string' ||
+      !transaction_nsu ||
+      typeof invoice_slug !== 'string' ||
+      !invoice_slug
+    ) {
       console.warn('[Webhook InfinitePay] Parâmetros obrigatórios ausentes:', {
         order_nsu,
         transaction_nsu,
@@ -61,9 +68,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Falha na verificação de autenticidade do pagamento.' }, { status: 400 })
     }
 
-    const checkData = await checkResponse.json()
+    const checkData = await checkResponse.json() as Record<string, unknown>
     // O retorno esperado do endpoint de check contém { success: true, paid: true, ... }
-    if (!checkData.paid) {
+    if (checkData.paid !== true) {
       console.warn('[Webhook InfinitePay] Transação validada, mas não consta como paga:', checkData)
       return NextResponse.json({ ok: false, error: 'Transação não confirmada como paga.' }, { status: 400 })
     }
@@ -71,7 +78,11 @@ export async function POST(req: NextRequest) {
     // 2. Processar informações do pagamento
     const finalAmountCentavos = checkData.paid_amount ?? checkData.amount ?? paid_amount ?? amount
     const finalCaptureMethod = checkData.capture_method ?? capture_method ?? 'unknown'
-    const finalReceiptUrl = receipt_url ?? null
+    const finalReceiptUrl = typeof receipt_url === 'string' ? receipt_url : null
+    const amountNumber = Number(finalAmountCentavos)
+    if (!Number.isInteger(amountNumber) || amountNumber <= 0) {
+      return NextResponse.json({ ok: false, error: 'Valor de pagamento inválido.' }, { status: 400 })
+    }
 
     // Determinar o tipo da doação
     const tipo = order_nsu.startsWith('apoio-mensal') ? 'mensal' : 'unica'
@@ -107,8 +118,8 @@ export async function POST(req: NextRequest) {
         order_nsu,
         transaction_nsu,
         invoice_slug,
-        Number(finalAmountCentavos),
-        finalCaptureMethod,
+        amountNumber,
+        String(finalCaptureMethod),
         finalReceiptUrl,
         tipo,
         JSON.stringify(payload),
@@ -120,7 +131,7 @@ export async function POST(req: NextRequest) {
       transaction_nsu,
       invoice_slug,
       tipo,
-      amount: finalAmountCentavos / 100,
+      amount: amountNumber / 100,
     })
 
     return NextResponse.json({ ok: true }, { status: 200 })

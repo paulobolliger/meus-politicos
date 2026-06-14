@@ -1,23 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Pool } from 'pg'
 import { CandidatoPageClient, type CandidatoData, type BemPatrimonial } from './CandidatoPageClient'
+import { getPgPool } from '@/lib/db/pool'
 
 export const revalidate = 3600
-
-// ─── Pool singleton ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata(
@@ -27,7 +13,7 @@ export async function generateMetadata(
   const anoNum = parseInt(ano, 10)
   if (isNaN(anoNum)) return { title: 'Candidato | Meus Políticos' }
 
-  const pool = getPool()
+  const pool = getPgPool()
 
   try {
     const res = await pool.query<{ nome_urna: string | null; nome: string; cargo: string; uf: string; link_foto: string | null }>(
@@ -70,7 +56,7 @@ export default async function CandidatoPage(
   const anoNum = parseInt(ano, 10)
   if (isNaN(anoNum)) notFound()
 
-  const pool = getPool()
+  const pool = getPgPool()
 
   let candidato: CandidatoData | null = null
   let bens: BemPatrimonial[] = []

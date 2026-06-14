@@ -1,54 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
+import { z } from 'zod'
 import { getPgPool } from '@/lib/db/pool'
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? ''
 const ASAAS_API_URL = process.env.ASAAS_API_URL ?? 'https://sandbox.asaas.com/api/v3'
 
-interface CartaoInfo {
-  holderName: string
-  number: string
-  expiry: string // MM/AA
-  ccv: string
-  postalCode: string
-  addressNumber: string
-}
+const cartaoSchema = z.object({
+  holderName: z.string().trim().min(2).max(120),
+  number: z.string().transform((value) => value.replace(/\D/g, '')).pipe(z.string().min(13).max(19)),
+  expiry: z.string().trim().regex(/^(0[1-9]|1[0-2])\/(\d{2}|\d{4})$/),
+  ccv: z.string().trim().regex(/^\d{3,4}$/),
+  postalCode: z.string().transform((value) => value.replace(/\D/g, '')).pipe(z.string().length(8)),
+  addressNumber: z.string().trim().min(1).max(20),
+})
+
+const apoioSchema = z.object({
+  nome: z.string().trim().min(2).max(120),
+  email: z.email().transform((value) => value.trim().toLowerCase()),
+  cpfCnpj: z.string().transform((value) => value.replace(/\D/g, '')).refine(
+    (value) => value.length === 11 || value.length === 14,
+    'CPF/CNPJ inválido.'
+  ),
+  telefone: z.string().default('').transform((value) => value.replace(/\D/g, '')),
+  tipo: z.enum(['mensal', 'unica']),
+  valor: z.number().finite().min(5).max(10_000),
+  formaPagamento: z.enum(['pix', 'cartao']),
+  cartaoInfo: cartaoSchema.optional(),
+}).superRefine((data, ctx) => {
+  if (data.formaPagamento === 'cartao' && !data.cartaoInfo) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['cartaoInfo'],
+      message: 'Dados do cartão de crédito ausentes.',
+    })
+  }
+})
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const {
-      nome,
-      email,
-      cpfCnpj,
-      telefone,
-      tipo,
-      valor,
-      formaPagamento,
-      cartaoInfo
-    } = body as {
-      nome: string
-      email: string
-      cpfCnpj: string
-      telefone: string
-      tipo: 'mensal' | 'unica'
-      valor: number // em reais
-      formaPagamento: 'pix' | 'cartao'
-      cartaoInfo?: CartaoInfo
+    const parsed = apoioSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados de pagamento inválidos.', fields: z.flattenError(parsed.error).fieldErrors },
+        { status: 400 }
+      )
     }
-
-    if (!nome || !email || !cpfCnpj || !valor || !formaPagamento) {
-      return NextResponse.json({ error: 'Campos obrigatórios ausentes.' }, { status: 400 })
-    }
+    const { nome, email, cpfCnpj, telefone, tipo, valor, formaPagamento, cartaoInfo } = parsed.data
 
     if (!ASAAS_API_KEY || ASAAS_API_KEY === 'mock_api_key_for_testing') {
       console.error('[Asaas] API Key do Asaas não configurada corretamente.')
-      return NextResponse.json({ error: 'Gateway de pagamento em manutenção.' }, { status: 500 })
+      return NextResponse.json({ error: 'Gateway de pagamento em manutenção.' }, { status: 503 })
     }
 
-    const cleanCpfCnpj = cpfCnpj.replace(/\D/g, '')
-    const cleanEmail = email.trim().toLowerCase()
-    const cleanPhone = telefone.replace(/\D/g, '') || '11999999999'
+    const cleanCpfCnpj = cpfCnpj
+    const cleanEmail = email
+    const cleanPhone = telefone || undefined
 
     // 1. Buscar ou Criar Cliente no Asaas
     let customerId = ''
@@ -189,9 +196,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Processar Cobrança Cartão de Crédito
     if (formaPagamento === 'cartao') {
-      if (!cartaoInfo) {
-        return NextResponse.json({ error: 'Dados do cartão de crédito ausentes.' }, { status: 400 })
-      }
+      if (!cartaoInfo) return NextResponse.json({ error: 'Dados do cartão de crédito ausentes.' }, { status: 400 })
 
       const [expMonth, expYear] = cartaoInfo.expiry.split('/')
       if (!expMonth || !expYear) {
@@ -240,7 +245,11 @@ export async function POST(req: NextRequest) {
         try {
           const errJson = JSON.parse(errText)
           if (errJson.errors && errJson.errors.length > 0) {
-            const errorMsg = errJson.errors.map((e: any) => e.description).join('; ')
+            const errors = errJson.errors as Array<{ description?: string }>
+            const errorMsg = errors
+              .map((error) => error.description)
+              .filter((description): description is string => Boolean(description))
+              .join('; ')
             return NextResponse.json({ error: errorMsg }, { status: 400 })
           }
         } catch {

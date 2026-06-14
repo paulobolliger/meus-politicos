@@ -79,7 +79,7 @@ O codigo organiza a experiencia em grupos do App Router. O roteamento por subdom
 | `/estado/[sigla]` | `app/src/app/(site)/estado/[sigla]/page.tsx` | Pagina estadual | PostgreSQL `estados_governos`, `estados_economia`, `estados_pacto_federativo`, `estados_tribunais`, `politicos`, `municipios`, `emendas`, `estados_timeline`, `estados_ale` | Funcional parcial |
 | `/estado/[sigla]/assembleia` | `app/src/app/(site)/estado/[sigla]/assembleia/page.tsx` | Assembleia estadual | PostgreSQL `politicos`, `partidos` e dados ALE | Parcial; depende da cobertura ALE |
 | `/estado/[sigla]/assembleia/[slug]` | `app/src/app/(site)/estado/[sigla]/assembleia/[slug]/page.tsx` | Perfil de deputado estadual | PostgreSQL `politicos`, colegas, dados estaduais/ALE | Parcial; emendas estaduais em breve e ratios placeholder |
-| `/meu-estado` | `app/src/app/(site)/meu-estado/page.tsx` | Descoberta de representantes por localidade | Componentes `MeuEstadoContent`, ViaCEP/IBGE, PostgreSQL em componente server | Parcial; deputados estaduais/vereadores em breve |
+| `/meu-estado` | `app/src/app/(site)/meu-estado/page.tsx` | Compatibilidade de URL legada | Redirect permanente para `/estado` | Descontinuada |
 | `/camara` | `app/src/app/(site)/camara/page.tsx` | Visao da Camara dos Deputados | PostgreSQL `politicos`, `partidos`, `gastos`, `votacoes`, `proposicoes` | Funcional parcial |
 | `/cidades` | `app/src/app/(site)/cidades/page.tsx` | Consulta/lista de municipios | PostgreSQL `municipios` | Funcional parcial |
 | `/candidatos-2026` | `app/src/app/(site)/candidatos-2026/page.tsx` | Lista de candidatos 2026 | PostgreSQL `candidatos`; catch para tabela ausente | Parcial; depende de ETL/tabela |

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Props = {
   politicoId: string
@@ -27,12 +27,12 @@ export function BotaoAcompanhar({
 }: Props) {
   const [seguindo, setSeguindo] = useState<boolean>(initialIsSeguindo ?? false)
   const [loading, setLoading] = useState(false)
-  const [fired, setFired] = useState(false)
+  const firedRef = useRef(false)
 
   // Auto-follow após retorno do login (?follow=1)
   useEffect(() => {
-    if (!followIntent || fired || seguindo) return
-    setFired(true)
+    if (!followIntent || firedRef.current || seguindo) return
+    firedRef.current = true
     follow()
     // Limpa o ?follow=1 da URL sem recarregar
     const url = new URL(window.location.href)
@@ -97,7 +97,11 @@ export function BotaoAcompanhar({
     e.preventDefault()
     e.stopPropagation()
     if (loading) return
-    seguindo ? unfollow() : follow()
+    if (seguindo) {
+      void unfollow()
+    } else {
+      void follow()
+    }
   }
 
   if (variant === 'card') {

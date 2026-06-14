@@ -100,7 +100,7 @@ Legenda:
 | `/estado/[sigla]` | `app/src/app/(site)/estado/[sigla]/page.tsx` | Parcial | Dados reais, UI estadual customizada |
 | `/estado/[sigla]/assembleia` | `app/src/app/(site)/estado/[sigla]/assembleia/page.tsx` | Parcial | Cobertura ALE depende de dados |
 | `/estado/[sigla]/assembleia/[slug]` | `app/src/app/(site)/estado/[sigla]/assembleia/[slug]/page.tsx` | Parcial | Detalhe estadual |
-| `/meu-estado` | `app/src/app/(site)/meu-estado/page.tsx` | Parcial | UX depende de CEP/localidade |
+| `/meu-estado` | `app/src/app/(site)/meu-estado/page.tsx` | Descontinuada | Redirect permanente para `/estado` |
 | `/cidades` | `app/src/app/(site)/cidades/page.tsx` | Pendente parcial | Contem indicacao operacional de ETL IBGE |
 | `/camara` | `app/src/app/(site)/camara/page.tsx` + `CamaraClient.tsx` | Parcial | Forte uso de inline styles e cores hardcoded |
 | `/partidos` | `app/src/app/(site)/partidos/page.tsx` | Parcial | UI rica com filtros/tabs |

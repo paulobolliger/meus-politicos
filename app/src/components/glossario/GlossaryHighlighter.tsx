@@ -1,6 +1,7 @@
 import { getCachedGlossaryTerms } from '@/lib/glossario/cached-terms'
 import { highlightGlossary } from '@/lib/glossario/highlighter'
 import { isFeatureActive } from '@/lib/flags'
+import type { ReactNode } from 'react'
 
 interface GlossaryHighlighterProps {
   children: string | null | undefined
@@ -12,20 +13,19 @@ interface GlossaryHighlighterProps {
  */
 export async function GlossaryHighlighter({ children }: GlossaryHighlighterProps) {
   if (!children) return null
-  
+
+  let highlighted: ReactNode = children
   try {
     const active = await isFeatureActive('glossario_tooltips')
-    if (!active) {
-      return <>{children}</>
+    if (active) {
+      const terms = await getCachedGlossaryTerms()
+      if (terms?.length) {
+        highlighted = highlightGlossary(children, terms)
+      }
     }
-    const terms = await getCachedGlossaryTerms()
-    if (!terms || terms.length === 0) {
-      return <>{children}</>
-    }
-    const highlighted = highlightGlossary(children, terms)
-    return <>{highlighted}</>
   } catch (err) {
     console.error('[GlossaryHighlighter] Failed to highlight terms:', err)
-    return <>{children}</>
   }
+
+  return <>{highlighted}</>
 }

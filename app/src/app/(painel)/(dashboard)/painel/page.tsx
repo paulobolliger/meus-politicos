@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getPgPool } from '@/lib/db/pool'
 
 import { FeedCivico, type FeedEvento } from '@/components/painel/FeedCivico'
@@ -395,10 +396,13 @@ export default async function PainelPage() {
                     >
                       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         {p.fotoUrl ? (
-                          <img
+                          <Image
                             src={p.fotoUrl}
                             alt={p.nomeEleitoral}
-                            style={{ width: 36, height: 36, borderRadius: 999, objectFit: 'cover', border: '1px solid var(--line)' }}
+                            width={36}
+                            height={36}
+                            unoptimized
+                            style={{ borderRadius: 999, objectFit: 'cover', border: '1px solid var(--line)' }}
                           />
                         ) : (
                           <div style={{ width: 36, height: 36, borderRadius: 999, background: 'var(--brand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 11 }}>

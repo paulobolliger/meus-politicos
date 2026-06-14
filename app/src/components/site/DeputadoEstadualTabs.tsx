@@ -39,7 +39,7 @@ interface Props {
   atuacaoActive?: boolean
 }
 
-export function DeputadoEstadualTabs({ dep, cor, pCor, sigla, estadoNome, atuacaoActive }: Props) {
+export function DeputadoEstadualTabs({ dep, cor, estadoNome, atuacaoActive }: Props) {
   const [active, setActive] = useState('votacoes')
 
   const GASTOS_CATS = [

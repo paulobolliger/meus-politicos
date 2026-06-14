@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getPgPool } from '@/lib/db/pool'
 import { EmendaExecutionTracker } from '@/components/emendas/EmendaExecutionTracker'
@@ -374,11 +375,14 @@ export default async function EmendaFichaPage({ params }: PageProps) {
               
               <div className="flex items-center gap-3">
                 {emenda.pol_foto_url ? (
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#334155] flex-shrink-0">
-                    <img
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#334155] flex-shrink-0">
+                    <Image
                       src={emenda.pol_foto_url}
                       alt={emenda.pol_nome_eleitoral || emenda.autor_nome}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="48px"
+                      unoptimized
+                      className="object-cover"
                     />
                   </div>
                 ) : (

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
 import Link from 'next/link'
+import { getPgPool } from '@/lib/db/pool'
 
 export const metadata: Metadata = {
   title: 'Emendas por Município | Meus Políticos',
@@ -30,23 +30,6 @@ type MunicipioRow = {
   per_capita: number
   qtd_parlamentares: number
   qtd_emendas: number
-}
-
-let _pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-  return _pool
 }
 
 function fmt(val: number): string {
@@ -86,7 +69,7 @@ export default async function CidadesPage({
   const ufParam = params.uf?.toUpperCase() || null
   const busca = params.q?.trim() || null
 
-  const pool = getPool()
+  const pool = getPgPool()
   const whereParts = ['total_emendas > 0']
   const values: string[] = []
 
@@ -126,7 +109,14 @@ export default async function CidadesPage({
     `,
     values
   )
-  const rows = result.rows
+  const rows = result.rows.map((row) => ({
+    ...row,
+    populacao: row.populacao == null ? null : Number(row.populacao),
+    total_emendas: Number(row.total_emendas),
+    per_capita: Number(row.per_capita),
+    qtd_parlamentares: Number(row.qtd_parlamentares),
+    qtd_emendas: Number(row.qtd_emendas),
+  }))
 
   const maxPerCapita = rows.reduce((m, r) => Math.max(m, r.per_capita), 0)
   const maxTotal     = rows.reduce((m, r) => Math.max(m, r.total_emendas), 0)

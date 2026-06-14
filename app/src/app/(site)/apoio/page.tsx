@@ -1,14 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { X, Check, RefreshCw } from 'lucide-react'
-
-// ─── Grid background inline (com linhas sutis baseadas em var(--line)) ────────
-const GRID_BG: React.CSSProperties = {
-  backgroundImage: 'linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px)',
-  backgroundSize: '60px 60px',
-}
+import { RefreshCw } from 'lucide-react'
+import Image from 'next/image'
 
 type TipoApoio = 'mensal' | 'unica'
 
@@ -47,6 +41,13 @@ export default function ApoioPage() {
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
+  const pararPollingPix = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+  }
+
   // Limpar polling se desmontar
   useEffect(() => {
     return () => pararPollingPix()
@@ -70,13 +71,6 @@ export default function ApoioPage() {
         console.warn('Erro ao verificar status do Pix:', err)
       }
     }, 5000)
-  }
-
-  const pararPollingPix = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current)
-      pollingRef.current = null
-    }
   }
 
   const handleVerificarPixManual = async () => {
@@ -272,18 +266,6 @@ export default function ApoioPage() {
     } finally {
       setPagamentoEmAndamento(null)
     }
-  }
-
-  const buttonBase: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    padding: '14px 0',
-    borderRadius: 12,
-    fontSize: 15,
-    fontWeight: 700,
-    textAlign: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease-in-out',
   }
 
   return (
@@ -697,7 +679,14 @@ export default function ApoioPage() {
                 
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
                   <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', border: '1px solid var(--line)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                    <img src={`data:image/png;base64,${pixQrCode}`} alt="QR Code Pix" style={{ width: '180px', height: '180px', display: 'block' }} />
+                    <Image
+                      src={`data:image/png;base64,${pixQrCode}`}
+                      alt="QR Code Pix"
+                      width={180}
+                      height={180}
+                      unoptimized
+                      style={{ display: 'block' }}
+                    />
                   </div>
                 </div>
 
@@ -748,7 +737,7 @@ export default function ApoioPage() {
                     Aguardando confirmação de pagamento...
                   </div>
                   <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, lineHeight: 1.5 }}>
-                    Abra o app do seu banco, escolha "Pagar via Pix" e aponte a câmera para o QR Code ou cole o código acima.
+                    Abra o app do seu banco, escolha &quot;Pagar via Pix&quot; e aponte a câmera para o QR Code ou cole o código acima.
                   </p>
                 </div>
 

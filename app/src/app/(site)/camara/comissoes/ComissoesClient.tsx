@@ -250,8 +250,8 @@ export function ComissoesClient() {
   }, [search, activeTab])
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '40px 0 80px 0', color: 'var(--ink)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '40px 0 80px 0', color: 'var(--ink)', overflowX: 'clip' }}>
+      <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: '0 32px', boxSizing: 'border-box' }}>
         
         {/* Retorno e Título */}
         <div style={{ marginBottom: 40 }}>
@@ -366,7 +366,7 @@ export function ComissoesClient() {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))',
             gap: 24
           }}>
             {filtered.map((c, idx) => (

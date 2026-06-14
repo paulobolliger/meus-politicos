@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useTransition } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { perguntarGlossarioIA, Message } from '@/actions/ia-pergunta'
+import { createChatMessage } from '@/lib/chat-message'
 
 type IAPerguntaGlossarioProps = {
   termoSlug: string
@@ -35,12 +36,7 @@ export function IAPerguntaGlossario({ termoSlug, termoNome }: IAPerguntaGlossari
     if (!texto || texto.trim().length === 0 || loading) return
 
     setError(null)
-    const userMessage: Message = {
-      id: Math.random().toString(36).substring(7),
-      role: 'user',
-      content: texto,
-      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    }
+    const userMessage = createChatMessage('user', texto)
 
     setMessages((prev) => [...prev, userMessage])
     setPergunta('')
@@ -52,12 +48,7 @@ export function IAPerguntaGlossario({ termoSlug, termoNome }: IAPerguntaGlossari
       if ('erro' in response) {
         setError(response.erro)
       } else {
-        const assistantMessage: Message = {
-          id: Math.random().toString(36).substring(7),
-          role: 'assistant',
-          content: response.resposta,
-          timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        }
+        const assistantMessage = createChatMessage('assistant', response.resposta)
         setMessages((prev) => [...prev, assistantMessage])
       }
     } catch {

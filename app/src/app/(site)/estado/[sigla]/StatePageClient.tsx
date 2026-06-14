@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // ─── Hemicycle (semicírculo de cadeiras da ALE) ──────────────────────────────
 
@@ -23,14 +24,16 @@ export function HemicycleChart({ partidos, total }: { partidos: PartySlice[]; to
   const cx = 120, cy = 115, R = 95, r = 58
   const gap = 0.015
 
-  let angle = Math.PI
-  const slices = partidos.slice(0, 12).map((p) => {
+  const visibleParties = partidos.slice(0, 12)
+  const slices = visibleParties.map((p, index) => {
+    const previousSeats = visibleParties
+      .slice(0, index)
+      .reduce((sum, item) => sum + item.qtd, 0)
+    const angle = Math.PI + (previousSeats / total) * Math.PI
     const frac = p.qtd / total
     const span = frac * Math.PI - gap
     const a1 = angle + gap / 2
     const a2 = angle + frac * Math.PI - gap / 2
-    angle += frac * Math.PI
-
     const x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1)
     const x2 = cx + R * Math.cos(a2), y2 = cy + R * Math.sin(a2)
     const x3 = cx + r * Math.cos(a2), y3 = cy + r * Math.sin(a2)
@@ -62,7 +65,7 @@ export function HemicycleChart({ partidos, total }: { partidos: PartySlice[]; to
         <svg width={240} height={120} viewBox="0 0 240 120" style={{ overflow: 'visible' }}>
           {slices.map((s, i) => (
             <path key={i} d={s.d} fill={s.cor} opacity={0.88}>
-              <title>{s.sigla}: {s.qtd} cadeiras</title>
+              <title>{`${s.sigla}: ${s.qtd} cadeiras`}</title>
             </path>
           ))}
           {/* Label central ajustado perfeitamente dentro do vão do semicírculo para evitar sobreposição */}
@@ -527,9 +530,10 @@ export function BancadaFederalList({
                   width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
                   background: 'var(--line)', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                  position: 'relative',
                 }}>
                   {d.foto_url
-                    ? <img src={d.foto_url} alt={d.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ? <Image src={d.foto_url} alt={d.nome_eleitoral} fill sizes="32px" unoptimized style={{ objectFit: 'cover' }} />
                     : d.nome_eleitoral.charAt(0)
                   }
                 </div>
@@ -580,9 +584,10 @@ export function BancadaFederalList({
                           width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
                           background: 'var(--line)', flexShrink: 0,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                          position: 'relative',
                         }}>
                           {d.foto_url
-                            ? <img src={d.foto_url} alt={d.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ? <Image src={d.foto_url} alt={d.nome_eleitoral} fill sizes="32px" unoptimized style={{ objectFit: 'cover' }} />
                             : d.nome_eleitoral.charAt(0)
                           }
                         </div>
@@ -603,4 +608,3 @@ export function BancadaFederalList({
     </div>
   )
 }
-

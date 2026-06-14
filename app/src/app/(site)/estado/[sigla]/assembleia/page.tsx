@@ -1,24 +1,11 @@
-import { Pool } from 'pg'
-import { getEstado, ESTADOS } from '@/lib/estados-config'
+import { getEstado } from '@/lib/estados-config'
+import { getPgPool } from '@/lib/db/pool'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const revalidate = 86400
-
-// ─── Pool singleton ──────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 // ─── Bandeiras ───────────────────────────────────────────────────────────────
 const BANDEIRAS: Record<string, string> = {
@@ -191,7 +178,7 @@ export default async function AssembleiaPage({
   const cfg = getEstado(siglaUp)
   if (!cfg) notFound()
 
-  const pool = getPool()
+  const pool = getPgPool()
   const aleName = ALE_NOME[siglaUp] ?? `Assembleia Legislativa de ${cfg.nome}`
   const bandeira = BANDEIRAS[siglaUp]
   const cor = cfg.cor
@@ -244,6 +231,12 @@ export default async function AssembleiaPage({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
+        .assembleia-page,
+        .assembleia-page * { box-sizing: border-box; }
+        @media (max-width: 480px) {
+          .assembleia-hero { padding-left: 16px !important; padding-right: 16px !important; }
+          .assembleia-hero-content { padding: 28px 20px !important; }
+        }
         .dep-card { transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
         .dep-card:hover { border-color: var(--brand); box-shadow: 0 8px 24px rgba(0,0,0,0.20); transform: translateY(-2px); }
         .dep-avatar { transition: transform 0.3s; }
@@ -256,7 +249,7 @@ export default async function AssembleiaPage({
       ` }} />
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
-      <section style={{ padding: '12px 32px 0', maxWidth: 1280, margin: '0 auto' }}>
+      <section className="assembleia-hero" style={{ width: '100%', padding: '12px 32px 0', maxWidth: 1280, margin: '0 auto' }}>
         <div style={{
           position: 'relative', height: 360,
           borderRadius: 16, overflow: 'hidden',
@@ -264,15 +257,15 @@ export default async function AssembleiaPage({
         }}>
           {/* Bandeira como marca d'água */}
           {bandeira && (
-            <img src={bandeira} alt="" aria-hidden style={{
+            <Image src={bandeira} alt="" aria-hidden width={520} height={360} unoptimized style={{
               position: 'absolute', right: -60, top: -40,
-              height: '130%', opacity: 0.1,
+              width: 'auto', height: '130%', opacity: 0.1,
               pointerEvents: 'none',
             }} />
           )}
 
           {/* Overlay gradiente bottom */}
-          <div style={{
+          <div className="assembleia-hero-content" style={{
             position: 'absolute', inset: 0,
             background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
           }} />
@@ -335,12 +328,12 @@ export default async function AssembleiaPage({
         </div>
       </section>
 
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
+      <div className="assembleia-page" style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '0 32px', overflowX: 'clip' }}>
 
         {/* ── KPI GRID ──────────────────────────────────────────────── */}
         <section style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))',
           gap: 20, marginTop: 40,
         }}>
           {/* Card 1: Total deputados */}
@@ -425,7 +418,7 @@ export default async function AssembleiaPage({
 
         {/* ── BENTO: HEMICICLO + STATS ───────────────────────────────── */}
         <section style={{
-          display: 'grid', gridTemplateColumns: '7fr 5fr',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))',
           gap: 20, marginTop: 40,
         }}>
           <div style={{
@@ -636,10 +629,14 @@ export default async function AssembleiaPage({
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       {dep.foto_url ? (
-                        <img
+                        <Image
                            src={dep.foto_url}
                            alt={dep.nome_eleitoral}
                            className="dep-avatar"
+                           width={72}
+                           height={72}
+                           unoptimized
+                           loading="eager"
                            style={{
                              width: 72, height: 72, borderRadius: '50%', objectFit: 'cover',
                              border: '3px solid var(--panel)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)',

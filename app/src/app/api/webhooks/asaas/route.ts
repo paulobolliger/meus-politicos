@@ -12,9 +12,12 @@ export async function POST(req: NextRequest) {
     const token = req.headers.get('asaas-access-token')
     const webhookToken = process.env.ASAAS_WEBHOOK_TOKEN ?? ''
 
-    // Se o token estiver configurado localmente, validar a autenticidade
-    if (webhookToken && token !== webhookToken) {
-      console.warn('[Webhook Asaas] Tentativa de acesso não autorizada. Token inválido:', token)
+    if (!webhookToken) {
+      console.error('[Webhook Asaas] ASAAS_WEBHOOK_TOKEN não configurado.')
+      return NextResponse.json({ error: 'Webhook indisponível.' }, { status: 503 })
+    }
+    if (token !== webhookToken) {
+      console.warn('[Webhook Asaas] Tentativa de acesso não autorizada.')
       return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 })
     }
 
@@ -30,11 +33,18 @@ export async function POST(req: NextRequest) {
         externalReference?: string
         invoiceUrl?: string
         transactionReceiptUrl?: string
-        [key: string]: any
+        [key: string]: unknown
       }
     }
 
-    if (!event || !payment) {
+    if (
+      typeof event !== 'string' ||
+      !payment ||
+      typeof payment.id !== 'string' ||
+      !payment.id ||
+      !Number.isFinite(payment.value) ||
+      payment.value <= 0
+    ) {
       console.warn('[Webhook Asaas] Evento ou dados de pagamento ausentes no payload.')
       return NextResponse.json({ ok: false, error: 'Payload inválido.' }, { status: 400 })
     }
@@ -45,9 +55,9 @@ export async function POST(req: NextRequest) {
     if (event === 'PAYMENT_RECEIVED' || event === 'PAYMENT_CONFIRMED') {
       const order_nsu = payment.externalReference
 
-      if (!order_nsu) {
-        console.log(`[Webhook Asaas] Pagamento ${payment.id} sem externalReference. Ignorando persistência local.`)
-        return NextResponse.json({ ok: true, message: 'Ignorado (sem externalReference).' })
+      if (!order_nsu || !/^apoio-(mensal|unica)-/.test(order_nsu)) {
+        console.warn(`[Webhook Asaas] Pagamento ${payment.id} sem referência válida.`)
+        return NextResponse.json({ ok: false, error: 'Referência inválida.' }, { status: 400 })
       }
 
       const transaction_nsu = payment.id

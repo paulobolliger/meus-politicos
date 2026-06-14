@@ -10,7 +10,7 @@ export async function GET() {
     if (user && user.perfilId) {
       userId = user.perfilId
     }
-  } catch (e) {
+  } catch {
     // Ignore session errors
   }
 

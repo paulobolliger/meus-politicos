@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BookOpen, Calculator, FileText, FlaskConical, ListChecks, Scale, ShieldCheck, Wrench } from 'lucide-react'
+import { BookOpen, Calculator, FileText, ListChecks, ShieldCheck, Wrench } from 'lucide-react'
 import { SourceCite } from '@/components/civic'
 
 const scores = [

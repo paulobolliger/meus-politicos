@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
 
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 
 type PgError = Error & {
   code?: string
-}
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return _pool
 }
 
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
@@ -69,14 +52,14 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
   values.push(identifier)
 
   try {
-    await getPool().query(
+    await getPgPool().query(
       `UPDATE feature_flags
        SET ${setClauses.join(', ')}
        WHERE ${identifierColumn} = $${values.length}`,
       values
     )
 
-    await getPool().query(
+    await getPgPool().query(
       `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
        VALUES ($1, 'atualizar_feature_flag', 'feature_flags', $2, $3::jsonb)`,
       [
@@ -112,7 +95,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const res = await getPool().query(
+    const res = await getPgPool().query(
       `INSERT INTO feature_flags (slug, descricao, ativo, rollout_pct, criado_em, atualizado_em)
        VALUES ($1, $2, false, 0, now(), now())
        RETURNING id`,
@@ -121,7 +104,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const flagId = res.rows[0]?.id
 
-    await getPool().query(
+    await getPgPool().query(
       `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
        VALUES ($1, 'criar_feature_flag', 'feature_flags', $2, $3::jsonb)`,
       [
@@ -156,18 +139,18 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const checkRes = await getPool().query(
+    const checkRes = await getPgPool().query(
       `SELECT slug FROM feature_flags WHERE id = $1 LIMIT 1`,
       [body.id]
     )
     const slug = checkRes.rows[0]?.slug || body.id
 
-    await getPool().query(
+    await getPgPool().query(
       `DELETE FROM feature_flags WHERE id = $1`,
       [body.id]
     )
 
-    await getPool().query(
+    await getPgPool().query(
       `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
        VALUES ($1, 'excluir_feature_flag', 'feature_flags', $2, $3::jsonb)`,
       [

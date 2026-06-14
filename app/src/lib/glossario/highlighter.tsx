@@ -33,7 +33,7 @@ export function getTermPatterns(termo: string): string[] {
   const parenRegex = /^([^(]+)\(([^)]+)\)$/
   const match = termo.match(parenRegex)
   
-  let parts: string[] = []
+  const parts: string[] = []
   if (match) {
     parts.push(match[1].trim())
     parts.push(match[2].trim())

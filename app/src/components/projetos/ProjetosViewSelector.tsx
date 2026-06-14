@@ -162,7 +162,7 @@ export function ProjetosViewSelector({ projetos }: Props) {
       {viewMode === 'grid' && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
           gap: 24,
         }}>
           {projetos.map((p) => {
@@ -375,7 +375,7 @@ export function ProjetosViewSelector({ projetos }: Props) {
                 className="projeto-row-item"
               >
                 {/* Left side: Type badge + Title */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '1 1 500px', minWidth: 280 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '1 1 500px', minWidth: 0 }}>
                   <span style={{
                     fontSize: 12, fontWeight: 700,
                     background: 'rgba(99, 102, 241, 0.12)',

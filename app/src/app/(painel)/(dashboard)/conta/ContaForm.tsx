@@ -46,11 +46,13 @@ export function ContaForm({ initialProfile }: { initialProfile: ProfileData }) {
       .then((data) => setFlags(data))
       .catch(() => {})
 
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
+    const syncPushPermission = window.setTimeout(() => {
+      if ('Notification' in window && Notification.permission === 'granted') {
         setPushSubscribed(true)
       }
-    }
+    }, 0)
+
+    return () => window.clearTimeout(syncPushPermission)
   }, [])
 
   const isPushActive = flags['push_notifications'] === true

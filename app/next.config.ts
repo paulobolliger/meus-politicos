@@ -12,7 +12,7 @@ try {
   const gitHash = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
   const gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
   version = `v0.2.1-${gitBranch}+${gitHash}`
-} catch (e) {
+} catch {
   // fallback
 }
 
@@ -55,6 +55,11 @@ const nextConfig: NextConfig = {
         destination: "/eleicao/2026/:path*",
         permanent: true,
       },
+      {
+        source: "/meu-estado",
+        destination: "/estado",
+        permanent: true,
+      },
     ]
   },
 }
@@ -64,5 +69,4 @@ export default withSentryConfig(nextConfig, {
   project: "meus-politicos",
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  automaticVercelMonitors: true,
 })

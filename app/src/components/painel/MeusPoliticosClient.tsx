@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Bell, Download, Scale, Search, Star, Trash2, User } from 'lucide-react'
 
 import { Panel } from '@/components/civic'
@@ -284,7 +285,7 @@ export function MeusPoliticosClient({ initialSeguindo, isPremium = false }: { in
                     justifyContent: 'center',
                   }}>
                     {p.fotoUrl ? (
-                      <img src={p.fotoUrl} alt={p.nomeEleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <Image src={p.fotoUrl} alt={p.nomeEleitoral} width={64} height={64} unoptimized style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ fontSize: 20, fontWeight: 700, color: borderCol }}>
                         {initials(p.nomeEleitoral)}

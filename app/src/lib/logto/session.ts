@@ -12,7 +12,7 @@ export async function getLogtoSession(): Promise<LogtoContext> {
     if (host) {
       customBaseUrl = `${proto}://${host}`
     }
-  } catch (error) {
+  } catch {
     // Silently fallback if called outside request context (e.g., during build phase)
   }
 

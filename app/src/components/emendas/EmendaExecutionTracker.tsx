@@ -63,9 +63,9 @@ export function EmendaExecutionTracker({
             />
           </div>
 
-          <div className="flex justify-between items-start relative z-10">
+          <div className="grid grid-cols-3 items-start relative z-10">
             {/* Step 1: Empenhado */}
-            <div className="flex flex-col items-center w-24 sm:w-32 flex-shrink-0 text-center">
+            <div className="flex min-w-0 flex-col items-center px-1 text-center">
               <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 font-mono text-xs font-bold transition-all duration-300 ${
                 isEmpenhadoDone 
                   ? 'bg-[#1E293B] border-[#10B981] text-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
@@ -74,11 +74,11 @@ export function EmendaExecutionTracker({
                 {isEmpenhadoDone ? '✓' : '1'}
               </div>
               <span className="text-[10px] font-bold text-white mt-2 block">Empenhado</span>
-              <span className="text-[9px] text-[#94A3B8] font-mono mt-0.5 block">{formatCurrency(valorEmpenhado)}</span>
+              <span className="mt-0.5 block max-w-full break-words text-[9px] text-[#94A3B8] font-mono">{formatCurrency(valorEmpenhado)}</span>
             </div>
 
             {/* Step 2: Liquidado */}
-            <div className="flex flex-col items-center w-24 sm:w-32 flex-shrink-0 text-center">
+            <div className="flex min-w-0 flex-col items-center px-1 text-center">
               <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 font-mono text-xs font-bold transition-all duration-300 ${
                 isLiquidadoDone 
                   ? 'bg-[#1E293B] border-[#10B981] text-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
@@ -89,13 +89,13 @@ export function EmendaExecutionTracker({
                 {isLiquidadoDone ? '✓' : '2'}
               </div>
               <span className="text-[10px] font-bold text-white mt-2 block">Liquidado</span>
-              <span className="text-[9px] text-[#94A3B8] font-mono mt-0.5 block" title="Serviço prestado e verificado">
+              <span className="mt-0.5 block max-w-full break-words text-[9px] text-[#94A3B8] font-mono" title="Serviço prestado e verificado">
                 {formatCurrency(valorLiquidado)} ({pctLiquidado}%)
               </span>
             </div>
 
             {/* Step 3: Pago */}
-            <div className="flex flex-col items-center w-24 sm:w-32 flex-shrink-0 text-center">
+            <div className="flex min-w-0 flex-col items-center px-1 text-center">
               <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 font-mono text-xs font-bold transition-all duration-300 ${
                 isPagoDone 
                   ? 'bg-[#1E293B] border-[#10B981] text-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
@@ -106,7 +106,7 @@ export function EmendaExecutionTracker({
                 {isPagoDone ? '✓' : '3'}
               </div>
               <span className="text-[10px] font-bold text-white mt-2 block">Pago (Entregue)</span>
-              <span className="text-[9px] text-[#10B981] font-mono font-bold mt-0.5 block">
+              <span className="mt-0.5 block max-w-full break-words text-[9px] text-[#10B981] font-mono font-bold">
                 {formatCurrency(valorPago)} ({pctPago}%)
               </span>
             </div>

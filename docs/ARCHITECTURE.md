@@ -11,7 +11,7 @@ Este documento descreve a arquitetura real identificada no código do projeto Me
 
 ## 1. Tipo de Aplicacao
 
-O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Router, React 19, TypeScript, PostgreSQL (VPS) como banco relacional, Logto como provedor de identidade, InfinitePay para checkout e OpenAI para geracao/simplificacao de texto.
+O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Router, React 19, TypeScript, PostgreSQL (VPS) como banco relacional, Logto como provedor de identidade, Asaas para pagamentos e OpenAI para geracao/simplificacao de texto.
 
 | Dimensao | Classificacao real | Evidencia operacional |
 |---|---|---|
@@ -21,7 +21,7 @@ O projeto e uma aplicacao civic-tech full-stack baseada em Next.js 16 com App Ro
 | Banco | PostgreSQL (VPS) direto via `pg` | Uso recorrente de `new Pool()` com `POSTGRES_*`; acessa banco diretamente 100% Postgres VPS |
 | Autenticacao | Logto server-side e edge | `app/src/lib/logto/*`, `app/src/app/api/auth/logto/*`, `app/src/proxy.ts` |
 | RBAC | Role persistida em `perfis.role` | `app/src/lib/auth/current-user.ts`, endpoints admin |
-| Pagamentos | InfinitePay checkout link + webhook incompleto | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento`, `/api/webhooks/infinitepay` |
+| Pagamentos | Asaas Pix/cartao + webhook autenticado; InfinitePay legado | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento`, `/api/webhooks/asaas` |
 | IA | OpenAI server-side com cache em tabela de resumo | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` |
 | ETL | Scripts Python externos ao runtime web | `etl/camara`, `etl/senado`, `etl/tse`, `etl/ibge`, `etl/portal_transparencia`, `etl/ale` |
 | Estado global | Nao ha store global identificada | `useState`, `useEffect`, `useMemo`, `useTransition`; sem Zustand/Redux/SWR/TanStack Query |
@@ -62,9 +62,9 @@ flowchart TB
   API --> LOGTO
   PROXY[proxy.ts] --> LOGTO
 
-  SITE --> IPAY[InfinitePay]
-  API --> IPAY
-  IPAY --> WEBHOOK[/api/webhooks/infinitepay/]
+  SITE --> ASAAS[Asaas]
+  API --> ASAAS
+  ASAAS --> WEBHOOK[/api/webhooks/asaas/]
 
   API --> OPENAI[OpenAI]
   ETL[Scripts Python ETL] --> PG
@@ -168,7 +168,7 @@ sequenceDiagram
 |---|---|---|
 | Feed civico nao deriva de eventos reais completos | O usuario acompanha, mas nao recebe uma linha do tempo civica confiavel | `app/src/components/painel/FeedCivico.tsx` |
 | Admin ETL nao dispara scripts | Dados podem ficar desatualizados apesar do painel exibir acao de ETL | `app/src/app/api/admin/etl/run/route.ts`, `app/src/components/admin/EtlSourceCard.tsx` |
-| InfinitePay nao persiste confirmacao | Apoio financeiro pode ser criado, mas o estado confirmado nao entra no banco pelo webhook | `app/src/app/api/webhooks/infinitepay/route.ts` |
+| Configuracao externa do Asaas | Fluxo financeiro depende de chave, token de webhook e migration aplicados no ambiente | `app/src/app/api/webhooks/asaas/route.ts` |
 
 ## 6. Gerenciamento de Estado
 
@@ -180,7 +180,7 @@ Nao ha biblioteca de estado global identificada. O estado e distribuido por:
 | Estado remoto | Fetch client-side para APIs internas | `/api/busca`, `/api/acompanhamentos`, `/api/admin/*` |
 | Estado autenticado | Sessao Logto server-side/edge + perfil PostgreSQL | `getLogtoSession()`, `getCurrentUser()` |
 | Estado persistente | PostgreSQL | `acompanhamentos`, `perfis`, `analytics_eventos`, tabelas civicas |
-| Estado de pagamento | Link InfinitePay e payload webhook | Falta persistencia do webhook |
+| Estado de pagamento | Cobranca Asaas e tabela `doacoes` | Persistencia pendente/paga e upsert idempotente |
 | Estado de IA | Cache/resultado em banco e limite diario por usuario | `resumo-interpretativo.ts` |
 
 ### 6.1 Consequencias Tecnicas
@@ -225,7 +225,7 @@ O backend HTTP identificado possui 18 endpoints, documentados em `docs/API.md`:
 | Auth Logto | 5 | Login, cadastro, reset, callback, logout |
 | Busca/glossario/analytics | 3 | Produto publico e telemetria |
 | Acompanhamentos | 2 | Core loop autenticado |
-| Apoio/InfinitePay | 3 | Criacao de checkout, verificacao e webhook |
+| Apoio/pagamentos | 4 | Criacao, verificacao, webhook Asaas e webhook legado InfinitePay |
 | Admin | 4 | Flags, politicos, emendas, ETL |
 | Total mapeado | 18 | Superficie backend atual |
 
@@ -237,14 +237,14 @@ O backend HTTP identificado possui 18 endpoints, documentados em `docs/API.md`:
 | Analytics produto | `/api/analytics` insere eventos best-effort | Sem contrato forte de schema/payload |
 | Admin logs | Mutacoes admin inserem `admin_logs` em alguns endpoints | Parcial, sem auditoria centralizada |
 | ETL logs | Scripts Python usam logging local | Sem orquestrador e sem status central |
-| Pagamentos | Logs no webhook InfinitePay | Sem persistencia e sem assinatura verificada |
+| Pagamentos | Persistencia em `doacoes`, token Asaas e validacao back-channel legada | Falta rate limit e teste sandbox automatizado |
 
 ## 10. Riscos Arquiteturais Prioritarios
 
 | Prioridade | Risco | Impacto | Acao tecnica recomendada |
 |---|---|---|---|
 | P0 | Chave privada aparente em `docs/meuspoliticos_master.md` | Exposicao de segredo | Revogar chave, remover valor do repo e auditar historico Git |
-| P0/P1 | Webhook InfinitePay nao persiste doacao | Perda de confirmacao financeira | Implementar tabela/servico de doacoes, idempotencia e validacao de origem |
+| P1 | Configuracao financeira por ambiente | Webhook/cobranca indisponiveis se segredos ou migration faltarem | Validar sandbox, aplicar migration e monitorar falhas |
 | P1 | ETL admin nao executa scripts | Dados civicos desatualizados | Criar job runner/orquestrador e status persistente por fonte |
 | P1 | Uso direto e repetido de `new Pool()` | Duplicacao e risco operacional | Centralizar factory de DB e politica de timeout |
 | P1 | Contratos de busca divergentes | UI envia params ignorados | Normalizar `limite`/`porPagina`/`pagina` |
@@ -252,4 +252,4 @@ O backend HTTP identificado possui 18 endpoints, documentados em `docs/API.md`:
 
 ## 11. Resumo Executivo
 
-A arquitetura atual e coerente para um MVP civic-tech: Next.js concentra produto e backend, PostgreSQL armazena o dominio, Logto autentica e o ETL Python alimenta dados publicos. O principal problema nao e conceitual; e de consolidacao operacional. Os pontos que impedem producao robusta sao persistencia financeira incompleta, acionamento real do ETL ausente, segredo exposto em doc legado e repeticao de acesso direto ao banco sem camada compartilhada de confiabilidade.
+A arquitetura atual e coerente para um MVP civic-tech: Next.js concentra produto e backend, PostgreSQL armazena o dominio, Logto autentica e o ETL Python alimenta dados publicos. Os principais riscos restantes sao configuracao operacional dos provedores, orquestracao ETL, segredo historico e repeticao de acesso direto ao banco.

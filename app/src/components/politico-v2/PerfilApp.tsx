@@ -76,6 +76,41 @@ type DoadorEleitoralItem = {
   ano: number | null
 }
 
+type ProposicaoItem = {
+  id: string
+  slug: string
+  tipo: string | null
+  numero: string | number | null
+  ano: number | null
+  situacao: string | null
+  ementa: string | null
+}
+
+type EmendaItem = {
+  id: string
+  valor_pago: number | null
+  valor: number | null
+  ano: number | null
+  municipio_nome: string | null
+  uf_municipio: string | null
+  funcao: string | null
+}
+
+type FeedEvento = {
+  id: string
+  data: string | null
+  impacto_nivel: number | null
+  titulo: string | null
+  descricao: string | null
+  descricao_simples: string | null
+  link_fonte: string | null
+}
+
+type AcompanhamentoItem = {
+  politico_id: string
+  tipo: 'voto' | 'seguir'
+}
+
 type AnnualKpis = {
   ano: number
   has_presenca_ano: boolean
@@ -130,15 +165,15 @@ type Props = {
   votacoesRecentes?: VotacaoItem[]
   gastos: GastoItem[]
   presenca: PresencaItem[]
-  proposicoes?: any[]
-  emendas?: any[]
+  proposicoes?: ProposicaoItem[]
+  emendas?: EmendaItem[]
   historicoPartidario?: HistoricoPartidarioItem[]
   agenda?: AgendaItem[]
   doadoresEleitorais?: DoadorEleitoralItem[]
   kpis: AnnualKpis
   initialTab?: string
   timelineActive?: boolean
-  feedEventos?: any[]
+  feedEventos?: FeedEvento[]
   expliqueVotacaoActive?: boolean
 }
 
@@ -189,17 +224,17 @@ function GastosDonut({ categorias }: { categorias: [string, number][] }) {
 
   const cx = 70, cy = 70, r = 52, stroke = 20
   const gap = 0.02
-  let cumAngle = -Math.PI / 2
-
   const slices = categorias.slice(0, 6).map(([cat, val], i) => {
     const frac = val / total
     const angle = frac * (2 * Math.PI) - gap
-    const x1 = cx + r * Math.cos(cumAngle + gap / 2)
-    const y1 = cy + r * Math.sin(cumAngle + gap / 2)
-    const x2 = cx + r * Math.cos(cumAngle + angle)
-    const y2 = cy + r * Math.sin(cumAngle + angle)
+    const startAngle = -Math.PI / 2 + categorias
+      .slice(0, i)
+      .reduce((sum, [, previousValue]) => sum + (previousValue / total) * (2 * Math.PI), 0)
+    const x1 = cx + r * Math.cos(startAngle + gap / 2)
+    const y1 = cy + r * Math.sin(startAngle + gap / 2)
+    const x2 = cx + r * Math.cos(startAngle + angle)
+    const y2 = cy + r * Math.sin(startAngle + angle)
     const large = angle > Math.PI ? 1 : 0
-    cumAngle += frac * (2 * Math.PI)
     return { cat, val, frac, x1, y1, x2, y2, large, color: DONUT_COLORS[i] }
   })
 
@@ -414,7 +449,9 @@ export function PerfilApp({
     'fontes': 'Fontes',
   }
   const defaultTab = (initialTab && tabMap[initialTab.toLowerCase()]) || (initialTab as Tab) || 'Visão geral'
-  const [tab, setTab] = useState<Tab>(TABS.includes(defaultTab as any) ? (defaultTab as Tab) : 'Visão geral')
+  const [tab, setTab] = useState<Tab>(
+    TABS.some((candidate) => candidate === defaultTab) ? defaultTab as Tab : 'Visão geral'
+  )
   
   const tabs = useMemo<Tab[]>(() => {
     return [
@@ -443,7 +480,8 @@ export function PerfilApp({
     fetch('/api/acompanhamentos')
       .then((res) => res.json())
       .then((data) => {
-        const item = data.acompanhamentos?.find((a: any) => a.politico_id === politico.id)
+        const item = (data.acompanhamentos as AcompanhamentoItem[] | undefined)
+          ?.find((acompanhamento) => acompanhamento.politico_id === politico.id)
         if (item) {
           setSeguindoStatus({ seguindo: true, tipo: item.tipo })
         }
@@ -581,15 +619,14 @@ export function PerfilApp({
         }}
       >
         {bannerImg && (
-          <img
+          <Image
             src={bannerImg}
             alt=""
             aria-hidden
+            fill
+            unoptimized
+            sizes="100vw"
             style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
               objectFit: 'cover',
               objectPosition: 'center 35%',
               opacity: 0.18,
@@ -1267,7 +1304,7 @@ export function PerfilApp({
                       {/* Linha vertical conectora */}
                       <div style={{ position: 'absolute', left: 9, top: 4, bottom: 4, width: 2, background: 'var(--line)' }} />
 
-                      {feedEventos.map((evt: any, idx: number) => {
+                      {feedEventos.map((evt, idx) => {
                         const dateFmt = evt.data ? new Date(evt.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
                         const impacto = Number(evt.impacto_nivel || 1)
                         const impColor = impacto === 4 ? 'var(--neg)' : impacto === 3 ? 'var(--warn)' : impacto === 2 ? 'var(--info)' : 'var(--brand-2)'

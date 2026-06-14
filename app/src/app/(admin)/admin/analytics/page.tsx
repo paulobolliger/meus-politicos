@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Pool } from 'pg'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 import { AdminPageHeader, KpiCard } from '@/components/admin/AdminCard'
 
 export const metadata = { title: 'Analytics — Admin' }
@@ -15,30 +15,12 @@ type EventRow = {
 type SearchEntry = { query: string; count: number }
 type ViewEntry = { politico_id: string; nome: string; count: number }
 
-let pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
-}
-
 export default async function AnalyticsPage() {
   const currentUser = await getCurrentUser()
   if (!currentUser) redirect('/login')
   if (currentUser.role !== 'admin') redirect('/painel')
 
-  const { rows } = await getPool().query<EventRow>(`
+  const { rows } = await getPgPool().query<EventRow>(`
     SELECT tipo, payload, criado_em::text AS criado_em, usuario_id
     FROM analytics_eventos
     ORDER BY criado_em DESC

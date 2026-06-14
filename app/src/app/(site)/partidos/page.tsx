@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 import { PartidosClient, type PartidoCard, type FpAno } from './PartidosClient'
 
 export const revalidate = 86400
@@ -9,23 +9,9 @@ export const metadata: Metadata = {
   description: 'Explore os partidos políticos brasileiros — bancada, presença, gastos e histórico de votações.',
 }
 
-// ─── Pool singleton ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function PartidosPage() {
-  const pool = getPool()
+  const pool = getPgPool()
   let partidos: PartidoCard[] = []
   let totalPoliticos = 0
   // Fallback com dados reais do último query (atualizar via ETL)
@@ -74,7 +60,7 @@ export default async function PartidosPage() {
   // Tentar buscar FP do banco — fallback para valores hardcoded se falhar
   try {
     const fpRes = await pool.query<{ ano: string; total: string }>(
-      `SELECT ano::int AS ano, SUM(valor_total)::bigint AS total
+      `SELECT ano::int AS ano, SUM(valor)::bigint AS total
        FROM partidos_fundos
        GROUP BY ano ORDER BY ano`
     )

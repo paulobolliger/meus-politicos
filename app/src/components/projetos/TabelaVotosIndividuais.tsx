@@ -18,9 +18,11 @@ type TabelaVotosIndividuaisProps = {
   votos: VotoIndividual[]
 }
 
+type FiltroVoto = 'todos' | 'sim' | 'nao' | 'abstencao'
+
 export function TabelaVotosIndividuais({ votos }: TabelaVotosIndividuaisProps) {
   const [busca, setBusca] = useState('')
-  const [filtroVoto, setFiltroVoto] = useState<'todos' | 'sim' | 'nao' | 'abstencao'>('todos')
+  const [filtroVoto, setFiltroVoto] = useState<FiltroVoto>('todos')
 
   const votosFiltrados = votos.filter((v) => {
     const nomeMatch = v.nome_eleitoral.toLowerCase().includes(busca.toLowerCase())
@@ -49,18 +51,18 @@ export function TabelaVotosIndividuais({ votos }: TabelaVotosIndividuaisProps) {
 
         {/* Filtros de Voto */}
         <div className="flex flex-wrap gap-1.5">
-          {[
+          {([
             { id: 'todos', label: 'Todos' },
             { id: 'sim', label: 'Sim', count: votos.filter((v) => v.voto.toLowerCase() === 'sim').length, color: 'hover:bg-[#10B981]/15 text-[#34D399]' },
             { id: 'nao', label: 'Não', count: votos.filter((v) => v.voto.toLowerCase() === 'nao').length, color: 'hover:bg-[#F43F5E]/15 text-[#F43F5E]' },
             { id: 'abstencao', label: 'Abs', count: votos.filter((v) => v.voto.toLowerCase() === 'abstencao').length, color: 'hover:bg-[#F59E0B]/15 text-[#FBBF24]' },
-          ].map((btn) => {
+          ] satisfies Array<{ id: FiltroVoto; label: string; count?: number; color?: string }>).map((btn) => {
             const isActive = filtroVoto === btn.id
             return (
               <button
                 key={btn.id}
                 type="button"
-                onClick={() => setFiltroVoto(btn.id as any)}
+                onClick={() => setFiltroVoto(btn.id)}
                 className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
                   isActive
                     ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]'

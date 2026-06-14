@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
 
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 
 type PgError = Error & {
   code?: string
-}
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return _pool
 }
 
 export async function PATCH(
@@ -79,14 +62,14 @@ export async function PATCH(
   values.push(id)
 
   try {
-    await getPool().query(
+    await getPgPool().query(
       `UPDATE politicos
        SET ${setClauses.join(', ')}
        WHERE id = $${values.length}`,
       values
     )
 
-    await getPool().query(
+    await getPgPool().query(
       `INSERT INTO admin_logs (usuario_id, acao, entidade, entidade_id, detalhe)
        VALUES ($1, 'editar_politico', 'politicos', $2, $3::jsonb)`,
       [

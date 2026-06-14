@@ -44,10 +44,10 @@ Lista consolidada de pendencias para estabilizar o MVP real do Meus Politicos an
 
 | ID | Area | Pendencia | Evidencia | Saida esperada |
 |---|---|---|---|---|
-| P1-05 | Banco | Centralizar factory de conexao PostgreSQL | Muitos `new Pool()` em paginas, APIs e helpers | `lib/db` com timeout, SSL, logging e config unica |
+| P1-05 | Banco | (Resolvido) Centralizar factory de conexao PostgreSQL | Runtime usa `getPgPool()`; criacao de `Pool` centralizada em `lib/db/pool.ts` | Uma unica factory no runtime |
 | P1-06 | Banco | Resolver defaults divergentes `5432` vs `5433` | `docs/ENVIRONMENT.md` | Porta padrao unica por ambiente |
 | P1-07 | Banco | Criar/confirmar tabela `doacoes` | Ausente em migrations; citada por TODO/webhook | Migration SQL versionada |
-| P1-08 | Banco | Versionar `partidos_fundos` se usado pelo app | Criada por script ETL, nao por migration | Migration ou guard de ausencia |
+| P1-08 | Banco | (Resolvido) Versionar `partidos_fundos` usada pelo app | Migration `20260612000000_partidos_fundos.sql` | Schema, constraints e indices versionados |
 | P1-09 | Banco/Auth | Validar RLS/grants vs Logto e `pg` direto | RLS legado usa `auth.uid()`/`auth.jwt()` | Roles Postgres de menor privilegio e grants revisados |
 | P1-10 | Auth | (Resolvido) Criar provisioning para usuario Logto sem perfil legado | Resolvido via runtime logic e migration de decupagem | Criação automática em perfis |
 | P1-11 | Auth | Reduzir dependencia de `auth.users` legado | Decupagem de constraints realizada; linking de email legado preservado | Plano de desligamento ou tabela de emails interna |

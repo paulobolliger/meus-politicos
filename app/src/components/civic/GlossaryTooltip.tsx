@@ -10,7 +10,6 @@ interface GlossaryTooltipProps {
 export function GlossaryTooltip({ term, children }: GlossaryTooltipProps) {
   const [active, setActive] = useState(false)
   const [definition, setDefinition] = useState<{ termo: string; definicao_simples: string } | null>(null)
-  const [hovered, setHovered] = useState(false)
   const [loading, setLoading] = useState(false)
   const [flags, setFlags] = useState<Record<string, boolean>>({})
 
@@ -25,11 +24,10 @@ export function GlossaryTooltip({ term, children }: GlossaryTooltipProps) {
 
   const isEnabled = flags['glossario_tooltips'] === true
 
-  useEffect(() => {
-    if (!isEnabled || !hovered || definition || loading) return
-
+  function loadDefinition() {
+    if (!isEnabled || definition || loading) return
     setLoading(true)
-    fetch(`/api/glossario/${slug}`)
+    void fetch(`/api/glossario/${slug}`)
       .then((res) => {
         if (!res.ok) throw new Error()
         return res.json()
@@ -43,7 +41,7 @@ export function GlossaryTooltip({ term, children }: GlossaryTooltipProps) {
       .finally(() => {
         setLoading(false)
       })
-  }, [isEnabled, hovered, slug, definition, loading])
+  }
 
   if (!isEnabled) {
     return <>{children}</>
@@ -52,8 +50,8 @@ export function GlossaryTooltip({ term, children }: GlossaryTooltipProps) {
   return (
     <span
       onMouseEnter={() => {
-        setHovered(true)
         setActive(true)
+        loadDefinition()
       }}
       onMouseLeave={() => setActive(false)}
       onClick={() => {

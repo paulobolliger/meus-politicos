@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation'
 import { useCallback, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type PoliticoCompar = {
   id: string
@@ -291,10 +292,10 @@ export function CompararClient({
                     width: 32, height: 32, borderRadius: '50%',
                     background: 'var(--brand-soft)', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--brand)',
-                    flexShrink: 0, overflow: 'hidden',
+                    flexShrink: 0, overflow: 'hidden', position: 'relative',
                   }}>
                     {r.foto_url
-                      ? <img src={r.foto_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                      ? <Image src={r.foto_url} alt="" fill sizes="32px" unoptimized style={{ objectFit: 'cover' }} />
                       : initials(r.nome_eleitoral)}
                   </div>
                   <div>
@@ -322,10 +323,10 @@ export function CompararClient({
               <div style={{
                 width: 20, height: 20, borderRadius: '50%', background: 'var(--brand-soft)',
                 overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 9, fontWeight: 700, color: 'var(--brand)', flexShrink: 0,
+                fontSize: 9, fontWeight: 700, color: 'var(--brand)', flexShrink: 0, position: 'relative',
               }}>
                 {p.foto_url
-                  ? <img src={p.foto_url} alt="" style={{ width: 20, height: 20, objectFit: 'cover' }} />
+                  ? <Image src={p.foto_url} alt="" fill sizes="20px" unoptimized style={{ objectFit: 'cover' }} />
                   : initials(p.nome_eleitoral)}
               </div>
               <span style={{ fontWeight: 500, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -390,10 +391,10 @@ export function CompararClient({
                     margin: '0 auto 10px', overflow: 'hidden',
                     background: 'var(--brand-soft)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 16, fontWeight: 700, color: 'var(--brand)',
+                    fontSize: 16, fontWeight: 700, color: 'var(--brand)', position: 'relative',
                   }}>
                     {p.foto_url
-                      ? <img src={p.foto_url} alt="" style={{ width: 52, height: 52, objectFit: 'cover' }} />
+                      ? <Image src={p.foto_url} alt="" fill sizes="52px" unoptimized style={{ objectFit: 'cover' }} />
                       : initials(p.nome_eleitoral)}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3 }}>

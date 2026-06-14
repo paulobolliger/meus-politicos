@@ -1,8 +1,7 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect, useTransition } from 'react'
-import Link from 'next/link'
+import { useCallback, useState, useEffect, useTransition } from 'react'
 
 type Props = {
   defaultQ?: string
@@ -33,11 +32,7 @@ export function GlossarioFiltros({
 
   const [q, setQ] = useState(defaultQ)
 
-  useEffect(() => {
-    setQ(defaultQ)
-  }, [defaultQ])
-
-  function navegar(novoQ: string, novaCat: string, novaLetra: string) {
+  const navegar = useCallback((novoQ: string, novaCat: string, novaLetra: string) => {
     const params = new URLSearchParams(searchParams.toString())
     
     if (novoQ.trim()) params.set('q', novoQ.trim()); else params.delete('q')
@@ -46,7 +41,12 @@ export function GlossarioFiltros({
 
     const qs = params.toString()
     startTransition(() => router.push(qs ? `${pathname}?${qs}` : pathname))
-  }
+  }, [pathname, router, searchParams])
+
+  useEffect(() => {
+    const syncQuery = window.setTimeout(() => setQ(defaultQ), 0)
+    return () => window.clearTimeout(syncQuery)
+  }, [defaultQ])
 
   // Debounced search
   useEffect(() => {
@@ -58,7 +58,7 @@ export function GlossarioFiltros({
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [q])
+  }, [defaultCategoria, defaultLetra, navegar, q, searchParams])
 
   function clearAll() {
     setQ('')

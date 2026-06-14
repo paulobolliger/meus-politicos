@@ -7,7 +7,7 @@ related: [docs/DEPENDENCIES.md, docs/GAP_ANALYSIS.md, docs/API.md]
 
 # Testes — Estado Atual e Estratégia
 
-> ⚠️ **Gap G-06 (P1):** O projeto tem **zero cobertura de testes automatizados**. Nenhum framework de testes está configurado. Não existem arquivos `.test.*`, `.spec.*`, nenhum jest/vitest/playwright/cypress config.
+> Estado em 2026-06-12: Playwright esta configurado em `app/playwright.config.ts` com testes E2E de navegacao, hidratacao, responsividade, rotas protegidas e validacao da API de pagamentos.
 
 ---
 
@@ -15,16 +15,16 @@ related: [docs/DEPENDENCIES.md, docs/GAP_ANALYSIS.md, docs/API.md]
 
 ### 1.1 TypeScript — verificação de tipos
 
-A verificação de tipos é o único "teste" automático que existe no projeto.
+A verificacao de tipos possui script dedicado:
 
 ```bash
 # Executar type check sem emitir arquivos
-npx tsc --noEmit
+npm run typecheck
 ```
 
 **Cobertura:** tipos de componentes, props, retornos de funções, schemas Zod → tipos TypeScript. Captura erros de tipo em tempo de compilação, mas não captura lógica incorreta ou comportamento em runtime.
 
-**Status:** habilitado implicitamente pelo build (`npm run build`). Não há script dedicado `typecheck` em `package.json`.
+**Status:** executavel isoladamente e tambem validado pelo build.
 
 ### 1.2 ESLint — análise estática
 
@@ -45,20 +45,38 @@ import nextTs  from "eslint-config-next/typescript";
 cd app && npm run lint
 ```
 
-### 1.3 O que não existe
+### 1.3 Cobertura automatizada atual
 
 | Tipo de teste | Framework | Status |
 |---|---|---|
 | Testes unitários | Vitest / Jest | ❌ Não configurado |
 | Testes de integração | Vitest + pg-test | ❌ Não configurado |
-| Testes E2E | Playwright / Cypress | ❌ Não configurado |
+| Testes E2E | Playwright | Configurado |
 | Cobertura de código | c8 / istanbul | ❌ Não configurado |
-| Testes de API | Supertest / Vitest | ❌ Não configurado |
+| Testes de API | Playwright request context | Configurado para validacao de pagamentos |
 | Testes de snapshot | Vitest snapshots | ❌ Não configurado |
 
 ---
 
-## 2. Impacto da ausência de testes
+Executar:
+
+```bash
+cd app
+npm run test:e2e
+npm run test:e2e -- --project=desktop
+```
+
+Suites atuais:
+
+| Arquivo | Cobertura |
+|---|---|
+| `hydration.spec.ts` | Erros de hidratacao em rotas publicas |
+| `navigation.spec.ts` | Navegacao e redirect legado `/meu-estado` |
+| `responsive.spec.ts` | Overflow horizontal em rotas publicas, inclusive 320 px |
+| `protected-routes.spec.ts` | Redirect de painel, conta e admin sem sessao |
+| `payment-api.spec.ts` | Validacao antes de gateway externo |
+
+## 2. Riscos ainda nao cobertos
 
 ### 2.1 Riscos identificados
 
@@ -69,7 +87,7 @@ cd app && npm run lint
 | Quebra na lógica de cookies cross-subdomain | `middleware.ts` | Média |
 | RLS bypassada acidentalmente por `createAdminClient()` usado no lugar errado | API routes | Média |
 | Filtro de partido retorna dados errados no fallback `pg.Pool` | `/api/busca` | Média |
-| Webhook InfinitePay processa payload malformado | `/api/webhooks/infinitepay` | Baixa |
+| Webhooks com gateway real e banco isolado | `/api/webhooks/asaas`, `/api/webhooks/infinitepay` | Media |
 
 ### 2.2 Custo do upgrade sem testes
 
@@ -253,7 +271,7 @@ export default defineConfig({
 | Fluxo | Complexidade | Valor |
 |---|---|---|
 | Busca por nome → clique no resultado → perfil carrega | Baixa | Alta — caminho mais comum |
-| CEP válido → /meu-estado → lista de representantes | Média | Alta |
+| `/meu-estado` legado → redirect permanente para `/estado` | Alta | Baixa |
 | Login Google OAuth → redirect /painel | Alta | Alta — sessão cross-subdomain |
 | Admin acessa /admin → KPIs carregam | Média | Alta — proteção dupla |
 | Pagamento Stripe (modo test) → webhook → confirmação | Alta | Alta — fluxo financeiro |

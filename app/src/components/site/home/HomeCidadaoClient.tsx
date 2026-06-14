@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { VotacaoRecente } from '@/app/(site)/page'
@@ -33,55 +34,6 @@ const UF_NOMES: Record<string, string> = {
   DF: 'Distrito Federal', MG: 'Minas Gerais', ES: 'Espírito Santo',
   RJ: 'Rio de Janeiro', SP: 'São Paulo', PR: 'Paraná',
   SC: 'Santa Catarina', RS: 'Rio Grande do Sul', MS: 'Mato Grosso do Sul',
-}
-
-// ─── Mini-componentes ─────────────────────────────────────────────────────────
-
-function PresencaRingMini({ value }: { value: number }) {
-  const r = 38
-  const c = 2 * Math.PI * r
-  const off = c - (value / 100) * c
-  return (
-    <svg width="96" height="96" viewBox="0 0 96 96">
-      <circle cx="48" cy="48" r={r} fill="none" stroke="var(--bg-2)" strokeWidth="8" />
-      <circle cx="48" cy="48" r={r} fill="none" stroke="var(--pos)" strokeWidth="8"
-        strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round"
-        transform="rotate(-90 48 48)" />
-      <text x="48" y="52" textAnchor="middle" fontSize="22" fontWeight="700"
-        fill="var(--ink)" letterSpacing="-0.02em">{value}%</text>
-    </svg>
-  )
-}
-
-function UsageBar({ pct }: { pct: number }) {
-  return (
-    <div style={{ width: '100%' }}>
-      <div style={{ height: 8, background: 'var(--bg-2)', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%)' }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: 'var(--ink-3)' }}>
-        <span className="mono">USADO {pct}%</span>
-        <span className="mono">TETO 100%</span>
-      </div>
-    </div>
-  )
-}
-
-function VoteMini() {
-  const votes = [
-    { v: '✓', c: 'var(--pos)' }, { v: '✓', c: 'var(--pos)' },
-    { v: '✕', c: 'var(--neg)' }, { v: '✓', c: 'var(--pos)' },
-    { v: '○', c: 'var(--warn)' }, { v: '✓', c: 'var(--pos)' },
-  ]
-  return (
-    <div style={{ display: 'flex', gap: 6 }}>
-      {votes.map((b, i) => (
-        <div key={i} style={{ width: 30, height: 30, background: b.c, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, borderRadius: 5 }}>
-          {b.v}
-        </div>
-      ))}
-    </div>
-  )
 }
 
 function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) => void }) {
@@ -130,7 +82,6 @@ const cardStyle: React.CSSProperties = {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export function HomeCidadaoClient({
-  recentVotacoes = [],
   estatisticas,
 }: {
   recentVotacoes?: VotacaoRecente[]
@@ -147,21 +98,24 @@ export function HomeCidadaoClient({
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeUf, setActiveUf] = useState('SP')
-  const [hovered, setHovered] = useState<string | null>(null)
-
-  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [suggestions, setSuggestions] = useState<Array<{
+    id: string
+    slug: string
+    nome?: string
+    nome_eleitoral?: string | null
+    foto_url?: string | null
+    cargo?: string
+    uf?: string | null
+    partidos?: { sigla?: string | null } | null
+  }>>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const [, setSuggestionsLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   // Debounced autocomplete search on the homepage
   useEffect(() => {
     const trimmed = query.trim()
-    const isCep = /^\d{5}-?\d{3}$/.test(trimmed) || /^\d{8}$/.test(trimmed.replace(/\D/g, ''))
-    
-    if (!trimmed || isCep || trimmed.length < 2) {
-      setSuggestions([])
-      setShowSuggestions(false)
+    if (!trimmed || trimmed.length < 2) {
       return
     }
 
@@ -362,12 +316,7 @@ export function HomeCidadaoClient({
     e.preventDefault()
     const q = query.trim()
     if (!q) return
-    const isCep = /^\d{5}-?\d{3}$/.test(q) || /^\d{8}$/.test(q.replace(/\D/g, ''))
-    if (isCep) {
-      router.push(`/meu-estado?cep=${q.replace(/\D/g, '')}`)
-    } else {
-      router.push(`/busca?q=${encodeURIComponent(q)}`)
-    }
+    router.push(`/busca?q=${encodeURIComponent(q)}`)
   }
 
   return (
@@ -399,11 +348,18 @@ export function HomeCidadaoClient({
                 }}>
                   <input
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      const nextQuery = e.target.value
+                      setQuery(nextQuery)
+                      if (nextQuery.trim().length < 2) {
+                        setSuggestions([])
+                        setShowSuggestions(false)
+                      }
+                    }}
                     onFocus={() => {
                       if (suggestions.length > 0) setShowSuggestions(true)
                     }}
-                    placeholder="Digite seu CEP ou nome de um político"
+                    placeholder="Nome, cargo, partido ou estado"
                     style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 15, color: 'var(--ink)', fontFamily: 'var(--font-sans)' }}
                   />
                   <button type="submit" style={{
@@ -466,9 +422,12 @@ export function HomeCidadaoClient({
                               flexShrink: 0
                             }}>
                               {p.foto_url ? (
-                                <img
+                                <Image
                                   src={p.foto_url}
                                   alt=""
+                                  width={40}
+                                  height={40}
+                                  unoptimized
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                               ) : (
@@ -510,7 +469,7 @@ export function HomeCidadaoClient({
                       }}
                       className="hover:bg-slate-800/50 hover:text-white"
                     >
-                      Ver todos os resultados para "{query}" →
+                      Ver todos os resultados para &quot;{query}&quot; →
                     </Link>
                   </div>
                 )}

@@ -153,11 +153,11 @@ def coletar_fp(ano: int) -> dict[str, float]:
 MIGRATION = """
 CREATE TABLE IF NOT EXISTS partidos_fundos (
     id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    partido_id  uuid,
-    tipo        text   NOT NULL,   -- 'fp' | 'fefc'
-    ano         integer NOT NULL,
-    valor       numeric(18,2) NOT NULL DEFAULT 0,
-    coletado_em timestamptz DEFAULT now(),
+    partido_id  uuid NOT NULL REFERENCES partidos(id) ON DELETE CASCADE,
+    tipo        text NOT NULL CHECK (tipo IN ('fp', 'fefc')),
+    ano         integer NOT NULL CHECK (ano >= 1995),
+    valor       numeric(18,2) NOT NULL DEFAULT 0 CHECK (valor >= 0),
+    coletado_em timestamptz NOT NULL DEFAULT now(),
     UNIQUE (partido_id, tipo, ano)
 );
 

@@ -64,7 +64,7 @@ export function EtlSourceCard({ source, defaultOpen, badgeVariant }: EtlSourceCa
       })
       const json = await res.json() as { message?: string; error?: string }
       setLogMsg(json.message ?? json.error ?? 'Registrado.')
-    } catch (e) {
+    } catch {
       setLogMsg('Erro ao chamar API.')
     } finally {
       setLogging(false)

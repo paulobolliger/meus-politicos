@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Pool } from 'pg'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 import { AdminPageHeader } from '@/components/admin/AdminCard'
 import { FeatureFlagList } from '@/components/admin/FeatureFlagList'
 
@@ -15,30 +15,12 @@ type FeatureFlag = {
   atualizado_em: string
 }
 
-let pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
-}
-
 export default async function FeatureFlagsPage() {
   const currentUser = await getCurrentUser()
   if (!currentUser) redirect('/login')
   if (currentUser.role !== 'admin') redirect('/painel')
 
-  const { rows: flags } = await getPool().query<FeatureFlag>(`
+  const { rows: flags } = await getPgPool().query<FeatureFlag>(`
     SELECT id, slug, descricao, ativo, rollout_pct, atualizado_em::text AS atualizado_em
     FROM feature_flags
     ORDER BY slug ASC

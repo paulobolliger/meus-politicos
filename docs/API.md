@@ -221,8 +221,11 @@ Body:
 {
   "nome": "Joao Silva",
   "email": "joao@example.com",
+  "cpfCnpj": "12345678901",
+  "telefone": "11999999999",
   "tipo": "unica",
-  "valor": 50
+  "valor": 50,
+  "formaPagamento": "pix"
 }
 ```
 
@@ -230,37 +233,27 @@ Regras:
 
 | Campo | Regra |
 |---|---|
-| `nome` | Obrigatorio |
-| `email` | Obrigatorio |
-| `valor` | Obrigatorio; valor em reais |
-| `tipo` | Usado para descricao e parse de `order_nsu`; esperado `mensal` ou `unica` |
-| `INFINITEPAY_HANDLE` | Obrigatorio |
-
-Payload enviado a InfinitePay:
-
-```json
-{
-  "handle": "meus-politicos",
-  "order_nsu": "apoio-unica-...",
-  "items": [{ "description": "Apoio Cívico", "quantity": 1, "price": 5000 }],
-  "redirect_url": "https://.../apoio/confirmacao",
-  "webhook_url": "https://.../api/webhooks/infinitepay",
-  "customer": { "name": "...", "email": "..." }
-}
-```
+| `nome` | 2 a 120 caracteres |
+| `email` | Email valido |
+| `cpfCnpj` | 11 ou 14 digitos apos normalizacao |
+| `telefone` | Opcional |
+| `valor` | Numero finito entre R$ 5 e R$ 10.000 |
+| `tipo` | `mensal` ou `unica` |
+| `formaPagamento` | `pix` ou `cartao` |
+| `cartaoInfo` | Obrigatorio para cartao; numero, validade, CCV, CEP e numero |
 
 Respostas:
 
 | Condicao | Status | Payload |
 |---|---:|---|
-| Campos ausentes | 400 | `{ "error": "Campos obrigatórios ausentes." }` |
-| Handle ausente | 500 | `{ "error": "Configuração de pagamento indisponível." }` |
-| InfinitePay erro | 502 | `{ "error": "Falha ao gerar link de pagamento." }` |
-| Resposta sem URL | 502 | `{ "error": "URL de pagamento não retornada." }` |
+| Dados invalidos | 400 | `{ "error": "Dados de pagamento inválidos.", "fields": {} }` |
+| Asaas sem configuracao | 503 | `{ "error": "Gateway de pagamento em manutenção." }` |
+| Falha do gateway | 400 | Erro sanitizado de cliente/cobranca |
 | Erro interno | 500 | `{ "error": "Erro interno do servidor." }` |
-| Sucesso | 200 | `{ "url": "...", "order_nsu": "..." }` |
+| Pix | 200 | `{ "success": true, "type": "pix", "paymentId": "...", "qrCode": "...", "copiaCola": "..." }` |
+| Cartao | 200 | `{ "success": true, "type": "cartao", "paymentId": "...", "status": "..." }` |
 
-Banco: nenhum. Risco: pedido de pagamento nao e pre-persistido.
+Banco: insere `doacoes` como `pendente` ou `pago`, conforme resposta do Asaas.
 
 ## 8. `POST /api/apoio/verificar-pagamento`
 
@@ -272,9 +265,7 @@ Body:
 
 ```json
 {
-  "order_nsu": "...",
-  "transaction_nsu": "...",
-  "slug": "..."
+  "paymentId": "pay_..."
 }
 ```
 
@@ -282,50 +273,39 @@ Respostas:
 
 | Condicao | Status | Payload |
 |---|---:|---|
-| Parametros ausentes | 400 | `{ "error": "Parâmetros insuficientes." }` |
-| InfinitePay erro | 502 | `{ "paid": false, "error": "Não foi possível verificar o pagamento." }` |
+| `paymentId` invalido | 400 | `{ "error": "Parâmetro paymentId é obrigatório." }` |
+| Pagamento nao registrado localmente | 404 | `{ "paid": false, "error": "Pagamento não encontrado." }` |
+| Asaas sem configuracao | 503 | `{ "paid": false, "error": "Gateway de pagamento em manutenção." }` |
+| Asaas indisponivel | 502 | `{ "paid": false, "error": "Não foi possível consultar o status do pagamento." }` |
 | Erro interno | 500 | `{ "paid": false, "error": "Erro interno." }` |
-| Sucesso | 200 | Payload direto da InfinitePay |
+| Sucesso | 200 | `{ "paid": true|false, "status": "..." }` |
 
-Consumo UI: nao identificado. Classificacao: API fantasma no frontend atual.
+Seguranca: a consulta externa so ocorre quando `transaction_nsu` ja existe em `doacoes`.
 
-## 9. `POST /api/webhooks/infinitepay`
+## 9. `POST /api/webhooks/asaas`
 
-Arquivo: `app/src/app/api/webhooks/infinitepay/route.ts`.
+Arquivo: `app/src/app/api/webhooks/asaas/route.ts`.
 
-Auth: externa; nao ha assinatura/HMAC implementada.
+Auth: header `asaas-access-token`, comparado com `ASAAS_WEBHOOK_TOKEN`. Sem configuracao, retorna `503`.
 
 Payload esperado:
 
 ```json
 {
-  "invoice_slug": "...",
-  "amount": 5000,
-  "paid_amount": 5000,
-  "capture_method": "pix",
-  "transaction_nsu": "...",
-  "order_nsu": "apoio-unica-...",
-  "receipt_url": "...",
-  "items": []
+  "event": "PAYMENT_RECEIVED",
+  "payment": {
+    "id": "pay_...",
+    "value": 50,
+    "billingType": "PIX",
+    "status": "RECEIVED",
+    "externalReference": "apoio-unica-..."
+  }
 }
 ```
 
-Validacao real:
+Eventos `PAYMENT_RECEIVED` e `PAYMENT_CONFIRMED` fazem upsert idempotente por `order_nsu`. Referencias fora do prefixo `apoio-(mensal|unica)-` sao rejeitadas.
 
-| Condicao | Resposta |
-|---|---|
-| Sem `order_nsu` ou sem `transaction_nsu` | `400 { "ok": false }` |
-| Erro no handler | `400 { "ok": false }` |
-| Demais casos | `200 { "ok": true }` |
-
-Comportamento real:
-
-- extrai `tipo` de `order_nsu.startsWith('apoio-mensal')`;
-- nao grava em banco;
-- loga `Pagamento confirmado` no console;
-- possui TODO para `doacoes`.
-
-Status: incompleto/P0-P1.
+O endpoint `/api/webhooks/infinitepay` permanece disponivel apenas para compatibilidade legada. Ele exige `INFINITEPAY_HANDLE`, valida a transacao no `payment_check` da InfinitePay e tambem persiste por upsert.
 
 ## 10. `GET /api/auth/logto/sign-in`
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Vereador = {
   id: string
@@ -183,10 +184,10 @@ export default function CamaraClient({ vereadores, sigla, slugCidade, cor, parti
                     background: `linear-gradient(135deg, ${vCor} 0%, ${vCor}99 100%)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 28, fontWeight: 900, color: 'white', marginBottom: 12,
-                    boxShadow: `0 4px 12px ${vCor}22`
+                    boxShadow: `0 4px 12px ${vCor}22`, position: 'relative',
                   }}>
                     {v.foto_url ? (
-                      <img src={v.foto_url} alt={v.nome_eleitoral} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <Image src={v.foto_url} alt={v.nome_eleitoral} fill sizes="72px" unoptimized style={{ objectFit: 'cover' }} />
                     ) : initChar}
                   </div>
 

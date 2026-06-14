@@ -5,8 +5,6 @@ import Image from 'next/image'
 import { useState } from 'react'
 
 import { BotaoAcompanhar } from '@/components/politico/BotaoAcompanhar'
-import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
-
 export type PoliticoCard = {
   id: string
   slug: string
@@ -160,7 +158,11 @@ export function CardPolitico({ politico }: { politico: PoliticoCard }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link href={`/politicos/${politico.slug}`} style={{ textDecoration: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Link
+        href={`/politicos/${politico.slug}`}
+        data-testid="politico-card-link"
+        style={{ textDecoration: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}
+      >
 
         {/* ── Área da foto ── */}
         <div style={{ height: 192, position: 'relative', background: '#090d16', overflow: 'hidden', flexShrink: 0, borderRadius: '16px 16px 0 0', clipPath: 'inset(0 0 0 0 round 16px 16px 0 0)' }}>

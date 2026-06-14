@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getPgPool } from '@/lib/db/pool'
 import Link from 'next/link'
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { CompararClient } from '@/components/comparar/CompararClient'
 import { getCurrentUser } from '@/lib/auth/current-user'
 import { isFeatureActive } from '@/lib/flags'

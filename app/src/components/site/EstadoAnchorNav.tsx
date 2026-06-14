@@ -36,10 +36,12 @@ export function EstadoAnchorNav({ cor }: { cor: string }) {
     <nav style={{
       position: 'sticky', top: 64, zIndex: 40,
       background: '#1E293B', borderBottom: '1px solid #334155',
+      width: '100%', maxWidth: '100%', overflow: 'hidden',
     }}>
       <div style={{
-        maxWidth: 1280, margin: '0 auto', padding: '0 32px',
+        width: '100%', maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px, 4vw, 32px)',
         display: 'flex', gap: 32, overflowX: 'auto',
+        boxSizing: 'border-box',
         scrollbarWidth: 'none', msOverflowStyle: 'none' as never,
       }}>
         {ANCHORS.map(a => (

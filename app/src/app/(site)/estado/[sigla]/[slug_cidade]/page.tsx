@@ -2,6 +2,7 @@ import { getEstado } from '@/lib/estados-config'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getPgPool } from '@/lib/db/pool'
 
 export const revalidate = 86400
@@ -50,13 +51,6 @@ function fmtBrl(v: number | null | undefined): string {
 function fmtNum(v: number | null | undefined): string {
   if (v == null) return '—'
   return v.toLocaleString('pt-BR')
-}
-
-function fmtPop(v: number | null | undefined): string {
-  if (v == null) return '—'
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace('.', ',')}mi`
-  if (v >= 1000) return `${(v / 1000).toFixed(0)}k`
-  return String(v)
 }
 
 function calcIdade(dataNasc: string | null): number | null {
@@ -186,7 +180,13 @@ export default async function CidadePage(
   }
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px' }}>
+    <div className="cidade-detail-page" style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '32px 32px 72px', boxSizing: 'border-box', overflowX: 'clip' }}>
+      <style>{`
+        .cidade-detail-page,
+        .cidade-detail-page * {
+          box-sizing: border-box;
+        }
+      `}</style>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -291,10 +291,10 @@ export default async function CidadePage(
                   background: `linear-gradient(145deg, ${pCor} 0%, ${pCor}99 100%)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 54, fontWeight: 900, color: 'white', flexShrink: 0,
-                  boxShadow: `0 8px 24px ${pCor}33`
+                  boxShadow: `0 8px 24px ${pCor}33`, position: 'relative',
                 }}>
                   {prefeito.foto_url ? (
-                    <img src={prefeito.foto_url} alt={prefeito.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <Image src={prefeito.foto_url} alt={prefeito.nome} fill sizes="120px" unoptimized style={{ objectFit: 'cover' }} />
                   ) : inicial}
                 </div>
 

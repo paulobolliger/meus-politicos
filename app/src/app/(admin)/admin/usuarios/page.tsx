@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Pool } from 'pg'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 import { AdminPageHeader, StatusBadge } from '@/components/admin/AdminCard'
 import Link from 'next/link'
 
@@ -22,24 +22,6 @@ const LEGACY_AUTH_USER_ID_COLUMN = ['sup', 'abase_user_id'].join('')
 export const metadata = { title: 'Usuários — Admin' }
 
 const PAGE_SIZE = 25
-
-let pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
-}
 
 function fmtDate(iso: string): string {
   const d = new Date(iso)
@@ -63,7 +45,7 @@ export default async function UsuariosPage({
   const emailQuery = (params.email ?? '').trim().toLowerCase()
   const page = Math.max(1, parseInt(params.page ?? '1', 10))
   const offset = (page - 1) * PAGE_SIZE
-  const pool = getPool()
+  const pool = getPgPool()
   const emailFilter = emailQuery ? `%${emailQuery}%` : null
 
   const { rows: totalRows } = await pool.query<CountRow>(

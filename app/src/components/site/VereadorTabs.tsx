@@ -39,7 +39,7 @@ interface Props {
   atuacaoActive?: boolean
 }
 
-export function VereadorTabs({ ver, cor, pCor, sigla, cidadeNome, atuacaoActive }: Props) {
+export function VereadorTabs({ ver, cor, cidadeNome, atuacaoActive }: Props) {
   const [active, setActive] = useState('biografia') // Default to biografia for local politicians as biography is most relevant
 
   const GASTOS_CATS = [

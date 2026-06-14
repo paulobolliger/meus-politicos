@@ -1,23 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Pool } from 'pg'
 import { PartidoDetailClient, type PartidoDetail, type MembroPartido } from './PartidoDetailClient'
+import { getPgPool } from '@/lib/db/pool'
 
 export const revalidate = 3600
-
-// ─── Pool singleton ───────────────────────────────────────────────────────────
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 // ─── Wikipedia summary ────────────────────────────────────────────────────────
 export type WikiSummary = {
@@ -58,7 +44,7 @@ export async function generateMetadata(
   { params }: { params: Promise<{ sigla: string }> }
 ): Promise<Metadata> {
   const { sigla } = await params
-  const pool = getPool()
+  const pool = getPgPool()
 
   try {
     const res = await pool.query<{ sigla: string; nome: string }>(
@@ -82,7 +68,7 @@ export default async function PartidoPage(
   { params }: { params: Promise<{ sigla: string }> }
 ) {
   const { sigla } = await params
-  const pool = getPool()
+  const pool = getPgPool()
 
   let partido: PartidoDetail | null = null
   let membros: MembroPartido[] = []

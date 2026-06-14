@@ -7,7 +7,7 @@ import { BrazilDots, Panel, PanelHeader, Sparkline, StatusDot, VoteChip } from '
 
 // ─── tipos ───────────────────────────────────────────────────────────────────
 
-type SearchTab = 'nome' | 'cep' | 'partido' | 'estado'
+type SearchTab = 'nome' | 'partido' | 'estado'
 
 type VotacaoRow = {
   id: string
@@ -23,7 +23,6 @@ type VotacaoRow = {
 
 const TABS: { id: SearchTab; label: string }[] = [
   { id: 'nome', label: 'Nome' },
-  { id: 'cep', label: 'CEP' },
   { id: 'partido', label: 'Partido' },
   { id: 'estado', label: 'Estado' },
 ]
@@ -132,7 +131,6 @@ export function HomeApp() {
   const [activeUf, setActiveUf] = useState('SP')
 
   const placeholder = useMemo(() => {
-    if (tab === 'cep') return 'Digite o CEP (ex: 13010001)'
     if (tab === 'partido') return 'Digite sigla do partido (ex: PL)'
     if (tab === 'estado') return 'Digite a UF (ex: SP)'
     return '$ buscar --politico '
@@ -142,7 +140,6 @@ export function HomeApp() {
     event.preventDefault()
     const value = query.trim()
     if (!value) return
-    if (tab === 'cep') { router.push(`/meu-estado?cep=${encodeURIComponent(value)}`); return }
     if (tab === 'estado') { router.push(`/busca?uf=${encodeURIComponent(value.toUpperCase())}`); return }
     if (tab === 'partido') { router.push(`/busca?partido=${encodeURIComponent(value.toUpperCase())}`); return }
     router.push(`/busca?q=${encodeURIComponent(value)}`)
@@ -338,7 +335,7 @@ export function HomeApp() {
               { value: '378.695', label: 'VOTAÇÕES' },
               { value: 'R$ 604k', label: 'GASTOS' },
               { value: '4min', label: 'ATUALIZAÇÃO' },
-            ].map((kpi, i) => (
+            ].map((kpi) => (
               <div
                 key={kpi.label}
                 className="p-[14px_16px] border-l border-t sm:border-t-0 border-[var(--line-strong)] [&:nth-child(2n+1)]:border-l-0 sm:[&:nth-child(2n+1)]:border-l sm:first:border-l-0 [&:nth-child(-n+2)]:border-t-0"
@@ -515,7 +512,7 @@ export function HomeApp() {
               tone: 'var(--pos)',
               data: [12, 13, 13.5, 14, 14.8, 15.2, 15.6, 16, 16.5],
             },
-          ].map((kpi, i) => (
+          ].map((kpi) => (
             <div
               key={kpi.label}
               className="p-[20px_20px_16px] border-l border-t lg:border-t-0 border-[var(--line-strong)] [&:nth-child(2n+1)]:border-l-0 lg:[&:nth-child(2n+1)]:border-l lg:first:border-l-0 [&:nth-child(-n+2)]:border-t-0"

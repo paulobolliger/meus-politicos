@@ -7,7 +7,7 @@ related: [vercel.json, package.json, app/package.json, docs/ENVIRONMENT.md, docs
 
 # Deployment
 
-Este documento consolida o modelo operacional de hospedagem, build e rotinas dependentes do projeto Meus Politicos em 2026-06-02. A aplicacao web roda como Next.js 16 na Vercel; o banco e PostgreSQL (VPS) acessado por `pg`; autenticacao usa Logto; pagamentos usam InfinitePay; rotinas de dados ficam em scripts Python fora do runtime web.
+Este documento consolida o modelo operacional revisado em 2026-06-12. A aplicacao web roda como Next.js 16 na Vercel; o banco e PostgreSQL (VPS) acessado por `pg`; autenticacao usa Logto; pagamentos usam Asaas; rotinas de dados ficam em scripts Python fora do runtime web.
 
 ## 1. Topologia de Producao
 
@@ -16,7 +16,7 @@ Este documento consolida o modelo operacional de hospedagem, build e rotinas dep
 | Frontend/backend web | Vercel | Alvo operacional documentado | Next.js App Router com Route Handlers |
 | Banco relacional | PostgreSQL (VPS) | Ativo | Runtime usa `POSTGRES_*`; ETL aceita `SUPABASE_DB_*` apenas como fallback legado |
 | Identidade | Logto | Ativo | Sessao server-side/edge e RBAC por `perfis.role` |
-| Pagamentos | InfinitePay | Ativo parcial | Checkout ativo; webhook sem persistencia |
+| Pagamentos | Asaas | Ativo condicionado | Pix/cartao e webhook implementados; exige segredos e migration |
 | IA | OpenAI | Ativo condicionado | Server Action e ETL IA exigem `OPENAI_API_KEY` |
 | ETL | Python local/remoto | Manual/pendente de orquestracao | Admin registra pedido, mas nao dispara scripts |
 | DNS/CDN | A configurar por dominio | Dependente de projeto | URLs em `NEXT_PUBLIC_*` precisam casar com dominios reais |
@@ -27,7 +27,7 @@ flowchart TB
   V --> NEXT[Next.js 16 app]
   NEXT --> PG[(PostgreSQL VPS)]
   NEXT --> LOGTO[Logto]
-  NEXT --> IPAY[InfinitePay]
+  NEXT --> ASAAS[Asaas]
   NEXT --> OPENAI[OpenAI]
   ETL[Python ETL runner] --> PG
   ETL --> FONTES[Fontes publicas]
@@ -92,6 +92,8 @@ Nao ha build artefatual separado para ETL. Os scripts Python nao entram no deplo
 | `npm run build` | `next build` | Build Next.js 16 |
 | `npm run start` | `next start` | Runtime local de producao |
 | `npm run lint` | `eslint` | Lint da aplicacao |
+| `npm run typecheck` | `tsc --noEmit` | Verificacao TypeScript |
+| `npm run test:e2e` | `playwright test` | Testes E2E e responsivos |
 
 ## 4. Comandos de Build e Validacao
 
@@ -112,7 +114,8 @@ As variaveis detalhadas estao em `docs/ENVIRONMENT.md`. Para deploy web minimo:
 | PostgreSQL | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Obrigatorio para paginas e APIs com dados |
 | Logto | `LOGTO_ENDPOINT`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_COOKIE_SECRET`, `LOGTO_BASE_URL` | Obrigatorio para auth |
 | URLs publicas | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_PAINEL_URL` | Obrigatorio para redirects/callbacks |
-| InfinitePay | `INFINITEPAY_HANDLE` | Obrigatorio para `/apoio` |
+| Asaas | `ASAAS_API_KEY`, `ASAAS_API_URL`, `ASAAS_WEBHOOK_TOKEN` | Obrigatorio para `/apoio` e webhook |
+| InfinitePay legado | `INFINITEPAY_HANDLE` | Somente enquanto o webhook legado estiver ativo |
 | OpenAI | `OPENAI_API_KEY`, `IA_RESUMO_MAX_GERACOES_DIA` | Obrigatorio para IA; limite recomendado |
 | Email | `RESEND_API_KEY`, `RESEND_FROM` | Nao consumido no runtime mapeado; se reativado, tratar como segredo critico |
 
@@ -201,7 +204,7 @@ Requisitos minimos:
 |---|---|---|---|
 | PostgreSQL | Pode afetar build se paginas forem avaliadas dinamicamente | Sim | Paginas/APIs de dados falham |
 | Logto | Sim, se config for avaliada | Sim para auth | Erro por env obrigatoria ou login indisponivel |
-| InfinitePay | Nao | Sim para apoio | `/api/apoio/criar-link` retorna erro |
+| Asaas | Nao | Sim para apoio | APIs retornam `503` quando nao configuradas |
 | OpenAI | Nao para build geral | Sim para IA | Resumo/simplificacao indisponivel |
 | Fontes publicas ETL | Nao | Nao para web imediato | Dados ficam desatualizados |
 
@@ -215,7 +218,8 @@ Requisitos minimos:
 | Configurar `NEXT_PUBLIC_*` por ambiente | Feito |
 | Configurar `LOGTO_*` e callbacks no tenant | Feito |
 | Configurar `POSTGRES_*` com usuario de menor privilegio | Feito |
-| Configurar `INFINITEPAY_HANDLE` | Feito |
+| Aplicar migration `20260603000000_create_doacoes.sql` | Feito |
+| Configurar `ASAAS_API_KEY`, `ASAAS_API_URL` e `ASAAS_WEBHOOK_TOKEN` | Feito |
 | Configurar `OPENAI_API_KEY` se IA estiver ativa | Feito |
 | Revogar/remover chave Resend vazada antes de deploy publico | Obrigatorio/P0 |
 
@@ -225,10 +229,12 @@ Requisitos minimos:
 |---|---|
 | Instalar dependencias | `cd app && npm ci --include=optional` |
 | Lint | `npm run lint` |
+| Typecheck | `npm run typecheck` |
+| E2E | `npm run test:e2e` |
 | Build | `npm run build` |
 | Validar auth | Login, callback, logout, painel |
 | Validar core loop | Busca -> perfil -> acompanhar -> painel |
-| Validar apoio | Criar link InfinitePay em ambiente controlado |
+| Validar apoio | Criar Pix/cartao Asaas e confirmar webhook em sandbox |
 | Validar admin | Acesso admin e bloqueio para usuario comum |
 
 ## 11. Riscos de Deploy
@@ -236,7 +242,7 @@ Requisitos minimos:
 | Prioridade | Risco | Mitigacao |
 |---|---|---|
 | P0 | Chave Resend real aparente em doc versionado | Revogar e remover antes de publicar |
-| P0/P1 | Webhook InfinitePay sem persistencia | Nao tratar apoio como confirmado ate implementar |
+| P1 | Segredos/migration Asaas ausentes | Fazer pre-flight e teste sandbox antes de liberar apoio |
 | P1 | ETL sem orquestracao | Criar runner externo e tabela de jobs |
 | P1 | `new Pool()` duplicado sem timeout central | Centralizar conexao e aplicar timeout/SSL |
 | P1 | Variaveis obrigatorias Logto ausentes quebram runtime | Checklist de env por ambiente |

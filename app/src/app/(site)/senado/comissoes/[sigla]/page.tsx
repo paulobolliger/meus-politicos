@@ -1,22 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 
 export const revalidate = 3600 // 1 hora
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 type CommissionStatic = {
   sigla: string
@@ -277,7 +264,7 @@ export default async function DetalheComissaoSenadoPage({ params }: { params: Pr
   const com = getSenateCommissionData(sigla)
   if (!com) notFound()
 
-  const pool = getPool()
+  const pool = getPgPool()
   let proposicoes: ProposicaoInfo[] = []
 
   try {
@@ -324,8 +311,8 @@ export default async function DetalheComissaoSenadoPage({ params }: { params: Pr
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '40px 0 80px 0', color: 'var(--ink)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: '40px 0 80px 0', color: 'var(--ink)', overflowX: 'clip' }}>
+      <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: '0 32px', boxSizing: 'border-box' }}>
         
         {/* Retorno */}
         <div style={{ marginBottom: 32 }}>

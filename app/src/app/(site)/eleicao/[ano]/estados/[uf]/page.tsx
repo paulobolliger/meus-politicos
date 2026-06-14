@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPgPool } from '@/lib/db/pool'
-import { getEstado, SIGLAS_ORDENADAS } from '@/lib/estados-config'
+import { getEstado } from '@/lib/estados-config'
 
 export const revalidate = 86400
 

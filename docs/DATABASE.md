@@ -246,7 +246,7 @@ ETLs usam `ON CONFLICT ... DO UPDATE` para idempotencia em varias tabelas. `cole
 | Gap | Evidencia | Severidade |
 |---|---|---|
 | `doacoes` ausente | Somente docs/TODO e pseudo-codigo comentado | P0/P1 |
-| `partidos_fundos` fora das migrations | Criada dentro de script ETL | P1/P2 |
+| `partidos_fundos` | Versionada em `20260612000000_partidos_fundos.sql` | Resolvido |
 | `candidatos_bens` ausente | Codigo tenta consultar e captura erro | P2 |
 | Politicas RLS legadas com Logto | `auth.uid()`/`auth.jwt()` no SQL, Logto no runtime | P1 |
 | Muitos `new Pool()` | Conexao duplicada no app | P2 |

@@ -7,8 +7,11 @@ export function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const accepted = localStorage.getItem('mp-cookies-accepted')
-    if (!accepted) setVisible(true)
+    const showBanner = window.setTimeout(() => {
+      const accepted = localStorage.getItem('mp-cookies-accepted')
+      if (!accepted) setVisible(true)
+    }, 0)
+    return () => window.clearTimeout(showBanner)
   }, [])
 
   function accept() {

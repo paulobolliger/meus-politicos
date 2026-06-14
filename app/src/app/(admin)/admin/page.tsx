@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
 
 import { AdminPageHeader, KpiCard, StatusBadge } from '@/components/admin/AdminCard'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 
 export const metadata = { title: 'Dashboard Admin — Meus Políticos' }
 
@@ -17,23 +18,6 @@ type EtlRow = {
 
 type CountRow = {
   count: number | string
-}
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) {
-    _pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return _pool
 }
 
 function etlBadgeVariant(status: string): 'ok' | 'warn' | 'err' | 'never' {
@@ -80,15 +64,15 @@ export default async function AdminDashboardPage() {
     redirect('/painel')
   }
 
-  const pool = getPool()
+  const pool = getPgPool()
 
   // User stats
   const totalUsers = await countRows(pool, 'perfis')
 
-  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { rows: newUsersRows } = await pool.query<CountRow>(
-    'SELECT COUNT(*)::int AS count FROM perfis WHERE criado_em >= $1',
-    [since7d],
+    `SELECT COUNT(*)::int AS count
+     FROM perfis
+     WHERE criado_em >= NOW() - INTERVAL '7 days'`,
   )
   const newUsers7d = Number(newUsersRows[0]?.count ?? 0)
 
@@ -119,10 +103,12 @@ export default async function AdminDashboardPage() {
   const etlLatest = Array.from(etlMap.values())
 
   // Alert if any ETL failed in last 24h
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const failedRecent = etlLatest.filter(
-    (r) =>
-      (r.status === 'erro' || r.status === 'falha') && r.criado_em > since24h
+  const { rows: failedRecent } = await pool.query<EtlRow>(
+    `SELECT fonte, status, criado_em::text AS criado_em, duracao_ms, registros, mensagem
+     FROM coletas_log
+     WHERE status IN ('erro', 'falha')
+       AND criado_em >= NOW() - INTERVAL '24 hours'
+     ORDER BY criado_em DESC`,
   )
 
   const dbCards = [

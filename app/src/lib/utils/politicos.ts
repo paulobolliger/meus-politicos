@@ -25,7 +25,9 @@ export interface RawPoliticoDb {
   partidos?: { sigla: string | null } | { sigla: string | null }[] | null
 }
 
-export function extrairSigla(partido: any): string {
+type PartidoSigla = { sigla: string | null }
+
+export function extrairSigla(partido: string | PartidoSigla | PartidoSigla[] | null | undefined): string {
   if (!partido) return '--'
   if (typeof partido === 'string') return partido
   if (Array.isArray(partido)) {
@@ -107,4 +109,3 @@ export function normalizarPoliticoComparar(r: RawPoliticoComparDb): PoliticoComp
     mandato_fim: r.mandato_fim,
   }
 }
-

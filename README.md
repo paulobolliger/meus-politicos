@@ -38,10 +38,10 @@ O MVP ainda nao deve ser classificado como producao plena porque ha gaps impedit
 | UI | Tailwind CSS v4, shadcn/ui, lucide-react, recharts, framer-motion | `app/package.json`, `app/src/components` |
 | ETL | Python | `etl/camara`, `etl/senado`, `etl/tse`, `etl/ale`, `etl/ibge`, `etl/portal_transparencia` |
 | IA | OpenAI SDK | `app/src/actions/resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` |
-| Pagamentos | InfinitePay | `app/src/app/api/apoio/criar-link/route.ts`, `app/src/app/api/webhooks/infinitepay/route.ts` |
+| Pagamentos | Asaas | `app/src/app/api/apoio/criar-link/route.ts`, `app/src/app/api/webhooks/asaas/route.ts` |
 | Deploy | Vercel | `vercel.json`, scripts `npm run build/start` |
 
-Nota importante: documentacoes antigas ainda podem mencionar Supabase Auth ou Stripe. O codigo atual aponta para **Logto como identidade ativa** e **InfinitePay como pagamento ativo**. Em divergencia, o codigo atual vence.
+Nota importante: documentacoes antigas ainda podem mencionar Supabase Auth, Stripe ou InfinitePay. O codigo atual aponta para **Logto como identidade ativa** e **Asaas como pagamento ativo**. Em divergencia, o codigo atual vence.
 
 ## Mapa De Documentacao
 
@@ -73,13 +73,14 @@ Nota importante: documentacoes antigas ainda podem mencionar Supabase Auth ou St
 | Documento | Finalidade |
 |---|---|
 | [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Variaveis de ambiente e hierarquia de resolucao |
-| [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) | InfinitePay, OpenAI, Logto, dados publicos e demais servicos |
+| [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) | Asaas, InfinitePay legado, OpenAI, Logto e demais servicos |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Build, deploy, Vercel e procedimentos operacionais |
 | [docs/SECURITY.md](docs/SECURITY.md) | Riscos, segredos, RBAC/RLS e varredura historica |
 | [docs/DESIGN.md](docs/DESIGN.md) | Guia visual e status de UI/UX |
 | [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | Dependencias, pacotes e riscos |
 | [docs/TODO_PRODUCTION.md](docs/TODO_PRODUCTION.md) | Pendencias P0-P3 para lancamento |
 | [docs/MODERNIZATION_ROADMAP.md](docs/MODERNIZATION_ROADMAP.md) | Plano tatico pos-readiness |
+| [docs/IMPLEMENTATION_ROADMAP_2026-06.md](docs/IMPLEMENTATION_ROADMAP_2026-06.md) | Roteiro executavel de rotas, mobile-first, qualidade, operacao e go-live |
 
 ### Documentos historicos e dominio legado
 

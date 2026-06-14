@@ -69,8 +69,6 @@ Este documento mapeia debito visual e funcional visivel na UI: TODOs, mocks, `hr
 |---|---|---|---|---|---|
 | `app/src/components/painel/FeedCivico.tsx:108` | `Esta área está em breve.` | Abas `Meus políticos`, `Alertas`, `Agenda`, `RSS / Export` | Abas navegaveis mostram bloco vazio | P2 | Ocultar abas fora do MVP ou implementar conteudo real |
 | `app/src/components/painel/FeedCivico.tsx:53` | `Alertas (3)` | Contagem fixa de alertas | Diverge do painel que passa `alertasAtivos={0}` | P2 | Calcular contagem real ou remover numero |
-| `app/src/components/meu-estado/MeuEstadoContent.tsx:468` | `Dados de deputados estaduais em breve.` | Representantes estaduais por localidade | Usuario nao recebe cobertura estadual prometida | P2 | Integrar dados ALE ou marcar como fora do MVP |
-| `app/src/components/meu-estado/MeuEstadoContent.tsx:476` | `Dados de vereadores em breve.` | Vereadores por localidade | Cobertura municipal ausente | P2 | Integrar fonte municipal ou remover promessa |
 | `app/src/components/politico-v2/PerfilApp.tsx:450` | `Comissões — em breve` | Comissoes do politico | Perfil app incompleto | P2 | Integrar dados de comissoes ou ocultar aba |
 | `app/src/components/politico-v2/PerfilApp.tsx:555` | `sub="em breve"` | Secao nao identificada pelo inventario amplo | Cartao/metricas sem conteudo | P2 | Nomear feature e backlog |
 | `app/src/components/politico-v2/PerfilApp.tsx:561` | `sub="em breve"` | Secao nao identificada pelo inventario amplo | Cartao/metricas sem conteudo | P2 | Nomear feature e backlog |
@@ -134,7 +132,6 @@ Os seguintes itens foram encontrados, mas nao sao debito visual por si so. Devem
 | `app/src/components/admin/MatchEmendaButton.tsx:127` | Nome do politico |
 | `app/src/components/projetos/ProjetosSearchForm.tsx:90` | Exemplo de busca |
 | `app/src/components/busca/BuscaClient.tsx:135` | Nome do parlamentar |
-| `app/src/components/meu-estado/CepForm.tsx:162` | Cidade ou CEP |
 | `app/src/components/comparar/CompararClient.tsx:246` | Adicionar parlamentar |
 | `app/src/components/auth/*.tsx` | Nome, email, senha |
 | `app/src/app/(app)/proposicoes/page.tsx:217` | Buscar na ementa |

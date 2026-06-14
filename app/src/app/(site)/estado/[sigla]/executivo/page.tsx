@@ -1,7 +1,8 @@
-import { getEstado, ESTADOS } from '@/lib/estados-config'
+import { getEstado } from '@/lib/estados-config'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getPgPool } from '@/lib/db/pool'
 import { PactoFederativoFlow, TimelinePolitica } from '../StatePageClient'
 import { GlossaryHighlighter } from '@/components/glossario/GlossaryHighlighter'
@@ -36,10 +37,6 @@ type GovernadorRow = {
   foto_url: string | null
   situacao: string | null
   politico_slug: string | null
-}
-
-type EconomiaRow = {
-  populacao: number | null
 }
 
 type PactoRow = {
@@ -93,13 +90,6 @@ type MunicipioRow = {
 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function fmtMi(v: number | null | undefined): string {
-  if (v == null) return '—'
-  if (Math.abs(v) >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(2)}tri`
-  if (Math.abs(v) >= 1000) return `R$ ${(v / 1000).toFixed(1)}bi`
-  return `R$ ${v.toFixed(0)}mi`
-}
-
 function fmtBrlCompact(val: number): string {
   const abs = Math.abs(val)
   const prefix = val < 0 ? '-' : '+'
@@ -107,11 +97,6 @@ function fmtBrlCompact(val: number): string {
   if (abs >= 1_000_000) return `${prefix}R$ ${(abs / 1_000_000).toFixed(1)}mi`
   if (abs >= 1_000) return `${prefix}R$ ${(abs / 1_000).toFixed(0)}mil`
   return `${prefix}R$ ${abs.toFixed(0)}`
-}
-
-function fmtNum(v: number | null | undefined): string {
-  if (v == null) return '—'
-  return v.toLocaleString('pt-BR')
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -353,13 +338,6 @@ const PALACIO_DETALHES: Record<string, PalacioInfo> = {
   }
 }
 
-const ESTADO_IBGE_CODIGO: Record<string, string> = {
-  AC: '12', AL: '27', AM: '13', AP: '16', BA: '29', CE: '23', DF: '53',
-  ES: '32', GO: '52', MA: '21', MG: '31', MS: '50', MT: '51', PA: '15',
-  PB: '25', PE: '26', PI: '22', PR: '41', RJ: '33', RN: '24', RO: '11',
-  RR: '14', RS: '43', SC: '42', SE: '28', SP: '35', TO: '17',
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default async function EstadoExecutivoPage(
   { params }: { params: Promise<{ sigla: string }> }
@@ -372,7 +350,7 @@ export default async function EstadoExecutivoPage(
   const pool = getPgPool()
 
   // ─── Database queries ──────────────────────────────────────────────────────
-  const [govRes, econRes, pactoRes, tceRes, timelineRes, secretariasRes, municipiosRes] = await Promise.all([
+  const [govRes, pactoRes, tceRes, timelineRes, secretariasRes, municipiosRes] = await Promise.all([
     pool.query<GovernadorRow>(
       `SELECT eg.nome_governador, eg.nome_vice, eg.partido_sigla, eg.mandato_inicio::text AS mandato_inicio,
               eg.mandato_fim::text AS mandato_fim, eg.foto_url, eg.situacao, p.slug AS politico_slug
@@ -380,10 +358,6 @@ export default async function EstadoExecutivoPage(
        LEFT JOIN politicos p ON p.id = eg.politico_id
        WHERE eg.sigla = $1 AND eg.is_atual = true
        LIMIT 1`,
-      [siglaUp]
-    ),
-    pool.query<EconomiaRow>(
-      `SELECT populacao FROM estados_economia WHERE sigla = $1 LIMIT 1`,
       [siglaUp]
     ),
     pool.query<PactoRow>(
@@ -436,7 +410,6 @@ export default async function EstadoExecutivoPage(
   ])
 
   const governador = govRes.rows[0] ?? null
-  const economia = econRes.rows[0] ?? null
   const pactoRaw = pactoRes.rows[0] ?? null
   const tce = tceRes.rows[0] ?? null
   const timeline = timelineRes.rows
@@ -553,9 +526,13 @@ export default async function EstadoExecutivoPage(
   const palacio = PALACIO_DETALHES[siglaUp] ?? null
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)' }}>
+    <div className="executivo-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', overflowX: 'clip' }}>
       {/* Estilos CSS Inline para Media Queries (Vanilla CSS) */}
       <style dangerouslySetInnerHTML={{ __html: `
+        .executivo-page,
+        .executivo-page * {
+          box-sizing: border-box;
+        }
         .executivo-dashboard {
           display: grid;
           grid-template-columns: 1fr;
@@ -679,16 +656,15 @@ export default async function EstadoExecutivoPage(
                 border: '1px solid var(--line)',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
                 background: 'var(--bg)',
-                flexShrink: 0,
+                flexShrink: 0, position: 'relative',
               }}>
-                <img
+                <Image
                   src={bandeira}
                   alt={`Bandeira de ${cfg.nome}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
+                  fill
+                  sizes="150px"
+                  unoptimized
+                  style={{ objectFit: 'cover' }}
                 />
               </div>
             )}
@@ -715,7 +691,7 @@ export default async function EstadoExecutivoPage(
       </section>
 
       {/* ── MAIN CONTENT GRID ────────────────────────────────────────── */}
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 32px 80px', display: 'flex', flexDirection: 'column', gap: 40 }}>
+      <main style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '40px 32px 80px', display: 'flex', flexDirection: 'column', gap: 40 }}>
         
         {/* Layout de duas colunas */}
         <div className="executivo-dashboard">
@@ -740,10 +716,10 @@ export default async function EstadoExecutivoPage(
                       border: `3px solid ${PARTIDO_COR[governador.partido_sigla ?? ''] ?? 'var(--line-strong)'}`,
                       background: 'var(--bg)', flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.15)', position: 'relative',
                     }}>
                       {governador.foto_url ? (
-                        <img src={governador.foto_url} alt={governador.nome_governador} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <Image src={governador.foto_url} alt={governador.nome_governador} fill sizes="80px" unoptimized style={{ objectFit: 'cover' }} />
                       ) : (
                         governador.nome_governador.charAt(0)
                       )}
@@ -882,13 +858,16 @@ export default async function EstadoExecutivoPage(
                           fontSize: 16,
                           fontWeight: 700,
                           color: cor,
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.05)', position: 'relative',
                         }}>
                           {sec.foto_secretario_url ? (
-                            <img
+                            <Image
                               src={sec.foto_secretario_url}
                               alt={sec.secretario_nome}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              fill
+                              sizes="44px"
+                              unoptimized
+                              style={{ objectFit: 'cover' }}
                             />
                           ) : (
                             sec.secretario_nome.charAt(0)
@@ -1371,4 +1350,3 @@ export default async function EstadoExecutivoPage(
     </div>
   )
 }
-

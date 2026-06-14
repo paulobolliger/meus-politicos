@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pool } from 'pg'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { getPgPool } from '@/lib/db/pool'
 
 /**
  * POST /api/analytics
@@ -18,24 +18,6 @@ import { getCurrentUser } from '@/lib/auth/current-user'
  * Retorna 202 sempre (best-effort, não bloqueia o cliente).
  */
 
-let pool: Pool | null = null
-
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      host: process.env.POSTGRES_HOST ?? 'localhost',
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database: process.env.POSTGRES_DB ?? 'meuspoliticos_db',
-      user: process.env.POSTGRES_USER ?? 'postgres',
-      password: process.env.POSTGRES_PASSWORD,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
@@ -47,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const currentUser = await getCurrentUser().catch(() => null)
 
-    await getPool().query(
+    await getPgPool().query(
       `
         INSERT INTO analytics_eventos (tipo, payload, usuario_id)
         VALUES ($1, $2::jsonb, $3)

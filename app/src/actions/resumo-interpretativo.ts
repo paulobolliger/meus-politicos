@@ -1,10 +1,11 @@
 'use server'
 
 import OpenAI from 'openai'
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
 import { z } from 'zod'
 
 import { stableHash } from '@/lib/ai/stable-hash'
+import { getPgPool } from '@/lib/db/pool'
 
 export type ResumoInterpretativoMetricas = {
   cargo: string
@@ -54,8 +55,6 @@ export type ResumoInterpretativoErro = {
 const SYSTEM_PROMPT =
   'Es um tradutor de dados publicos neutro. Traduz as metricas num JSON para cidadaos leigos em leitura rapida. REGRAS: 1. Tom institucional, sem adjetivos; 2. Gera exatamente 3 bullets curtos (maximo 12 palavras por bullet); 3. Nunca facas calculos; 4. Gera 1 alerta APENAS se houver falta de dados ou desvios grandes, caso contrario devolve null.'
 
-let pool: Pool | null = null
-
 function getPool(): Pool | null {
   const host = process.env.POSTGRES_HOST
   const database = process.env.POSTGRES_DB
@@ -66,19 +65,7 @@ function getPool(): Pool | null {
     return null
   }
 
-  if (!pool) {
-    pool = new Pool({
-      host,
-      port: Number(process.env.POSTGRES_PORT ?? 5432),
-      database,
-      user,
-      password,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-    })
-  }
-
-  return pool
+  return getPgPool()
 }
 
 function buildUserPayload(metricas: ResumoInterpretativoMetricas) {

@@ -24,14 +24,15 @@ export function AppHeader() {
               alt="Meus Politicos"
               height={28}
               width={140}
-              style={{ objectFit: 'contain' }}
+              priority
+              style={{ width: 'auto', height: 28, objectFit: 'contain' }}
             />
           </Link>
           <nav style={{ display: 'flex', gap: 4, marginLeft: 24 }}>
             {[
               { label: 'Inicio', href: '/' },
               { label: 'Buscar', href: '/busca' },
-              { label: 'Meu estado', href: '/meu-estado' },
+              { label: 'Estados', href: '/estado' },
               { label: 'Meus politicos', href: '/meus-politicos' },
               { label: 'Metodologia', href: '/metodologia' },
               { label: 'Fontes', href: '/fontes' },
@@ -75,7 +76,7 @@ export function AppHeader() {
             />
             513 deputados monitorados
           </span>
-          <a
+          <Link
             href="/"
             style={{
               fontSize: 12,
@@ -87,7 +88,7 @@ export function AppHeader() {
             }}
           >
             &larr; site publico
-          </a>
+          </Link>
           <Link
             href="/login"
             style={{

@@ -1,28 +1,13 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
 import Link from 'next/link'
 import { ProjetosSearchForm } from '@/components/projetos/ProjetosSearchForm'
 import { ProjetosViewSelector } from '@/components/projetos/ProjetosViewSelector'
+import { getPgPool } from '@/lib/db/pool'
 
 export const metadata: Metadata = {
   title: 'Projetos de Lei | Meus Políticos',
   description: 'Acompanhe os projetos de lei em tramitação no Congresso Nacional em linguagem simples.',
 }
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    connectionTimeoutMillis: 4000,
-  })
-  return _pool
-}
-
-
 
 // ── Types ─────────────────────────────────────────────────
 type Projeto = {
@@ -59,7 +44,7 @@ export default async function ProjetosSitePage({
   let total = 0
 
   try {
-    const pool = getPool()
+    const pool = getPgPool()
 
     const conditions: string[] = []
     const values: unknown[]    = []

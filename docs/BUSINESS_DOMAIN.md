@@ -233,7 +233,7 @@ Status: parcial; historico detalhado ainda aparece como "em breve" em UI.
 
 ### Jornada 6: Estado e municipio
 
-1. Usuario acessa `/estado` ou `/meu-estado`.
+1. Usuario acessa `/estado`; `/meu-estado` existe apenas como redirect legado.
 2. Seleciona UF/cidade ou informa CEP.
 3. Produto apresenta governador, bancada, economia, municipios, emendas e ALE.
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useTransition } from 'react'
+import React, { useCallback, useState, useEffect, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -116,15 +116,17 @@ export function EmendasDashboard({
 
   // Evitar hydration mismatch com recharts
   useEffect(() => {
-    setMounted(true)
+    const markMounted = window.setTimeout(() => setMounted(true), 0)
+    return () => window.clearTimeout(markMounted)
   }, [])
 
   useEffect(() => {
-    setQ(filters.q)
+    const syncQuery = window.setTimeout(() => setQ(filters.q), 0)
+    return () => window.clearTimeout(syncQuery)
   }, [filters.q])
 
   // Navegar alterando search params
-  const atualizarFiltros = (novosFiltros: Partial<typeof filters>) => {
+  const atualizarFiltros = useCallback((novosFiltros: Partial<typeof filters>) => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('pagina') // Resetar para página 1 ao filtrar
 
@@ -140,7 +142,7 @@ export function EmendasDashboard({
     startTransition(() => {
       router.push(qs ? `${pathname}?${qs}` : pathname)
     })
-  }
+  }, [filters, pathname, router, searchParams])
 
   // Debounce para o input de texto
   useEffect(() => {
@@ -150,7 +152,7 @@ export function EmendasDashboard({
       }
     }, 400)
     return () => clearTimeout(timer)
-  }, [q])
+  }, [atualizarFiltros, filters.q, q])
 
   const formatCurrency = (num: number) => {
     if (num >= 1e9) return `R$ ${(num / 1e9).toFixed(2)} Bi`
@@ -160,6 +162,13 @@ export function EmendasDashboard({
 
   const formatCurrencyDetailed = (num: number) => {
     return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const formatChartCurrency = (value: number | string | readonly (number | string)[] | undefined) => {
+    if (value === undefined) return formatCurrencyDetailed(0)
+    const rawValue = Array.isArray(value) ? value[0] : value
+    const numericValue = typeof rawValue === 'number' ? rawValue : Number(rawValue)
+    return formatCurrencyDetailed(Number.isFinite(numericValue) ? numericValue : 0)
   }
 
   // Montar dados comparativos para o gráfico de barras
@@ -334,9 +343,15 @@ export function EmendasDashboard({
             </div>
           </div>
 
-          <div className="flex-1 min-h-[250px] w-full">
+          <div className="flex-1 min-h-[250px] min-w-0 w-full">
             {mounted ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                minHeight={250}
+                initialDimension={{ width: 640, height: 250 }}
+              >
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="name" stroke="#64748B" fontSize={11} tickLine={false} />
                   <YAxis 
@@ -350,7 +365,7 @@ export function EmendasDashboard({
                     contentStyle={{ background: '#1E293B', borderColor: '#475569', borderRadius: 8 }}
                     labelStyle={{ color: 'white', fontWeight: 'bold', fontSize: 11 }}
                     itemStyle={{ fontSize: 12 }}
-                    formatter={(value: any) => [formatCurrencyDetailed(value), '']}
+                    formatter={(value) => [formatChartCurrency(value), '']}
                   />
                   <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: 11 }} />
                   <Bar dataKey="Reservado (Empenhado)" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
@@ -370,9 +385,15 @@ export function EmendasDashboard({
             Destinação por Área (Saúde Lidera)
           </h3>
           <div className="flex-1 flex flex-col md:flex-row lg:flex-col items-center justify-center gap-4 min-h-[250px]">
-            <div className="w-[180px] h-[180px] relative flex-shrink-0">
+            <div className="w-[180px] h-[180px] min-w-0 relative flex-shrink-0">
               {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                  minWidth={180}
+                  minHeight={180}
+                  initialDimension={{ width: 180, height: 180 }}
+                >
                   <PieChart>
                     <Pie
                       data={dadosSetoriais}
@@ -389,7 +410,7 @@ export function EmendasDashboard({
                     </Pie>
                     <Tooltip 
                       contentStyle={{ background: '#1E293B', borderColor: '#475569', borderRadius: 8, fontSize: 11 }}
-                      formatter={(value: any) => [formatCurrencyDetailed(value), 'Total Pago']}
+                      formatter={(value) => [formatChartCurrency(value), 'Total Pago']}
                     />
                   </PieChart>
                 </ResponsiveContainer>

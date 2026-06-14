@@ -98,7 +98,6 @@ function InfoTag({ label, value }: { label: string; value: string }) {
   )
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PropostaCard({ icon, titulo, texto }: { icon: string; titulo: string; texto: string }) {
   return (
     <div style={{

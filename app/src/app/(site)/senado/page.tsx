@@ -1,21 +1,8 @@
 import type { Metadata } from 'next'
-import { Pool } from 'pg'
+import { getPgPool } from '@/lib/db/pool'
 import { SenadoClient } from './SenadoClient'
 
 export const revalidate = 3600
-
-let _pool: Pool | null = null
-function getPool(): Pool {
-  if (!_pool) _pool = new Pool({
-    host:     process.env.POSTGRES_HOST     ?? 'localhost',
-    port:     Number(process.env.POSTGRES_PORT ?? 5432),
-    database: process.env.POSTGRES_DB       ?? 'meuspoliticos_db',
-    user:     process.env.POSTGRES_USER     ?? 'postgres',
-    password: process.env.POSTGRES_PASSWORD,
-    max: 5, idleTimeoutMillis: 30_000,
-  })
-  return _pool
-}
 
 export type DestaqueSenador = {
   id: string
@@ -86,7 +73,7 @@ export const metadata: Metadata = {
 }
 
 export default async function SenadoPage() {
-  const pool = getPool()
+  const pool = getPgPool()
   const ano = new Date().getFullYear()
 
   let stats: SenadoStats = { total: 0, presencaMedia: null, gastoTotalAno: null }

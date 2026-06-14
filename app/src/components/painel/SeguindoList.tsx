@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { Panel, PanelHeader } from '@/components/civic'
 
@@ -57,11 +58,12 @@ export function SeguindoList({ seguindo }: { seguindo: SeguidoPolitico[] }) {
       }}
     >
       {p.fotoUrl ? (
-        <img
+        <Image
           src={p.fotoUrl}
           alt={p.nomeEleitoral}
           width={34}
           height={34}
+          unoptimized
           style={{ width: 34, height: 34, borderRadius: 999, objectFit: 'cover', border: '1px solid var(--border)' }}
         />
       ) : (

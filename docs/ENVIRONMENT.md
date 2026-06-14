@@ -44,7 +44,7 @@ Este documento consolida as variaveis de ambiente identificadas no codigo, `.env
 | `SUPABASE_DB_USER` | Condicional | ETL | Varios scripts Python | `postgres` | ETL sem credencial | Alto |
 | `SUPABASE_DB_PASSWORD` | Condicional | ETL | Varios scripts Python | Sem valor seguro | ETL falha | Critico |
 | `SUPABASE_DB_NAME` | Condicional | ETL | Varios scripts Python | `postgres` | ETL escreve/le banco errado | Medio |
-| `NEXT_PUBLIC_SITE_URL` | Sim para producao | Client-safe/server | Site principal, InfinitePay `redirect_url`/`webhook_url`, Logto fallback | `https://meuspoliticos.com.br` em pagamento | Links e callbacks errados | Baixo se URL publica |
+| `NEXT_PUBLIC_SITE_URL` | Sim para producao | Client-safe/server | Site principal e Logto fallback | URL publica do site | Links e callbacks errados | Baixo se URL publica |
 | `NEXT_PUBLIC_APP_URL` | Sim para multi-host | Client-safe/server | Logto baseUrl fallback | Fallback para `NEXT_PUBLIC_SITE_URL` ou localhost | Auth base incorreta | Baixo |
 | `NEXT_PUBLIC_PAINEL_URL` | Sim para auth/painel | Client-safe/server | `proxy.ts`, callback Logto, `BotaoAcompanhar` | `https://painel.meuspoliticos.com.br` | Redirects quebrados | Baixo |
 | `LOGTO_BASE_URL` | Recomendado | Server | `getLogtoConfig()` | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, localhost | Callback/base URL inconsistentes | Baixo/medio |
@@ -52,7 +52,10 @@ Este documento consolida as variaveis de ambiente identificadas no codigo, `.env
 | `LOGTO_APP_ID` | Sim | Server | `app/src/lib/logto/config.ts` | Nenhum; erro obrigatorio | Auth indisponivel | Medio |
 | `LOGTO_APP_SECRET` | Sim | Server | `app/src/lib/logto/config.ts` | Nenhum; erro obrigatorio | Auth indisponivel | Critico |
 | `LOGTO_COOKIE_SECRET` | Sim | Server | `app/src/lib/logto/config.ts` | Nenhum; erro obrigatorio | Sessao indisponivel | Critico |
-| `INFINITEPAY_HANDLE` | Sim para apoio | Server | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento` | Vazio; `criar-link` retorna 500 | Checkout indisponivel | Baixo/medio |
+| `ASAAS_API_KEY` | Sim para apoio | Server | Criacao e verificacao de cobrancas | Vazio; APIs retornam 503 | Checkout indisponivel | Critico |
+| `ASAAS_API_URL` | Opcional | Server | Base da API Asaas | Sandbox Asaas | Ambiente financeiro incorreto | Medio |
+| `ASAAS_WEBHOOK_TOKEN` | Sim para webhook | Server | Autenticidade do webhook Asaas | Vazio; webhook retorna 503 | Confirmacao automatica indisponivel | Critico |
+| `INFINITEPAY_HANDLE` | Condicional/legado | Server | Validacao back-channel do webhook InfinitePay | Vazio; webhook legado retorna erro | Apenas transacoes legadas afetadas | Medio |
 | `OPENAI_API_KEY` | Sim para IA | Server/ETL | `resumo-interpretativo.ts`, `etl/ia/simplificar_proposicoes.py` | Se ausente, retorna erro/nao gera | IA indisponivel | Critico |
 | `IA_RESUMO_MAX_GERACOES_DIA` | Opcional | Server | `resumo-interpretativo.ts` | Limite interno padrao no codigo | Limite de custo inadequado | Baixo |
 | `PORTAL_TRANSPARENCIA_API_KEY` | Condicional | ETL | `etl/portal_transparencia/collect_emendas.py` | String vazia | Coleta CGU pode falhar/limitar | Alto se chave real |
@@ -96,15 +99,16 @@ LOGTO_BASE_URL
 -> http://localhost:3000
 ```
 
-### 4.3 InfinitePay
+### 4.3 Pagamentos
 
 | Variavel | Consumidor | Comportamento |
 |---|---|---|
-| `INFINITEPAY_HANDLE` | `/api/apoio/criar-link` | Obrigatoria para criar link; se ausente retorna 500 |
-| `INFINITEPAY_HANDLE` | `/api/apoio/verificar-pagamento` | Enviada para endpoint de verificacao |
-| `NEXT_PUBLIC_SITE_URL` | `/api/apoio/criar-link` | Monta `redirect_url` e `webhook_url` |
+| `ASAAS_API_KEY` | `/api/apoio/criar-link`, `/api/apoio/verificar-pagamento` | Obrigatoria; server-only |
+| `ASAAS_API_URL` | Rotas de apoio | Default `https://sandbox.asaas.com/api/v3` |
+| `ASAAS_WEBHOOK_TOKEN` | `/api/webhooks/asaas` | Obrigatoria; webhook falha fechado quando ausente |
+| `INFINITEPAY_HANDLE` | `/api/webhooks/infinitepay` | Somente compatibilidade legada |
 
-Nao foi identificada variavel de assinatura/HMAC para validar webhook InfinitePay. Isso e gap de seguranca e integridade.
+O webhook ativo do Asaas exige token dedicado. O webhook legado InfinitePay confirma a transacao por chamada back-channel ao endpoint `payment_check`.
 
 ### 4.4 OpenAI
 
@@ -152,8 +156,8 @@ Foi detectado valor aparente de `RESEND_API_KEY` em `docs/meuspoliticos_master.m
 | Portas default divergentes `5432` e `5433` | Runtime web e ETL | Ambientes locais podem apontar para bancos diferentes |
 | ETL aceita `SUPABASE_DB_*`, runtime web usa `POSTGRES_*` | `etl/**` vs `app/src/**` | Configuracao duplicada e risco de drift |
 | `RESEND_*` documentado, mas sem consumidor runtime mapeado | `.env.example`, docs | Feature de email nao confirmada |
-| Stripe ainda aparece em docs legados | `docs/SECURITY.md`, docs historicos | Confusao operacional; runtime atual usa InfinitePay |
-| `INFINITEPAY_HANDLE` sem secret de webhook | APIs InfinitePay | Webhook sem verificacao criptografica |
+| Stripe/InfinitePay ainda aparecem em docs historicos | Documentos de inventario anteriores | Confusao operacional; runtime atual usa Asaas |
+| Token Asaas ausente | `/api/webhooks/asaas` | Webhook falha fechado com `503` |
 
 ## 7. Template Seguro para Desenvolvimento
 
@@ -206,7 +210,7 @@ RESEND_FROM=noreply@meuspoliticos.com.br
 | `NEXT_PUBLIC_*` alinhado aos dominios reais | Obrigatorio |
 | `OPENAI_API_KEY` em secret manager | Obrigatorio para IA |
 | `INFINITEPAY_HANDLE` configurado | Obrigatorio para apoio |
-| Assinatura/validacao de webhook InfinitePay definida | Pendente |
+| Token do webhook Asaas configurado e testado | Pendente por ambiente |
 | Chave Resend vazada revogada e removida do doc legado | Pendente critico |
 | Defaults `5432`/`5433` normalizados | Pendente |
 | `SUPABASE_DB_*` vs `POSTGRES_*` unificado para ETL | Pendente |

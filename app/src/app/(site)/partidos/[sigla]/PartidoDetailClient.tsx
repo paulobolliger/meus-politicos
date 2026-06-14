@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type PartidoDetail = {
@@ -89,8 +90,6 @@ const CARGO_LABEL_PLURAL: Record<string, string> = {
   deputado_federal: 'Deputados Federais', deputado_estadual: 'Deputados Estaduais',
   prefeito: 'Prefeitos', vereador: 'Vereadores',
 }
-const CARGO_ORDEM = ['governador', 'prefeito', 'senador', 'deputado_federal', 'deputado_estadual', 'vereador']
-
 // ─── Glass panel ─────────────────────────────────────────────────────────────
 const glass: React.CSSProperties = {
   background: 'rgba(255,255,255,0.7)',
@@ -144,12 +143,13 @@ function MembroFotoCard({ membro }: { membro: MembroPartido }) {
           overflow: 'hidden',
         }}>
           {membro.foto_url && !imgErr ? (
-            <img
+            <Image
               src={membro.foto_url} alt={nome}
               onError={() => setImgErr(true)}
+              fill
+              sizes="(max-width: 640px) 50vw, 200px"
+              unoptimized
               style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
                 objectFit: 'cover', objectPosition: 'top center',
                 filter: hovered ? 'grayscale(0%)' : 'grayscale(100%)',
                 transition: 'filter 0.25s',
@@ -238,8 +238,6 @@ export function PartidoDetailClient({
   gastosPorCategoria,
   wiki,
   coesao,
-  coesaoPorAno,
-  topDissidentes,
 }: {
   partido: PartidoDetail
   membros: MembroPartido[]
@@ -337,8 +335,14 @@ export function PartidoDetailClient({
     : coesao.score >= 65 ? '#f59e0b' : '#ef4444'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9ff', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 24px 80px' }}>
+    <div className="partido-detail-page" style={{ minHeight: '100vh', background: '#f8f9ff', fontFamily: 'Inter, sans-serif', overflowX: 'clip' }}>
+      <style>{`
+        .partido-detail-page,
+        .partido-detail-page * {
+          box-sizing: border-box;
+        }
+      `}</style>
+      <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: '24px 24px 80px', minWidth: 0 }}>
 
         {/* ── SECTION A: Identity ─────────────────────────────────────────── */}
         <div style={{
@@ -355,11 +359,11 @@ export function PartidoDetailClient({
               width: 128, height: 128, borderRadius: 10,
               background: '#eff4ff', border: '1px solid #c6c6cd',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, overflow: 'hidden', padding: 12,
+              flexShrink: 0, overflow: 'hidden', padding: 12, position: 'relative',
             }}>
               {logoSrc ? (
-                <img src={logoSrc} alt={partido.sigla} onError={onLogoError}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                <Image src={logoSrc} alt={partido.sigla} onError={onLogoError}
+                  fill sizes="128px" unoptimized loading="eager" style={{ objectFit: 'contain', padding: 12 }} />
               ) : (
                 <span style={{ fontSize: 28, fontWeight: 900, color: cor }}>
                   {partido.sigla.slice(0, 4)}
@@ -411,7 +415,7 @@ export function PartidoDetailClient({
 
         {/* ── 4 info cards ────────────────────────────────────────────────── */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))',
           gap: 16, marginBottom: 16,
         }}>
 
@@ -547,7 +551,7 @@ export function PartidoDetailClient({
         )}
 
         {/* ── BENTO GRID ──────────────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 20 }}>
+        <div className="partido-bento-grid" style={{ display: 'grid', gap: 20, marginBottom: 20 }}>
 
           {/* ── Card IA (4/12) ─────────────────────────────────────────── */}
           <div style={{
@@ -621,7 +625,7 @@ export function PartidoDetailClient({
             ...glass,
             gridColumn: 'span 8',
             padding: 24,
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24,
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 24,
           }}>
             {/* Left: Representatividade */}
             <div>
@@ -682,7 +686,7 @@ export function PartidoDetailClient({
         <div style={{
           ...glass,
           padding: 24,
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))',
           gap: 24, marginBottom: 20,
         }}>
 
@@ -776,7 +780,7 @@ export function PartidoDetailClient({
         </div>
 
         {/* ── FINANÇAS (8/12 + 4/12) ──────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, marginBottom: 24 }}>
+        <div className="partido-bento-grid" style={{ display: 'grid', gap: 20, marginBottom: 24 }}>
 
           {/* Fluxo Financeiro (8/12) */}
           <div style={{ ...glass, gridColumn: 'span 8', padding: 24 }}>
@@ -923,7 +927,7 @@ export function PartidoDetailClient({
                     background: '#fff', border: '1px solid #c6c6cd',
                     borderRadius: 10, padding: '9px 14px 9px 36px',
                     fontSize: 13, color: '#0b1c30', outline: 'none',
-                    minWidth: 260,
+                    minWidth: 0,
                   }}
                 />
               </div>
@@ -939,8 +943,8 @@ export function PartidoDetailClient({
           </div>
 
           {/* Tabs navigation */}
-          <div style={{ borderBottom: '1px solid #c6c6cd', marginBottom: 20, overflowX: 'auto' }}>
-            <nav style={{ display: 'flex', gap: 0, minWidth: 'max-content' }}>
+          <div style={{ width: '100%', maxWidth: '100%', minWidth: 0, contain: 'inline-size', borderBottom: '1px solid #c6c6cd', marginBottom: 20, overflowX: 'auto' }}>
+            <nav style={{ display: 'flex', gap: 0, width: 'max-content' }}>
               {TAB_CONFIG.map(tab => {
                 const count = membrosPorTab[tab.id].length
                 const isActive = activeTab === tab.id
@@ -987,7 +991,7 @@ export function PartidoDetailClient({
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))',
               gap: 14,
             }}>
               {filteredMembros.slice(0, 48).map(m => (
@@ -1010,7 +1014,17 @@ export function PartidoDetailClient({
             </div>
           )}
         </div>
-
+        <style>{`
+          @media (max-width: 899px) {
+            .partido-bento-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+            .partido-bento-grid > * {
+              grid-column: auto !important;
+              min-width: 0;
+            }
+          }
+        `}</style>
       </div>
     </div>
   )

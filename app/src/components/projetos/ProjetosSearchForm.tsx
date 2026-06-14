@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useRef, useTransition, useState, useEffect } from 'react'
+import { useCallback, useTransition, useState, useEffect } from 'react'
 
 type Props = {
   defaultQ?: string
@@ -18,28 +18,28 @@ export function ProjetosSearchForm({ defaultQ = '', defaultTipo = '' }: Props) {
 
   const [q, setQ] = useState(defaultQ)
 
-  useEffect(() => {
-    setQ(defaultQ)
-  }, [defaultQ])
-
-  function navegar(novoQ: string, novoTipo: string) {
+  const navegar = useCallback((novoQ: string, novoTipo: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('pagina')
     if (novoQ.trim()) params.set('q', novoQ.trim()); else params.delete('q')
     if (novoTipo)     params.set('tipo', novoTipo);  else params.delete('tipo')
     const qs = params.toString()
     startTransition(() => router.push(qs ? `${pathname}?${qs}` : pathname))
-  }
+  }, [pathname, router, searchParams, startTransition])
 
   useEffect(() => {
     const currentQ = searchParams.get('q') || ''
+    if (defaultQ !== currentQ) {
+      const syncTimer = setTimeout(() => setQ(defaultQ), 0)
+      return () => clearTimeout(syncTimer)
+    }
     if (q === currentQ) return
 
     const timer = setTimeout(() => {
       navegar(q, defaultTipo)
     }, 350)
     return () => clearTimeout(timer)
-  }, [q])
+  }, [defaultQ, defaultTipo, navegar, q, searchParams])
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -107,7 +107,7 @@ export function ProjetosSearchForm({ defaultQ = '', defaultTipo = '' }: Props) {
       ` }} />
 
       {/* Pesquisar Projetos */}
-      <div style={{ flex: '1 1 260px', minWidth: 220, maxWidth: 400 }}>
+      <div style={{ flex: '1 1 260px', minWidth: 0, maxWidth: 400 }}>
         <div style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
           color: 'var(--ink-3)', fontFamily: 'var(--font-mono)',

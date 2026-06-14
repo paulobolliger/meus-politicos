@@ -130,6 +130,37 @@ type CountRow = {
   total: number | string | null
 }
 
+type ProposicaoAppRow = {
+  id: string
+  slug: string
+  tipo: string | null
+  numero: string | number | null
+  ano: number | null
+  ementa: string | null
+  situacao: string | null
+}
+
+type EmendaAppRow = {
+  id: string
+  valor: number | null
+  valor_pago: number | null
+  municipio_nome: string | null
+  uf_municipio: string | null
+  funcao: string | null
+  ano: number | null
+}
+
+type FeedEventoRow = {
+  id: string
+  data: string | null
+  tipo: string | null
+  titulo: string | null
+  descricao: string | null
+  descricao_simples: string | null
+  impacto_nivel: number | null
+  link_fonte: string | null
+}
+
 type PresencaKpiRow = {
   total_sessoes: number | string | null
   total_presencas: number | string | null
@@ -331,7 +362,7 @@ async function getAppRelatedData(politicoId: string) {
        FROM base`,
       [politicoId, anoReferencia]
     ),
-    pool.query<any>(
+    pool.query<ProposicaoAppRow>(
       `SELECT p.id, p.slug, p.tipo, p.numero, p.ano, p.ementa, p.situacao
        FROM proposicoes p
        JOIN proposicao_autores pa ON pa.proposicao_id = p.id
@@ -349,7 +380,7 @@ async function getAppRelatedData(politicoId: string) {
          AND p.ano = $2`,
       [politicoId, anoReferencia]
     ),
-    pool.query<any>(
+    pool.query<EmendaAppRow>(
       `SELECT e.id, e.valor, e.valor_pago, e.municipio_nome, e.uf_municipio, e.funcao, e.ano
        FROM emendas e
        WHERE e.politico_id = $1
@@ -632,10 +663,10 @@ export default async function PerfilInternoPage({ params, searchParams }: PagePr
   }
 
   const timelineActive = await isFeatureActive('timeline_politica', currentUser.perfilId)
-  let feedEventos: any[] = []
+  let feedEventos: FeedEventoRow[] = []
   if (timelineActive) {
-    const { rows } = await pool.query(
-      `SELECT id, data::text AS data, tipo, titulo, descricao, descricao_simples, impacto_nivel::text AS impacto_nivel, link_fonte
+    const { rows } = await pool.query<FeedEventoRow>(
+      `SELECT id, data::text AS data, tipo, titulo, descricao, descricao_simples, impacto_nivel, link_fonte
        FROM feed_eventos
        WHERE politico_id = $1
        ORDER BY data DESC, criado_em DESC

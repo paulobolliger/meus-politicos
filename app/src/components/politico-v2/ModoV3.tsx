@@ -1,25 +1,19 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
-import { Bell, Download, Loader2, Scale, Star, X, Vote, ScrollText, Users, Mail, MapPin, Search } from 'lucide-react'
+import { useRef } from 'react'
+import { Download, Vote, ScrollText, Users, Mail, MapPin } from 'lucide-react'
 
-import { Panel, PanelHeader, Sparkline, StatusDot, VoteChip } from '@/components/civic'
+import { Sparkline, VoteChip } from '@/components/civic'
 import { IAPerguntaPolitico } from '@/components/politico-v2/IAPerguntaPolitico'
-import { ShareButton } from '@/components/politico-v2/ShareButton'
 import {
   CARGO_LABEL,
   CEAP_TETO_UF,
   NA,
   formatCurrency,
   formatGabinetePhone,
-  formatOptionalNumber,
-  initials,
   normalizePlatform,
-  yearsInOffice,
 } from '@/components/politico-v2/shared'
-import { classeFotoEnquadramento } from '@/lib/foto-enquadramento'
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -72,6 +66,36 @@ type DoadorEleitoralItem = {
   valor: number
   tipo: string | null
   ano: number | null
+}
+
+type ProposicaoItem = {
+  id: string
+  slug: string
+  tipo: string | null
+  numero: string | number | null
+  ano: number | null
+  situacao: string | null
+  ementa: string | null
+}
+
+type EmendaItem = {
+  id: string
+  valor_pago: number | null
+  valor: number | null
+  ano: number | null
+  municipio_nome: string | null
+  uf_municipio: string | null
+  funcao: string | null
+}
+
+type FeedEvento = {
+  id: string
+  data: string | null
+  impacto_nivel: number | null
+  titulo: string | null
+  descricao: string | null
+  descricao_simples: string | null
+  link_fonte: string | null
 }
 
 type AnnualKpis = {
@@ -128,8 +152,8 @@ type ModoV3Props = {
   votacoesRecentes?: VotacaoItem[]
   gastos: GastoItem[]
   presenca: PresencaItem[]
-  proposicoes?: any[]
-  emendas?: any[]
+  proposicoes?: ProposicaoItem[]
+  emendas?: EmendaItem[]
   historicoPartidario?: HistoricoPartidarioItem[]
   agenda?: AgendaItem[]
   doadoresEleitorais?: DoadorEleitoralItem[]
@@ -142,7 +166,7 @@ type ModoV3Props = {
   tab: Tab
   setTab: (t: Tab) => void
   timelineActive?: boolean
-  feedEventos?: any[]
+  feedEventos?: FeedEvento[]
 }
 
 // ── party themes ─────────────────────────────────────────────────────────────
@@ -214,8 +238,7 @@ function getPartyTheme(sigla: string | null | undefined): PartyTheme {
   }
 }
 
-const TABS = ['Visão geral', 'Votações', 'Gastos', 'Presença', 'Projetos de Lei', 'Emendas', 'Notícias', 'Linha do Tempo', 'Histórico', 'Fontes'] as const
-type Tab = typeof TABS[number]
+type Tab = 'Visão geral' | 'Votações' | 'Gastos' | 'Presença' | 'Projetos de Lei' | 'Emendas' | 'Notícias' | 'Linha do Tempo' | 'Histórico' | 'Fontes'
 
 const DONUT_COLORS = [
   'var(--party-brand, #6366f1)',
@@ -327,17 +350,17 @@ function GastosDonut({ categorias }: { categorias: [string, number][] }) {
 
   const cx = 70, cy = 70, r = 52, stroke = 20
   const gap = 0.02
-  let cumAngle = -Math.PI / 2
-
   const slices = categorias.slice(0, 6).map(([cat, val], i) => {
     const frac = val / total
     const angle = frac * (2 * Math.PI) - gap
-    const x1 = cx + r * Math.cos(cumAngle + gap / 2)
-    const y1 = cy + r * Math.sin(cumAngle + gap / 2)
-    const x2 = cx + r * Math.cos(cumAngle + angle)
-    const y2 = cy + r * Math.sin(cumAngle + angle)
+    const startAngle = -Math.PI / 2 + categorias
+      .slice(0, i)
+      .reduce((sum, [, previousValue]) => sum + (previousValue / total) * (2 * Math.PI), 0)
+    const x1 = cx + r * Math.cos(startAngle + gap / 2)
+    const y1 = cy + r * Math.sin(startAngle + gap / 2)
+    const x2 = cx + r * Math.cos(startAngle + angle)
+    const y2 = cy + r * Math.sin(startAngle + angle)
     const large = angle > Math.PI ? 1 : 0
-    cumAngle += frac * (2 * Math.PI)
     return { cat, val, frac, x1, y1, x2, y2, large, color: DONUT_COLORS[i] }
   })
 
@@ -372,13 +395,6 @@ function GastosDonut({ categorias }: { categorias: [string, number][] }) {
       </div>
     </div>
   )
-}
-
-function maskCpf(cpf: string | null | undefined) {
-  if (!cpf) return NA
-  const d = cpf.replace(/\D/g, '')
-  if (d.length !== 11) return NA
-  return `${d.slice(0, 3)}.${d.slice(3, 6)}.***-**`
 }
 
 function formatDateOnly(value: string | null | undefined, year: '2-digit' | 'numeric' = 'numeric') {
@@ -459,17 +475,10 @@ export function ModoV3({
   proposicoes = [],
   emendas = [],
   historicoPartidario = [],
-  agenda = [],
-  doadoresEleitorais = [],
   kpis,
   atualizadoEm,
-  seguindoStatus,
-  loadingSeguimento,
-  handleAcompanhar,
-  handleDeixarDeSeguir,
   tab,
   setTab,
-  timelineActive = false,
   feedEventos = [],
 }: ModoV3Props) {
   
@@ -485,17 +494,11 @@ export function ModoV3({
   } as React.CSSProperties
 
   const nomeExibicao = politico.nome_eleitoral ?? politico.nome
-  const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? '–'
   const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replaceAll('_', ' ')
-  const mandatoInfo = yearsInOffice(politico.mandato_inicio)
-  const classeFoto = classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })
 
   const tetoUf = CEAP_TETO_UF[politico.uf ?? ''] ?? null
-  const hasPresencaPoliticoAno = kpis.has_presenca_ano && kpis.presenca_total_sessoes > 0
-  const hasVotacoesPoliticoAno = kpis.has_votacoes_ano && kpis.total_votacoes > 0
   const hasGastosPoliticoAno = kpis.has_gastos_ano && gastos.length > 0
   const hasEmendasPoliticoAno = kpis.has_emendas_ano && kpis.total_emendas > 0
-  const hasProposicoesPoliticoAno = kpis.has_proposicoes_ano && kpis.total_proposicoes > 0
   
   const gastoPctTeto =
     hasGastosPoliticoAno && tetoUf != null && tetoUf > 0
@@ -516,8 +519,6 @@ export function ModoV3({
     return acc
   }, {})
   const gastosMesesOrdenados = Object.entries(gastosPorMes).sort((a, b) => a[0].localeCompare(b[0])).slice(-12)
-  const gastosSparkData = gastosMesesOrdenados.map(([, v]) => v)
-
   // Gastos categories
   const gastosPorCategoria = gastos.reduce<Record<string, number>>((acc, g) => {
     const cat = g.categoria ?? 'Outros'
@@ -550,14 +551,8 @@ export function ModoV3({
         }]
       : []
 
-  const bannerImg =
-    politico.cargo === 'senador'
-      ? 'https://upload.wikimedia.org/wikipedia/commons/4/47/Plen%C3%A1rio_do_Senado_%2843010124995%29.jpg'
-      : 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Plen%C3%A1rioCamaradeputados.jpg'
-
   // Flagship KPI evaluation for asymmetric display
   const isPresenceFlagship = kpis.presenca_pct != null && kpis.presenca_pct >= 90
-  const isGastoFlagship = !isPresenceFlagship && gastoPctTeto != null && gastoPctTeto < 50
 
   const handleScrollToContact = () => {
     setTab('Visão geral')
@@ -1083,7 +1078,7 @@ export function ModoV3({
                     <div style={{ position: 'relative', paddingLeft: 24, margin: '12px 0' }}>
                       <div style={{ position: 'absolute', left: 9, top: 4, bottom: 4, width: 2, background: 'rgba(255,255,255,0.06)' }} />
 
-                      {feedEventos.map((evt: any, idx: number) => {
+                      {feedEventos.map((evt, idx) => {
                         const dateFmt = evt.data ? new Date(evt.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
                         const impacto = Number(evt.impacto_nivel || 1)
                         const impColor = impacto === 4 ? 'var(--neg)' : impacto === 3 ? 'var(--warn)' : impacto === 2 ? 'var(--info)' : 'var(--party-brand)'

@@ -8,12 +8,24 @@ export async function POST(req: NextRequest) {
   try {
     const { paymentId } = await req.json()
 
-    if (!paymentId) {
+    if (typeof paymentId !== 'string' || !/^[A-Za-z0-9_-]{3,100}$/.test(paymentId)) {
       return NextResponse.json({ error: 'Parâmetro paymentId é obrigatório.' }, { status: 400 })
     }
 
+    const pool = getPgPool()
+    const localPayment = await pool.query(
+      `SELECT order_nsu, status
+       FROM doacoes
+       WHERE transaction_nsu = $1
+       LIMIT 1`,
+      [paymentId]
+    )
+    if (localPayment.rowCount === 0) {
+      return NextResponse.json({ paid: false, error: 'Pagamento não encontrado.' }, { status: 404 })
+    }
+
     if (!ASAAS_API_KEY || ASAAS_API_KEY === 'mock_api_key_for_testing') {
-      return NextResponse.json({ paid: false, error: 'Gateway de pagamento em manutenção.' }, { status: 500 })
+      return NextResponse.json({ paid: false, error: 'Gateway de pagamento em manutenção.' }, { status: 503 })
     }
 
     // Consultar o Asaas
@@ -36,7 +48,6 @@ export async function POST(req: NextRequest) {
 
     if (isPaid) {
       // Sincronizar com banco de dados local
-      const pool = getPgPool()
       await pool.query(
         `UPDATE doacoes
          SET status = 'pago',

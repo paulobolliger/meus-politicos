@@ -150,7 +150,7 @@ export default async function VerbetePage({ params }: Props) {
                 </h3>
                 <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-5 md:p-6">
                   <p className="text-slate-400 text-xs md:text-sm leading-relaxed italic">
-                    "{verbete.exemplo}"
+                    &quot;{verbete.exemplo}&quot;
                   </p>
                 </div>
               </section>
