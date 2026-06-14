@@ -120,7 +120,7 @@ function MembroFotoCard({ membro }: { membro: MembroPartido }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          background: '#fff',
+          background: 'var(--panel)',
           padding: 8,
           borderRadius: 12,
           border: `1.5px solid ${hovered ? '#000' : '#c6c6cd'}`,
@@ -346,7 +346,7 @@ export function PartidoDetailClient({
 
         {/* ── SECTION A: Identity ─────────────────────────────────────────── */}
         <div style={{
-          background: '#fff', border: '1px solid #c6c6cd',
+          background: 'var(--panel)', border: '1px solid var(--line)',
           borderRadius: 12, padding: '24px',
           display: 'flex', flexWrap: 'wrap',
           justifyContent: 'space-between', alignItems: 'flex-end',
@@ -420,7 +420,7 @@ export function PartidoDetailClient({
         }}>
 
           {/* Card 1: Presidente */}
-          <div style={{ background: '#fff', border: '1px solid #c6c6cd', borderRadius: 12, padding: 20 }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 20 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#45464d', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 12 }}>
               Presidente Nacional
             </span>
@@ -450,7 +450,7 @@ export function PartidoDetailClient({
           </div>
 
           {/* Card 2: Sede e Contato */}
-          <div style={{ background: '#fff', border: '1px solid #c6c6cd', borderRadius: 12, padding: 20 }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 20 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#45464d', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 12 }}>
               Sede e Contato
             </span>
@@ -498,7 +498,7 @@ export function PartidoDetailClient({
           </div>
 
           {/* Card 4: Transparência */}
-          <div style={{ background: '#fff', border: '1px solid #c6c6cd', borderRadius: 12, padding: 20 }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 20 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: '#45464d', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 12 }}>
               Transparência
             </span>
@@ -525,7 +525,7 @@ export function PartidoDetailClient({
         {/* ── História e Origem ────────────────────────────────────────────── */}
         {wikiExtract && (
           <div style={{
-            background: '#fff', border: '1px solid #c6c6cd', borderRadius: 12, padding: 24,
+            background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 24,
             marginBottom: 24, position: 'relative',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
@@ -666,7 +666,7 @@ export function PartidoDetailClient({
                 {/* Legenda */}
                 <div style={{
                   position: 'absolute', bottom: 10, right: 10,
-                  background: '#fff', border: '1px solid #e2e8f0',
+                  background: 'var(--panel)', border: '1px solid var(--line)',
                   borderRadius: 6, padding: '6px 10px',
                   display: 'flex', flexDirection: 'column', gap: 5,
                 }}>
@@ -924,7 +924,7 @@ export function PartidoDetailClient({
                   value={membroQ}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMembroQ(e.target.value)}
                   style={{
-                    background: '#fff', border: '1px solid #c6c6cd',
+                    background: 'var(--panel)', border: '1px solid var(--line)',
                     borderRadius: 10, padding: '9px 14px 9px 36px',
                     fontSize: 13, color: '#0b1c30', outline: 'none',
                     minWidth: 0,
@@ -933,7 +933,7 @@ export function PartidoDetailClient({
               </div>
               <Link href={`/busca?partido=${partido.sigla}`}
                 style={{
-                  background: '#fff', border: '1px solid #c6c6cd', borderRadius: 10,
+                  background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10,
                   padding: '9px 18px', fontSize: 13, fontWeight: 700,
                   color: '#0b1c30', textDecoration: 'none',
                 }}>

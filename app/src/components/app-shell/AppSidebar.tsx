@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 import {
   Activity,
   BookOpen,
@@ -208,11 +209,11 @@ export function AppMobileTopbar() {
         </button>
         <Link href="/painel" style={{ display: 'inline-flex', alignItems: 'center', height: '98%' }}>
           <Image
-            src="/logos_meus-politicos_colorido_semfundo.png"
+            src={BRAND_LOGO_URL}
             alt="Meus Politicos"
             height={30}
             width={126}
-            style={{ width: 'auto', height: 30, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+            style={{ width: 'auto', height: 30, objectFit: 'contain' }}
           />
         </Link>
         <Link
@@ -250,11 +251,11 @@ export function AppMobileTopbar() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Image
-                src="/logos_meus-politicos_colorido_semfundo.png"
+                src={BRAND_LOGO_URL}
                 alt="Meus Politicos"
                 height={30}
                 width={120}
-                style={{ width: 'auto', height: 30, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+                style={{ width: 'auto', height: 30, objectFit: 'contain' }}
               />
               <button
                 type="button"
@@ -437,11 +438,11 @@ export function AppSidebar() {
             />
           ) : (
             <Image
-              src="/logos_meus-politicos_colorido_semfundo.png"
+              src={BRAND_LOGO_URL}
               alt="Meus Politicos"
               height={32}
               width={130}
-              style={{ width: 'auto', height: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              style={{ width: 'auto', height: 32, objectFit: 'contain' }}
             />
           )}
         </Link>

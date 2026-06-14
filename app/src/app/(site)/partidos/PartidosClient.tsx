@@ -75,7 +75,7 @@ function LogoBox({ partido, size = 64 }: { partido: PartidoCard; size?: number }
     return (
       <div style={{
         width: size, height: size, borderRadius: 10,
-        background: '#fff', border: '1px solid #e5e7eb',
+        background: 'var(--panel)', border: '1px solid var(--line)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, overflow: 'hidden', padding: 6, position: 'relative',
       }}>
@@ -113,7 +113,7 @@ function PartidoCardItem({ partido }: { partido: PartidoCard }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: '#fff',
+        background: 'var(--panel)',
         border: `1.5px solid ${hovered ? '#2851cb' : '#c5c6d1'}`,
         borderRadius: 12,
         padding: '20px',
@@ -241,7 +241,7 @@ function PartidoCardItem({ partido }: { partido: PartidoCard }) {
             padding: '10px 0',
             borderRadius: 8,
             border: '1.5px solid #2851cb',
-            background: hovered ? '#2851cb' : '#fff',
+            background: hovered ? '#2851cb' : 'var(--panel)',
             color: hovered ? '#fff' : '#2851cb',
             fontSize: 13,
             fontWeight: 600,
@@ -436,8 +436,8 @@ export function PartidosClient({
     padding: '7px 16px',
     borderRadius: 20,
     border: ativo ? 'none' : '1px solid #c5c6d1',
-    background: ativo ? '#011549' : '#fff',
-    color: ativo ? '#fff' : '#374151',
+    background: ativo ? '#011549' : 'var(--panel)',
+    color: ativo ? '#fff' : 'var(--ink-2)',
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
@@ -457,7 +457,7 @@ export function PartidosClient({
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{
-        background: 'linear-gradient(180deg, #fff 0%, #f0f4ff 100%)',
+        background: 'linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%)',
         padding: '72px 24px 52px',
         textAlign: 'center',
         borderBottom: '1px solid #e5e7eb',
@@ -508,7 +508,7 @@ export function PartidosClient({
               padding: '16px 52px 16px 52px',
               border: '1.5px solid #c5c6d1',
               borderRadius: 12,
-              background: '#fff',
+              background: 'var(--panel)',
               color: '#011549',
               fontSize: 15,
               outline: 'none',
@@ -593,7 +593,7 @@ export function PartidosClient({
               padding: '7px 14px',
               borderRadius: 8,
               border: '1px solid #c5c6d1',
-              background: '#fff',
+              background: 'var(--panel)',
               color: '#374151',
               fontSize: 13, fontWeight: 600,
               cursor: 'pointer',
@@ -605,7 +605,7 @@ export function PartidosClient({
           {showOrdenarMenu && (
             <div style={{
               position: 'absolute', right: 0, top: 'calc(100% + 6px)',
-              background: '#fff', border: '1px solid #e5e7eb',
+              background: 'var(--panel)', border: '1px solid var(--line)',
               borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
               zIndex: 50, minWidth: 160, overflow: 'hidden',
             }}>
@@ -617,7 +617,7 @@ export function PartidosClient({
                     width: '100%', textAlign: 'left',
                     padding: '10px 16px',
                     border: 'none',
-                    background: ordenar === op ? '#eff4ff' : '#fff',
+                    background: ordenar === op ? 'var(--brand-soft)' : 'var(--panel)',
                     color: ordenar === op ? '#2851cb' : '#374151',
                     fontSize: 13, fontWeight: ordenar === op ? 700 : 400,
                     cursor: 'pointer',

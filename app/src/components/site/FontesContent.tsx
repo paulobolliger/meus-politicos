@@ -86,7 +86,7 @@ export function FontesContent() {
     <div style={{ background: 'var(--bg)', minHeight: '100%' }}>
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[var(--line)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#eef3ff] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[var(--brand-soft)] to-transparent" />
         <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
         <div className="container-shell relative py-14 sm:py-20">
           <div className="max-w-3xl space-y-6">
@@ -94,7 +94,7 @@ export function FontesContent() {
               <span className="inline-block size-2 rounded-full bg-[var(--brand-2)]" />
               <span className="mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--mute)]">Fontes de dados</span>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">De onde vêm os dados</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">De onde vêm os dados</h1>
             <p className="max-w-2xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
               Todos os dados exibidos no Meus Políticos são coletados diretamente de fontes oficiais do governo brasileiro. Nenhum dado é inventado, estimado ou proveniente de fontes não oficiais. Cada informação tem um link rastreável até sua origem.
             </p>
@@ -185,7 +185,7 @@ export function FontesContent() {
             <AlertTriangle size={20} className="text-yellow-500" />
             <span className="font-semibold text-yellow-700">O que não usamos</span>
           </div>
-          <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
+          <ul className="list-disc pl-5 text-sm text-[var(--ink-2)] space-y-1">
             <li>Não usamos scraping de sites de notícias como fonte primária</li>
             <li>Não usamos dados de redes sociais como fonte de fatos</li>
             <li>Não usamos estimativas ou projeções — apenas dados registrados oficialmente</li>

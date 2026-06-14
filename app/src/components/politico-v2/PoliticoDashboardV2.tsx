@@ -30,7 +30,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
   const nomeExibicao = politico.nome_eleitoral ?? politico.nome
   const classeFoto = classeFotoEnquadramento({ cargo: politico.cargo, slug: politico.slug })
   const cargoNome = CARGO_LABEL[politico.cargo] ?? politico.cargo.replaceAll('_', ' ')
-  const badgeCargo = CARGO_BADGE_CLASS[politico.cargo] ?? 'bg-slate-100 text-slate-700 border-slate-200'
+  const badgeCargo = CARGO_BADGE_CLASS[politico.cargo] ?? 'bg-[var(--bg-2)] text-[var(--ink-2)] border-[var(--line)]'
 
   const partidoSigla = politico.partidos?.sigla?.toUpperCase() ?? NA
   const mandatoInfo = yearsInOffice(politico.mandato_inicio)
@@ -39,7 +39,7 @@ export function PoliticoDashboardV2({ politico }: Props) {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <section className="relative overflow-hidden bg-[#1a2b5e] text-white">
           <div className="pointer-events-none absolute -left-20 top-8 h-56 w-56 rounded-full bg-[#2952cc]/25 blur-3xl" />
           <div className="pointer-events-none absolute -right-12 top-0 h-72 w-72 rounded-full bg-[#6f8fff]/20 blur-3xl" />

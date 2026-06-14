@@ -20,6 +20,15 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/dhqvjxgue/image/upload/**",
+      },
+    ],
+  },
   turbopack: {
     root: path.resolve(__dirname, ".."),
   },

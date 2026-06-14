@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 function LockIcon() {
   return (
@@ -33,10 +34,10 @@ function ConfirmacaoContent() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafd', fontFamily: 'var(--font-sans, system-ui)', color: '#0a0e1a' }}>
-      <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50 }}>
+      <header style={{ background: 'var(--panel)', borderBottom: '1px solid var(--line)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1160, margin: '0 auto', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <Image src="/logos_meus-politicos_colorido_semfundo.png" alt="Meus Politicos" height={24} width={120} style={{ width: 'auto', height: 24, objectFit: 'contain' }} />
+            <Image src={BRAND_LOGO_URL} alt="Meus Politicos" height={24} width={120} style={{ width: 'auto', height: 24, objectFit: 'contain' }} />
             <span style={{ padding: '2px 8px', borderRadius: 4, background: 'rgba(40,81,203,0.08)', color: '#2851cb', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
               APOIAR
             </span>
@@ -57,7 +58,7 @@ function ConfirmacaoContent() {
         </p>
 
         {(orderNsu || transactionNsu || slug) && (
-          <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', padding: 24, marginBottom: 28, textAlign: 'left' }}>
+          <div style={{ background: 'var(--panel)', borderRadius: 14, border: '1px solid var(--line)', padding: 24, marginBottom: 28, textAlign: 'left' }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', marginBottom: 16, letterSpacing: '0.05em' }}>
               REFERENCIA DA TRANSACAO
             </div>
@@ -73,7 +74,7 @@ function ConfirmacaoContent() {
           <Link href="/" style={{ display: 'block', padding: '14px', borderRadius: 10, background: '#2851cb', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
             Voltar ao site
           </Link>
-          <Link href="/apoio" style={{ display: 'block', padding: '14px', borderRadius: 10, background: '#fff', color: '#374151', border: '1px solid #e5e7eb', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          <Link href="/apoio" style={{ display: 'block', padding: '14px', borderRadius: 10, background: 'var(--panel)', color: 'var(--ink-2)', border: '1px solid var(--line)', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
             Voltar para apoio
           </Link>
         </div>

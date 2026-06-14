@@ -4,7 +4,7 @@ function SkeletonLine({ className }: { className: string }) {
 
 function SkeletonCard() {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm">
       <div className="flex items-start gap-4">
         <div className="size-12 animate-pulse rounded-2xl bg-[#eef3ff]" />
         <div className="min-w-0 flex-1 space-y-3">
@@ -26,7 +26,7 @@ export function SystemSkeleton() {
   return (
     <main className="min-h-screen bg-linear-to-b from-slate-50 to-white">
       <section className="relative overflow-hidden border-b border-slate-200/80">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff]/90 via-white to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[var(--brand-soft)] via-transparent to-transparent" />
         <div className="pointer-events-none absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-[#2952cc]/8 blur-3xl" />
 
         <div className="container-shell relative py-14 sm:py-18 lg:py-24">
@@ -53,7 +53,7 @@ export function SystemSkeleton() {
           </div>
 
           <div className="space-y-4">
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm">
               <SkeletonLine className="h-3 w-32" />
               <div className="mt-4 space-y-3">
                 <SkeletonLine className="h-4 w-5/6" />
@@ -62,7 +62,7 @@ export function SystemSkeleton() {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
                 <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
@@ -74,4 +74,3 @@ export function SystemSkeleton() {
     </main>
   )
 }
-

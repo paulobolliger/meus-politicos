@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 type AuthShellProps = {
   leftLabel: string
@@ -23,7 +24,7 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
         <Link href="/">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logos_meus-politicos_branco_semfundo.png"
+            src={BRAND_LOGO_URL}
             alt="Meus Políticos"
             style={{ height: 32, width: 'auto' }}
           />
@@ -61,7 +62,7 @@ export function AuthShell({ leftLabel, leftHeadline, leftSub, children }: AuthSh
             <Link href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logos_meus-politicos_colorido_semfundo.png"
+                src={BRAND_LOGO_URL}
                 alt="Meus Políticos"
                 style={{ height: 28, width: 'auto' }}
               />

@@ -45,14 +45,15 @@ export const metadata: Metadata = {
       "Dados públicos. Fontes oficiais. Sem opinião.",
     images: ["/logos_meus-politicos_colorido_fundobranco.png"],
   },
+  manifest: "/site.webmanifest",
   icons: {
     icon: [
-      { url: "/logos_meus-politicos_iconecolorido_fundobranco.png", type: "image/png" },
-      { url: "/favicon.ico" },
-      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
     ],
-    shortcut: ["/logos_meus-politicos_iconecolorido_fundobranco.png", "/favicon.ico"],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 }
 

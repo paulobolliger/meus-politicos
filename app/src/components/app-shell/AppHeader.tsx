@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { SystemBar } from '@/components/civic'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 export function AppHeader() {
   return (
@@ -20,7 +21,7 @@ export function AppHeader() {
         >
           <Link href="/">
             <Image
-              src="/logos_meus-politicos_colorido_semfundo.png"
+              src={BRAND_LOGO_URL}
               alt="Meus Politicos"
               height={28}
               width={140}

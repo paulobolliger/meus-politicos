@@ -1,8 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 const PUBLIC_LINKS = [
   { label: 'Buscar', href: '/busca' },
@@ -85,22 +87,15 @@ export function SiteHeader() {
         </div>
       )}
       <div className="max-w-7xl mx-auto h-16 px-4 md:px-8 flex justify-between items-center">
-        {/* Brand / Logo (Opção 11 com Vetor SVG + Texto Jakarta Sans) */}
-        <Link href="/" className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity">
-          <svg
-            viewBox="0 0 32 28"
-            className="w-8 h-7 text-[#6366F1] fill-current drop-shadow-[0_0_8px_rgba(99,102,241,0.3)] transition-transform duration-300 group-hover:scale-105"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect x="0" y="0" width="5.5" height="28" rx="1" />
-            <path d="M5.5 0 L14.5 18 L14.5 28 L5.5 10 Z" />
-            <rect x="16.5" y="16" width="4" height="12" rx="0.5" />
-            <rect x="22.5" y="8" width="4" height="20" rx="0.5" />
-            <rect x="28.5" y="0" width="3.5" height="28" rx="0.5" />
-          </svg>
-          <span className="font-sans font-extrabold text-white text-lg tracking-tight select-none">
-            Meus <span className="font-semibold text-slate-300">Políticos</span>
-          </span>
+        <Link href="/" className="group transition-opacity hover:opacity-95">
+          <Image
+            src={BRAND_LOGO_URL}
+            alt="Meus Políticos"
+            width={180}
+            height={40}
+            priority
+            className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+          />
         </Link>
 
         {/* Navigation Links (Desktop) */}

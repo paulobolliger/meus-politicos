@@ -25,7 +25,7 @@ const actionClasses = {
   primary:
     "border-[#2952cc] bg-[#2952cc] text-white shadow-[0_16px_32px_-22px_rgba(41,82,204,0.95)] hover:bg-[#2349bb]",
   secondary:
-    "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950",
+    "border-[var(--line)] bg-[var(--panel)] text-[var(--ink-2)] hover:border-[var(--line-strong)] hover:bg-[var(--bg-2)] hover:text-[var(--ink)]",
 }
 
 export function EmptyState({
@@ -43,11 +43,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm sm:p-10",
+        "relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-7 text-center shadow-sm sm:p-10",
         className
       )}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-[#eef3ff]/80 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-[var(--brand-soft)] to-transparent" />
       <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[#2952cc]/6 blur-3xl" />
 
       <div className="relative">
@@ -55,12 +55,12 @@ export function EmptyState({
           <Icon className="size-6" aria-hidden="true" />
         </div>
 
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1 shadow-sm">
           <span className="inline-block size-2 rounded-full bg-emerald-400" />
           <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">{eyebrow}</span>
         </div>
 
-        <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.75rem]">{title}</h2>
+        <h2 className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)] sm:text-[1.75rem]">{title}</h2>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">{description}</p>
         {children ? <div className="mt-4 text-sm text-slate-500">{children}</div> : null}
         {actionList.length > 0 ? (
@@ -83,4 +83,3 @@ export function EmptyState({
     </div>
   )
 }
-

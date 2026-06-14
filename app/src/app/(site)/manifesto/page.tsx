@@ -66,7 +66,7 @@ export default function ManifestoPage() {
   return (
     <main className="min-h-screen bg-linear-to-b from-[var(--bg)] to-[var(--panel)]">
       <section className="relative overflow-hidden border-b border-[var(--line)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[#eef3ff] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-[var(--brand-soft)] to-transparent" />
         <div className="pointer-events-none absolute right-[-8rem] top-12 h-72 w-72 rounded-full bg-[color:var(--brand-2)]/8 blur-3xl" />
 
         <div className="container-shell relative py-14 sm:py-20">
@@ -77,7 +77,7 @@ export default function ManifestoPage() {
             </div>
 
             <div className="space-y-5">
-              <h1 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold tracking-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">
                 Somos infraestrutura. O sistema operacional da cidadania política brasileira.
               </h1>
               <p className="max-w-3xl text-base leading-7 text-[var(--ink-3)] sm:text-lg">
@@ -111,7 +111,7 @@ export default function ManifestoPage() {
           {blocos.map((bloco) => (
             <article key={bloco.eyebrow} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-sm sm:p-7">
               <p className="mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">{bloco.eyebrow}</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">{bloco.title}</h2>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-[var(--ink)]">{bloco.title}</h2>
 
 
               {bloco.description ? (
@@ -130,7 +130,7 @@ export default function ManifestoPage() {
                   {bloco.bullets.map((item) => (
                     <li key={item} className="flex gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg)] p-4">
                       <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--brand-2)]" aria-hidden="true" />
-                      <span className="text-sm leading-6 text-slate-700">{item}</span>
+                      <span className="text-sm leading-6 text-[var(--ink-2)]">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -139,7 +139,7 @@ export default function ManifestoPage() {
               {bloco.closing ? (
                 <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-4">
                   <p className="mono text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-2)]">Posicionamento final</p>
-                  <p className="mt-2 text-lg font-bold tracking-tight text-slate-950">{bloco.closing}</p>
+                  <p className="mt-2 text-lg font-bold tracking-tight text-[var(--ink)]">{bloco.closing}</p>
                 </div>
               ) : null}
             </article>
