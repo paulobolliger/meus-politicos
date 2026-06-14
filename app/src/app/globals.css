@@ -5,6 +5,34 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-soft: var(--line-soft);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-mute: var(--mute);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-soft: var(--accent-gold-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-surface: var(--surface);
+
   --color-background: var(--bg);
   --color-foreground: var(--ink);
   --font-sans: var(--font-sans);
@@ -49,47 +77,48 @@
 }
 
 :root {
+  /* LIGHT THEME (Default) */
   /* Surface */
-  --bg: #0F172A;
-  --bg-2: #0F172A;
-  --panel: #1E293B;
-  --panel-2: #1E293B;
-  --line: #334155;
-  --line-strong: #475569;
+  --bg: #F8FAFC;
+  --bg-2: #F1F5F9;
+  --panel: #FFFFFF;
+  --panel-2: #F8FAFC;
+  --line: #E2E8F0;
+  --line-strong: #CBD5E1;
 
   /* Ink */
-  --ink: #F8FAFC;
-  --ink-2: #CBD5E1;
-  --ink-3: #94A3B8;
-  --mute: #64748B;
+  --ink: #0F172A;
+  --ink-2: #334155;
+  --ink-3: #64748B;
+  --mute: #94A3B8;
 
   /* Brand */
-  --brand: #8B5CF6;
-  --brand-2: #6366F1;
-  --brand-soft: rgba(139, 92, 246, 0.15);
+  --brand: #6366F1;
+  --brand-2: #4F46E5;
+  --brand-soft: rgba(99, 102, 241, 0.15);
 
   /* Acento */
-  --accent: #fbbf24;
-  --accent-soft: rgba(251, 191, 36, 0.15);
-  --accent-gold: #fbbf24;
-  --accent-gold-soft: rgba(251, 191, 36, 0.15);
+  --accent: #D97706;
+  --accent-soft: rgba(217, 119, 6, 0.15);
+  --accent-gold: #D97706;
+  --accent-gold-soft: rgba(217, 119, 6, 0.15);
 
   /* Status */
-  --pos: #10B981;
-  --pos-soft: rgba(16, 185, 129, 0.15);
-  --neg: #F43F5E;
-  --neg-soft: rgba(244, 63, 94, 0.15);
-  --warn: #F59E0B;
-  --warn-soft: rgba(245, 158, 11, 0.15);
-  --info: #3B82F6;
-  --info-soft: rgba(59, 130, 246, 0.15);
+  --pos: #059669;
+  --pos-soft: rgba(5, 150, 105, 0.15);
+  --neg: #E11D48;
+  --neg-soft: rgba(225, 29, 72, 0.15);
+  --warn: #D97706;
+  --warn-soft: rgba(217, 119, 6, 0.15);
+  --info: #2563EB;
+  --info-soft: rgba(37, 99, 235, 0.15);
 
   --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-sans);
   --font-display: 'Public Sans', system-ui, -apple-system, sans-serif;
 
   /* Borders */
-  --line-soft: #334155;
+  --line-soft: #F1F5F9;
 
   /* Surface alias — usado em componentes do painel */
   --surface: var(--panel);
@@ -104,8 +133,10 @@
   --radius: 0.625rem;
 }
 
+.dark,
 html.theme-dark,
 html[data-theme="dark"] {
+  /* DARK THEME */
   --bg: #0F172A;
   --bg-2: #0F172A;
   --panel: #1E293B;
@@ -121,6 +152,8 @@ html[data-theme="dark"] {
   --brand-soft: rgba(139, 92, 246, 0.15);
   --accent: #fbbf24;
   --accent-soft: rgba(251, 191, 36, 0.15);
+  --accent-gold: #fbbf24;
+  --accent-gold-soft: rgba(251, 191, 36, 0.15);
   --pos: #10B981;
   --pos-soft: rgba(16, 185, 129, 0.15);
   --neg: #F43F5E;
@@ -129,6 +162,9 @@ html[data-theme="dark"] {
   --warn-soft: rgba(245, 158, 11, 0.15);
   --info: #3B82F6;
   --info-soft: rgba(59, 130, 246, 0.15);
+
+  --line-soft: #334155;
+  --surface: var(--panel);
 
   --background: var(--bg);
   --foreground: var(--ink);

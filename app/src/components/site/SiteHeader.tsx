@@ -66,12 +66,12 @@ export function SiteHeader() {
     <header
       className={`fixed top-0 w-full z-50 border-b transition-all duration-300 ${
         scrolled
-          ? 'bg-[#1E293B]/95 backdrop-blur-sm border-[#334155] shadow-md'
-          : 'bg-[#1E293B]/90 backdrop-blur-sm border-[#334155]/60 shadow-sm'
+          ? 'bg-panel/95 backdrop-blur-sm border-line shadow-md'
+          : 'bg-panel/90 backdrop-blur-sm border-line/60 shadow-sm'
       }`}
     >
       {!loading && user && !isDashboard && (
-        <div className="bg-[#6366F1] text-white text-[11px] font-bold py-1.5 px-4 flex justify-between items-center transition-all z-50">
+        <div className="bg-brand text-white text-[11px] font-bold py-1.5 px-4 flex justify-between items-center transition-all z-50">
           <span className="flex items-center gap-2">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -89,7 +89,7 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity">
           <svg
             viewBox="0 0 32 28"
-            className="w-8 h-7 text-[#6366F1] fill-current drop-shadow-[0_0_8px_rgba(99,102,241,0.3)] transition-transform duration-300 group-hover:scale-105"
+            className="w-8 h-7 text-brand-2 fill-current drop-shadow-[0_0_8px_rgba(99,102,241,0.3)] transition-transform duration-300 group-hover:scale-105"
             xmlns="http://www.w3.org/2000/svg"
           >
             <rect x="0" y="0" width="5.5" height="28" rx="1" />
@@ -98,8 +98,8 @@ export function SiteHeader() {
             <rect x="22.5" y="8" width="4" height="20" rx="0.5" />
             <rect x="28.5" y="0" width="3.5" height="28" rx="0.5" />
           </svg>
-          <span className="font-sans font-extrabold text-white text-lg tracking-tight select-none">
-            Meus <span className="font-semibold text-slate-300">Políticos</span>
+          <span className="font-sans font-extrabold text-ink text-lg tracking-tight select-none">
+            Meus <span className="font-semibold text-mute">Políticos</span>
           </span>
         </Link>
 
@@ -113,8 +113,8 @@ export function SiteHeader() {
                 href={link.href}
                 className={`font-sans text-[13px] px-3.5 py-2 rounded-lg font-medium transition-all duration-200 ${
                   isActive
-                    ? 'text-[#8B5CF6] bg-[#8B5CF6]/10 border border-[#8B5CF6]/20'
-                    : 'text-[#94A3B8] hover:text-white hover:bg-[#0F172A]'
+                    ? 'text-brand bg-brand-soft border border-brand/20'
+                    : 'text-mute hover:text-ink hover:bg-bg-2'
                 }`}
               >
                 {link.label}
@@ -143,18 +143,18 @@ export function SiteHeader() {
 
           {/* Auth State Links */}
           {loading ? (
-            <div className="w-16 h-8 bg-slate-800 rounded-lg animate-pulse" />
+            <div className="w-16 h-8 bg-bg-2 rounded-lg animate-pulse" />
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link
                 href="/painel"
-                className="bg-[#334155] hover:bg-[#475569] text-white font-medium text-xs px-3.5 py-2 rounded-lg border border-[#475569]/60 transition-colors"
+                className="bg-line hover:bg-line-strong text-ink font-medium text-xs px-3.5 py-2 rounded-lg border border-line-strong/60 transition-colors"
               >
                 Painel
               </Link>
               <a
                 href="/api/auth/logto/sign-out"
-                className="text-[#94A3B8] hover:text-white text-xs font-semibold px-2 py-2 transition-colors"
+                className="text-mute hover:text-ink text-xs font-semibold px-2 py-2 transition-colors"
               >
                 Sair
               </a>
@@ -162,11 +162,7 @@ export function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="bg-[#8B5CF6] hover:bg-[#7C3AED] active:scale-95 transition-all text-white font-bold text-xs px-4 py-2 rounded-lg"
-              style={{
-                backgroundColor: '#8B5CF6',
-                color: '#ffffff',
-              }}
+              className="bg-brand hover:brightness-110 active:scale-95 transition-all text-white font-bold text-xs px-4 py-2 rounded-lg"
             >
               Entrar
             </Link>
@@ -178,7 +174,7 @@ export function SiteHeader() {
           {!loading && user && (
             <Link
               href="/painel"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] tracking-wide px-3 py-1.5 rounded-lg border border-indigo-500/30 transition-all shadow-sm"
+              className="bg-brand-2 hover:brightness-110 text-white font-bold text-[11px] tracking-wide px-3 py-1.5 rounded-lg border border-brand/30 transition-all shadow-sm"
             >
               PAINEL
             </Link>
@@ -187,7 +183,7 @@ export function SiteHeader() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Menu de Navegação"
-            className="p-2 text-[#94A3B8] hover:text-white focus:outline-none"
+            className="p-2 text-mute hover:text-ink focus:outline-none"
           >
             {mobileMenuOpen ? (
               <svg
@@ -218,7 +214,7 @@ export function SiteHeader() {
 
       {/* Mobile Dropdown Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#1E293B] border-t border-[#334155] px-4 py-4 space-y-3 animate-fade-in">
+        <div className="md:hidden bg-panel border-t border-line px-4 py-4 space-y-3 animate-fade-in">
           <nav className="flex flex-col gap-1.5">
             {links.map((link) => {
               const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
@@ -229,8 +225,8 @@ export function SiteHeader() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`font-sans text-sm px-3.5 py-2.5 rounded-lg font-medium transition-all ${
                     isActive
-                      ? 'text-[#8B5CF6] bg-[#8B5CF6]/10 border border-[#8B5CF6]/20'
-                      : 'text-[#94A3B8] hover:text-white hover:bg-[#0F172A]'
+                      ? 'text-brand bg-brand-soft border border-brand/20'
+                      : 'text-mute hover:text-ink hover:bg-bg-2'
                   }`}
                 >
                   {link.label}
@@ -238,7 +234,7 @@ export function SiteHeader() {
               )
             })}
           </nav>
-          <div className="border-t border-[#334155] pt-3 flex flex-col gap-2.5">
+          <div className="border-t border-line pt-3 flex flex-col gap-2.5">
             <Link
               href="/apoio"
               onClick={() => setMobileMenuOpen(false)}
@@ -256,19 +252,19 @@ export function SiteHeader() {
             </Link>
 
             {loading ? (
-              <div className="w-full h-10 bg-slate-800 rounded-lg animate-pulse" />
+              <div className="w-full h-10 bg-bg-2 rounded-lg animate-pulse" />
             ) : user ? (
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/painel"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full bg-[#334155] hover:bg-[#475569] text-white font-medium text-xs text-center py-2.5 rounded-lg border border-[#475569]/60 transition-colors"
+                  className="w-full bg-line hover:bg-line-strong text-ink font-medium text-xs text-center py-2.5 rounded-lg border border-line-strong/60 transition-colors"
                 >
                   Painel
                 </Link>
                 <a
                   href="/api/auth/logto/sign-out"
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-[#94A3B8] hover:text-white text-xs font-semibold text-center py-2.5 rounded-lg transition-colors"
+                  className="w-full bg-bg-2 hover:bg-line text-mute hover:text-ink text-xs font-semibold text-center py-2.5 rounded-lg transition-colors"
                 >
                   Sair
                 </a>
@@ -277,11 +273,7 @@ export function SiteHeader() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-xs py-2.5 rounded-lg transition-colors"
-                style={{
-                  backgroundColor: '#8B5CF6',
-                  color: '#ffffff',
-                }}
+                className="w-full text-center bg-brand hover:brightness-110 text-white font-bold text-xs py-2.5 rounded-lg transition-colors"
               >
                 Entrar
               </Link>

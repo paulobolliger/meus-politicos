@@ -575,7 +575,7 @@ export function HomeCidadaoClient({
 
               {/* Card 1 — Cotas CEAP */}
               <Link href="/busca" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -625,7 +625,7 @@ export function HomeCidadaoClient({
 
               {/* Card 2 — Bancadas Partidárias */}
               <Link href="/partidos" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -675,7 +675,7 @@ export function HomeCidadaoClient({
 
               {/* Card 3 — Emendas Parlamentares */}
               <Link href="/emendas" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -723,7 +723,7 @@ export function HomeCidadaoClient({
 
               {/* Card 4 — Atividade & Representantes */}
               <Link href="/busca" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -766,7 +766,7 @@ export function HomeCidadaoClient({
 
               {/* Card 5 — Presença por Estado */}
               <Link href="/estado" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(4,108,78,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -807,7 +807,7 @@ export function HomeCidadaoClient({
 
               {/* Card 6 — Emendas por Município */}
               <Link href="/cidades" className="group flex flex-col no-underline h-full">
-                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-[#1E293B] border border-[#334155] group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] transition-all duration-300 ease-out">
+                <article className="flex-1 flex flex-col p-6 rounded-2xl bg-panel border border-line group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)] transition-all duration-300 ease-out">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(29,58,138,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -868,7 +868,7 @@ export function HomeCidadaoClient({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-4">
               {exploreItems.map((item, idx) => (
                 <Link key={idx} href={item.href} className="group flex flex-col no-underline h-full">
-                  <article style={{ ...cardStyle, background: 'var(--panel)', border: '1px solid var(--line)', transition: 'all 0.3s ease-out' }} className="flex-1 flex flex-col p-6 group-hover:border-[#8B5CF6] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+                  <article style={{ ...cardStyle, transition: 'all 0.3s ease-out' }} className="bg-panel border border-line flex-1 flex flex-col p-6 group-hover:border-brand group-hover:shadow-[0_0_20px_rgba(99,102,241,0.12)]">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                       <div style={{ width: 36, height: 36, borderRadius: 8, background: item.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         {item.icon}
