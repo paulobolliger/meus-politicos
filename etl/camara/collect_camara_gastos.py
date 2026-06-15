@@ -39,7 +39,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
-PAGE_SIZE = 100
+PAGE_SIZE = 50
 
 SESSION = requests.Session()
 SESSION.headers.update({
