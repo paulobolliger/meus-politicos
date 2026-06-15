@@ -37,7 +37,8 @@ def get_db():
         user=os.getenv('POSTGRES_USER') or os.getenv('SUPABASE_DB_USER', 'postgres'),
         password=os.getenv('POSTGRES_PASSWORD') or os.getenv('SUPABASE_DB_PASSWORD'),
         dbname=os.getenv('POSTGRES_DB') or os.getenv('SUPABASE_DB_NAME', 'postgres'),
-        sslmode='disable'
+        sslmode='disable',
+        connect_timeout=15,
     )
 
 

@@ -58,6 +58,7 @@ def get_db():
         keepalives_idle=30,
         keepalives_interval=10,
         keepalives_count=5,
+        connect_timeout=15,
     )
 
 
@@ -206,7 +207,9 @@ def coletar_gastos_deputado(cur, politico_id: str, id_camara: int, ano: int, max
 
 def coletar_gastos(ano: int, max_paginas: int = 50):
     t0 = time.monotonic()
+    log.info('Conectando ao PostgreSQL...')
     db = get_db()
+    log.info('Conexão PostgreSQL estabelecida.')
     cur = db.cursor()
 
     deputados = buscar_deputados(cur)

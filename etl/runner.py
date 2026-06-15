@@ -7,13 +7,16 @@ Uso:
 """
 
 import argparse
+from collections import deque
 import json
 import logging
 import os
+import queue
 import signal
 import socket
 import subprocess
 import sys
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -183,14 +186,40 @@ def run_job(db, row, runner_id: str):
             cwd=ROOT,
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             encoding="utf-8",
             errors="replace",
+            bufsize=1,
             **popen_kwargs,
         )
-        stdout, stderr = proc.communicate(timeout=source.timeout)
-        output = f"{stdout}\n{stderr}".strip()
+        lines: deque[str] = deque(maxlen=500)
+        output_queue: queue.Queue[str | None] = queue.Queue()
+
+        def read_output():
+            assert proc.stdout is not None
+            for line in proc.stdout:
+                output_queue.put(line.rstrip())
+            output_queue.put(None)
+
+        threading.Thread(target=read_output, daemon=True).start()
+        deadline = time.monotonic() + source.timeout
+        stream_finished = False
+        while proc.poll() is None or not stream_finished:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(command, source.timeout)
+            try:
+                line = output_queue.get(timeout=min(1, remaining))
+            except queue.Empty:
+                continue
+            if line is None:
+                stream_finished = True
+            elif line:
+                lines.append(line)
+                log.info("[%s] %s", job_id, line)
+
+        output = "\n".join(lines).strip()
         duration = int(time.monotonic() - started)
         status = "ok" if proc.returncode == 0 else "falhou"
         should_retry = proc.returncode != 0 and attempts < max_attempts
@@ -208,8 +237,8 @@ def run_job(db, row, runner_id: str):
             proc.kill()
         else:
             os.killpg(proc.pid, signal.SIGKILL)
-        stdout, stderr = proc.communicate()
-        output = f"{stdout or ''}\n{stderr or ''}"
+        proc.wait()
+        output = "\n".join(lines).strip() if "lines" in locals() else ""
         finish_job(
             db,
             job_id,
