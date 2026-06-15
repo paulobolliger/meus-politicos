@@ -16,8 +16,10 @@ Notas:
 """
 
 import argparse
+from contextlib import contextmanager
 import hashlib
 import os
+import signal
 import time
 import logging
 from datetime import datetime
@@ -46,6 +48,24 @@ SESSION.headers.update({
 })
 
 
+@contextmanager
+def hard_timeout(seconds: int):
+    if os.name == 'nt':
+        yield
+        return
+
+    def handle_timeout(_signum, _frame):
+        raise TimeoutError(f'Limite absoluto de {seconds}s excedido')
+
+    previous = signal.signal(signal.SIGALRM, handle_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
 def get_db():
     return psycopg.connect(
         host=os.getenv('POSTGRES_HOST') or os.getenv('SUPABASE_DB_HOST'),
@@ -67,7 +87,8 @@ def get_json(path: str, params: dict = None) -> list | dict | None:
     last_error = None
     for tentativa in range(3):
         try:
-            r = SESSION.get(url, params=params, timeout=30)
+            with hard_timeout(90):
+                r = SESSION.get(url, params=params, timeout=(10, 30))
             if r.status_code == 404:
                 return None
             r.raise_for_status()
