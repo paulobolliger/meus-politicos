@@ -218,22 +218,23 @@ def upsert_redes(cur, politico_id, redes):
         plataforma = detectar_plataforma(url)
 
         cur.execute("""
-            INSERT INTO redes_sociais (
-                politico_id,
-                plataforma,
-                url
+            INSERT INTO redes_sociais (politico_id, plataforma, url)
+            SELECT %s, %s, %s
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM redes_sociais
+                WHERE politico_id = %s
+                  AND plataforma = %s
+                  AND url = %s
+                  AND removido_em IS NULL
             )
-            VALUES (%s, %s, %s)
-
-            ON CONFLICT (
-                politico_id,
-                plataforma
-            )
-            DO NOTHING
         """, (
             politico_id,
             plataforma,
-            url
+            url,
+            politico_id,
+            plataforma,
+            url,
         ))
 
 
@@ -245,6 +246,7 @@ def main():
     cur = conn.cursor()
 
     total = 0
+    erros = 0
 
     try:
 
@@ -316,11 +318,17 @@ def main():
             except Exception as e:
 
                 conn.rollback()
+                erros += 1
 
                 log.error(
                     f"Erro no deputado "
                     f"{dep['id']}: {e}"
                 )
+
+        if erros:
+            raise RuntimeError(
+                f"Coleta incompleta: {total} deputados processados e {erros} erros"
+            )
 
         duracao = int(
             (
