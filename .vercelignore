@@ -12,9 +12,7 @@ node_modules
 app/node_modules
 app/.next
 data
-etl
-!app/src/app/api/cron/etl/
-!app/src/app/api/cron/etl/**
+/etl
 docs
 scratch
 scripts
