@@ -40,7 +40,7 @@ class Source:
 
 SOURCES = {
     "camara_deputados": Source("etl/camara/collect_deputados.py", 3600),
-    "camara_ceap": Source("etl/camara/collect_camara_gastos.py", 14400),
+    "camara_ceap": Source("etl/camara/collect_camara_gastos_bulk.py", 3600),
     "camara_votacoes": Source("etl/camara/collect_votacoes.py", 14400),
     "camara_proposicoes": Source("etl/camara/collect_proposicoes.py", 14400),
     "senado_senadores": Source("etl/senado/collect_senadores.py", 3600),
