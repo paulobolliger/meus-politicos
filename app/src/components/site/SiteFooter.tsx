@@ -1,7 +1,6 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { isFeatureActive } from '@/lib/flags'
-import { BRAND_LOGO_URL } from '@/lib/brand'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 const COLUNAS = [
   {
@@ -117,12 +116,9 @@ export async function SiteFooter() {
           {/* Coluna Logo e Apresentação */}
           <div className="lg:col-span-1 space-y-4">
             <Link href="/" className="inline-flex group hover:opacity-95 transition-opacity">
-              <Image
-                src={BRAND_LOGO_URL}
-                alt="Meus Políticos"
-                width={180}
-                height={40}
-                className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              <BrandLogo
+                height={36}
+                className="transition-transform duration-300 group-hover:scale-[1.02]"
               />
             </Link>
             <p className="text-xs text-[#94A3B8] leading-relaxed max-w-sm">

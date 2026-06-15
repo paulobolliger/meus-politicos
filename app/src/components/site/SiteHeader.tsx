@@ -1,10 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { BRAND_LOGO_URL } from '@/lib/brand'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 const PUBLIC_LINKS = [
   { label: 'Buscar', href: '/busca' },
@@ -88,13 +87,10 @@ export function SiteHeader() {
       )}
       <div className="max-w-7xl mx-auto h-16 px-4 md:px-8 flex justify-between items-center">
         <Link href="/" className="group transition-opacity hover:opacity-95">
-          <Image
-            src={BRAND_LOGO_URL}
-            alt="Meus Políticos"
-            width={180}
-            height={40}
+          <BrandLogo
+            height={36}
             priority
-            className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+            className="transition-transform duration-300 group-hover:scale-[1.02]"
           />
         </Link>
 

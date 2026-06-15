@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { VotacaoRecente } from '@/app/(site)/page'
 import { BRAZIL_STATES, BrazilDots } from '@/components/civic'
-import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
 
 const UF_NOMES: Record<string, string> = {
   AM: 'Amazonas', RR: 'Roraima', AP: 'Amapá', PA: 'Pará', AC: 'Acre',
@@ -440,7 +439,7 @@ export function HomeCidadaoClient({
             {/* ── Coluna direita — 3 cards empilhados ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-              {/* Card 1 — Emendas */}
+              {/* Card 1 — Gastos CEAP */}
               <div style={{ ...cardStyle, padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(217,119,6,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -448,17 +447,17 @@ export function HomeCidadaoClient({
                       <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                     </svg>
                   </div>
-                  <span className="label">Investimentos 2024</span>
+                  <span className="label">Gastos parlamentares · {estatisticas?.ceap?.ano ?? 2026}</span>
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--accent-gold)', lineHeight: 1 }}>
-                  R$ 54,2 Bilhões
+                  {estatisticas?.ceap
+                    ? formatReal(estatisticas.ceap.total)
+                    : 'Dados indisponíveis'}
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
-                  Em{' '}
-                  <GlossarioTooltip termo="emenda parlamentar" slug={TERMOS_GLOSSARIO['emenda parlamentar']?.slug ?? 'emenda-parlamentar'} definicaoSimples={TERMOS_GLOSSARIO['emenda parlamentar']?.definicaoSimples}>
-                    emendas parlamentares
-                  </GlossarioTooltip>
-                  {' '}empenhadas.
+                  {estatisticas?.ceap
+                    ? `${formatInt(estatisticas.ceap.registros)} despesas CEAP coletadas em 2026.`
+                    : 'Despesas da cota parlamentar coletadas em 2026.'}
                 </p>
               </div>
 
@@ -470,13 +469,15 @@ export function HomeCidadaoClient({
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
                   </div>
-                  <span className="label">Atividade Legislativa</span>
+                  <span className="label">Base legislativa coletada</span>
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--pos)', lineHeight: 1 }}>
-                  1.432 Projetos
+                  {estatisticas?.legislativo
+                    ? `${formatInt(estatisticas.legislativo.total)} proposições`
+                    : 'Dados indisponíveis'}
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--ink-3)' }}>
-                  Votados nas duas casas este semestre.
+                  Projetos, medidas provisórias, PECs e outras matérias catalogadas.
                 </p>
               </div>
 
@@ -488,13 +489,15 @@ export function HomeCidadaoClient({
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                   </div>
-                  <span className="label" style={{ color: 'rgba(255,255,255,0.65)' }}>Ecossistema Público</span>
+                  <span className="label" style={{ color: 'rgba(255,255,255,0.65)' }}>Representantes na base</span>
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: 'white', lineHeight: 1 }}>
-                  594 Representantes
+                  {estatisticas?.representantes
+                    ? `${formatInt(estatisticas.representantes.total)} representantes`
+                    : 'Dados indisponíveis'}
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                  Monitorados em tempo real pela plataforma.
+                  Agentes públicos ativos atualmente cadastrados e acompanhados.
                 </p>
               </div>
 
