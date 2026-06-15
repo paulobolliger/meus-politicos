@@ -1,5 +1,7 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { isFeatureActive } from '@/lib/flags'
+import { BRAND_LOGO_URL } from '@/lib/brand'
 
 const COLUNAS = [
   {
@@ -114,21 +116,14 @@ export async function SiteFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Coluna Logo e Apresentação */}
           <div className="lg:col-span-1 space-y-4">
-            <Link href="/" className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity">
-              <svg
-                viewBox="0 0 32 28"
-                className="w-8 h-7 text-[#6366F1] fill-current drop-shadow-[0_0_8px_rgba(99,102,241,0.3)]"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect x="0" y="0" width="5.5" height="28" rx="1" />
-                <path d="M5.5 0 L14.5 18 L14.5 28 L5.5 10 Z" />
-                <rect x="16.5" y="16" width="4" height="12" rx="0.5" />
-                <rect x="22.5" y="8" width="4" height="20" rx="0.5" />
-                <rect x="28.5" y="0" width="3.5" height="28" rx="0.5" />
-              </svg>
-              <span className="font-extrabold text-white text-lg tracking-tight select-none">
-                Meus <span className="font-semibold text-slate-300">Políticos</span>
-              </span>
+            <Link href="/" className="inline-flex group hover:opacity-95 transition-opacity">
+              <Image
+                src={BRAND_LOGO_URL}
+                alt="Meus Políticos"
+                width={180}
+                height={40}
+                className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              />
             </Link>
             <p className="text-xs text-[#94A3B8] leading-relaxed max-w-sm">
               Traduzindo a atividade governamental de forma simples, direta e visual. Informação pública acessível de verdade.

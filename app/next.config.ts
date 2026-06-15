@@ -1,20 +1,13 @@
-import { execSync } from "child_process"
 import path from "path"
 
 import { loadEnvConfig } from "@next/env"
 import type { NextConfig } from "next"
 import { withSentryConfig } from "@sentry/nextjs"
+import packageJson from "./package.json"
 
 loadEnvConfig(path.resolve(__dirname, ".."))
 
-let version = "0.2.1"
-try {
-  const gitHash = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
-  const gitBranch = execSync("git rev-parse --abbrev-ref HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim()
-  version = `v0.2.1-${gitBranch}+${gitHash}`
-} catch {
-  // fallback
-}
+const version = `v${packageJson.version}`
 
 const nextConfig: NextConfig = {
   env: {

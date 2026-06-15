@@ -5,26 +5,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import type { VotacaoRecente } from '@/app/(site)/page'
+import { BRAZIL_STATES, BrazilDots } from '@/components/civic'
 import { GlossarioTooltip, TERMOS_GLOSSARIO } from '@/components/glossario/GlossarioTooltip'
-
-type StateDot = { uf: string; x: number; y: number; n: number }
-
-const STATES: StateDot[] = [
-  { uf: 'AM', x: 22, y: 36, n: 8 }, { uf: 'RR', x: 26, y: 16, n: 8 },
-  { uf: 'AP', x: 48, y: 18, n: 8 }, { uf: 'PA', x: 45, y: 30, n: 17 },
-  { uf: 'AC', x: 10, y: 42, n: 8 }, { uf: 'RO', x: 22, y: 48, n: 8 },
-  { uf: 'TO', x: 53, y: 44, n: 8 }, { uf: 'MA', x: 60, y: 32, n: 18 },
-  { uf: 'PI', x: 65, y: 41, n: 10 }, { uf: 'CE', x: 73, y: 33, n: 22 },
-  { uf: 'RN', x: 81, y: 35, n: 8 }, { uf: 'PB', x: 84, y: 40, n: 12 },
-  { uf: 'PE', x: 79, y: 44, n: 25 }, { uf: 'AL', x: 82, y: 49, n: 9 },
-  { uf: 'SE', x: 78, y: 52, n: 8 }, { uf: 'BA', x: 70, y: 56, n: 39 },
-  { uf: 'MT', x: 42, y: 54, n: 8 }, { uf: 'GO', x: 53, y: 60, n: 17 },
-  { uf: 'DF', x: 58, y: 58, n: 8 }, { uf: 'MG', x: 63, y: 65, n: 53 },
-  { uf: 'ES', x: 73, y: 66, n: 10 }, { uf: 'RJ', x: 67, y: 71, n: 46 },
-  { uf: 'SP', x: 58, y: 72, n: 70 }, { uf: 'PR', x: 51, y: 78, n: 30 },
-  { uf: 'SC', x: 53, y: 84, n: 16 }, { uf: 'RS', x: 46, y: 92, n: 31 },
-  { uf: 'MS', x: 45, y: 68, n: 8 },
-]
 
 const UF_NOMES: Record<string, string> = {
   AM: 'Amazonas', RR: 'Roraima', AP: 'Amapá', PA: 'Pará', AC: 'Acre',
@@ -34,38 +16,6 @@ const UF_NOMES: Record<string, string> = {
   DF: 'Distrito Federal', MG: 'Minas Gerais', ES: 'Espírito Santo',
   RJ: 'Rio de Janeiro', SP: 'São Paulo', PR: 'Paraná',
   SC: 'Santa Catarina', RS: 'Rio Grande do Sul', MS: 'Mato Grosso do Sul',
-}
-
-function BrazilDots({ active, onPick }: { active: string; onPick: (uf: string) => void }) {
-  const maxN = Math.max(...STATES.map((s) => s.n))
-  return (
-    <div style={{ position: 'relative', height: 460, width: '100%' }}>
-      <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
-        {/* Mapa base do Brasil */}
-        <image
-          href="/brazil-map.svg"
-          x="-3" y="0" width="105" height="100"
-          preserveAspectRatio="xMidYMid meet"
-          style={{ opacity: 0.18 }}
-        />
-        {/* Pontos interativos */}
-        {STATES.map((s) => {
-          const r = 1.2 + (s.n / maxN) * 2.6
-          const isActive = s.uf === active
-          return (
-            <g key={s.uf} style={{ cursor: 'pointer' }} onClick={() => onPick(s.uf)}>
-              <circle cx={s.x} cy={s.y} r={r + 1.6} fill="var(--brand-2)" opacity={isActive ? 0.18 : 0} />
-              <circle cx={s.x} cy={s.y} r={r} fill={isActive ? 'var(--accent)' : 'var(--brand)'} opacity={isActive ? 1 : 0.78} />
-              <text x={s.x} y={s.y - r - 1.2} fontFamily="var(--font-mono)" fontSize="2.2"
-                textAnchor="middle" fill={isActive ? 'var(--ink)' : 'var(--ink-3)'} fontWeight={isActive ? 700 : 500}>
-                {s.uf}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
 }
 
 // ─── Card compartilhado ───────────────────────────────────────────────────────
@@ -151,7 +101,7 @@ export function HomeCidadaoClient({
     }
   }, [])
 
-  const activeState = useMemo(() => STATES.find((s) => s.uf === activeUf) ?? STATES[0], [activeUf])
+  const activeState = useMemo(() => BRAZIL_STATES.find((s) => s.uf === activeUf) ?? BRAZIL_STATES[0], [activeUf])
 
   function formatReal(val: number): string {
     if (val >= 1_000_000_000) {
@@ -948,7 +898,7 @@ export function HomeCidadaoClient({
             </div>
 
             <div style={{ position: 'relative' }}>
-              <BrazilDots active={activeUf} onPick={setActiveUf} />
+              <BrazilDots active={activeUf} onPick={setActiveUf} dark height={400} />
             </div>
           </div>
         </section>

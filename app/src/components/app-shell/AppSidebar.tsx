@@ -430,11 +430,11 @@ export function AppSidebar() {
         <Link href="/painel" style={{ display: 'inline-flex', alignItems: 'center' }} title="Inicio">
           {collapsed ? (
             <Image
-              src="/icon.png"
+              src="https://res.cloudinary.com/dhqvjxgue/image/upload/v1781468847/04-icone-colorido_orpkwj.png"
               alt="Meus Politicos"
               height={32}
               width={32}
-              style={{ height: 32, width: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              style={{ height: 32, width: 32, objectFit: 'contain' }}
             />
           ) : (
             <Image

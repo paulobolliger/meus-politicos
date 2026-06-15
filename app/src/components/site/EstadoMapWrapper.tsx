@@ -17,12 +17,12 @@ export function EstadoMapWrapper() {
       border: '1px solid rgba(139, 92, 246, 0.25)',
       borderRadius: 20,
       overflow: 'hidden',
-      aspectRatio: '1 / 1',
+      minHeight: 430,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 24,
+      padding: '42px 16px 34px',
       width: '100%',
       boxSizing: 'border-box',
       boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 32px rgba(139, 92, 246, 0.12)',
@@ -36,8 +36,8 @@ export function EstadoMapWrapper() {
         Selecione uma UF no mapa
       </div>
       
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <BrazilDots active="" onPick={handlePick} dark={true} height={400} />
+      <div style={{ width: '100%', height: 350, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <BrazilDots active="" onPick={handlePick} dark={true} height={350} />
       </div>
 
       <div style={{
