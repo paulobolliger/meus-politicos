@@ -16,6 +16,7 @@ Notas:
 """
 
 import argparse
+import hashlib
 import os
 import time
 import logging
@@ -62,6 +63,7 @@ def get_db():
 
 def get_json(path: str, params: dict = None) -> list | dict | None:
     url = f'{BASE_URL}{path}'
+    last_error = None
     for tentativa in range(3):
         try:
             r = SESSION.get(url, params=params, timeout=30)
@@ -70,10 +72,11 @@ def get_json(path: str, params: dict = None) -> list | dict | None:
             r.raise_for_status()
             return r.json()
         except Exception as exc:
+            last_error = exc
             log.warning('Tentativa %d falhou: %s — %s', tentativa + 1, url, exc)
             if tentativa < 2:
                 time.sleep(2 ** tentativa)
-    return None
+    raise RuntimeError(f'Falha após 3 tentativas em {url}: {last_error}')
 
 
 def buscar_deputados(cur) -> list[tuple[str, int]]:
@@ -113,7 +116,10 @@ def upsert_gasto(cur, politico_id: str, despesa: dict, ano: int):
     num_doc     = despesa.get('numDocumento') or despesa.get('codDocumento') or ''
 
     # source_record_id único para evitar duplicatas em re-execuções
-    source_record_id = f'{politico_id}_{ano}_{mes_int}_{num_doc or hash(f"{categoria}{fornecedor}{valor}")}'
+    fallback_key = hashlib.sha256(
+        f'{categoria}|{fornecedor}|{cnpj}|{valor}|{descricao}'.encode('utf-8')
+    ).hexdigest()[:24]
+    source_record_id = f'{politico_id}_{ano}_{mes_int}_{num_doc or fallback_key}'
 
     cur.execute(
         '''
@@ -258,6 +264,8 @@ def coletar_gastos(ano: int, max_paginas: int = 50):
     log.info('Concluído: %d gastos inseridos/atualizados, %d erros, ano %d em %dms',
              total_gastos, erros, ano, duracao_ms)
     log.info('Concluído: %s em %.1fs', mensagem, duracao_ms / 1000)
+    if erros:
+        raise RuntimeError(mensagem)
 
 
 if __name__ == '__main__':
