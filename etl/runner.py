@@ -10,6 +10,7 @@ import argparse
 import json
 import logging
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -171,17 +172,25 @@ def run_job(db, row, runner_id: str):
     started = time.monotonic()
 
     try:
-        proc = subprocess.run(
+        popen_kwargs: dict[str, Any] = {}
+        if os.name == "nt":
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            popen_kwargs["start_new_session"] = True
+
+        proc = subprocess.Popen(
             command,
             cwd=ROOT,
             env={**os.environ, "PYTHONUNBUFFERED": "1"},
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=source.timeout,
             encoding="utf-8",
             errors="replace",
+            **popen_kwargs,
         )
-        output = f"{proc.stdout}\n{proc.stderr}".strip()
+        stdout, stderr = proc.communicate(timeout=source.timeout)
+        output = f"{stdout}\n{stderr}".strip()
         duration = int(time.monotonic() - started)
         status = "ok" if proc.returncode == 0 else "falhou"
         should_retry = proc.returncode != 0 and attempts < max_attempts
@@ -194,8 +203,13 @@ def run_job(db, row, runner_id: str):
             output,
             retry=should_retry,
         )
-    except subprocess.TimeoutExpired as exc:
-        output = f"{exc.stdout or ''}\n{exc.stderr or ''}"
+    except subprocess.TimeoutExpired:
+        if os.name == "nt":
+            proc.kill()
+        else:
+            os.killpg(proc.pid, signal.SIGKILL)
+        stdout, stderr = proc.communicate()
+        output = f"{stdout or ''}\n{stderr or ''}"
         finish_job(
             db,
             job_id,

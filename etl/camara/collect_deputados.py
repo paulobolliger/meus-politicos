@@ -27,6 +27,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://dadosabertos.camara.leg.br/api/v2"
+REQUEST_TIMEOUT = (10, 60)
 
 
 def get_db():
@@ -84,8 +85,10 @@ def buscar_deputados():
                 'ordenarPor': 'nome',
                 'itens': 100,
                 'pagina': pagina
-            }
+            },
+            timeout=REQUEST_TIMEOUT,
         )
+        r.raise_for_status()
 
         data = r.json().get('dados', [])
 
@@ -107,7 +110,11 @@ def buscar_deputados():
 
 
 def buscar_detalhe(id_camara):
-    r = requests.get(f"{BASE_URL}/deputados/{id_camara}")
+    r = requests.get(
+        f"{BASE_URL}/deputados/{id_camara}",
+        timeout=REQUEST_TIMEOUT,
+    )
+    r.raise_for_status()
     return r.json().get('dados', {})
 
 
@@ -360,7 +367,8 @@ def main():
 
     except Exception as e:
 
-        log.error(f"Erro geral: {e}")
+        log.exception(f"Erro geral: {e}")
+        raise
 
     finally:
 
